@@ -86,4 +86,27 @@ document.addEventListener('DOMContentLoaded', () => {
   updateClock();
   setInterval(updateClock, 1000 * 30); // atualiza a cada 30s (suficiente p/ minutos)
 
+  /* ---------- CONTROLES DE JANELA (minimizar / maximizar / fechar) ---------- */
+  // Placeholder visual: "fechar" recolhe a janela, "minimizar" oculta o corpo.
+  document.querySelectorAll('.window').forEach(win => {
+    const closeBtn = win.querySelector('.win-ctrl-close');
+    const minimizeBtn = win.querySelector('.win-ctrl:not(.win-ctrl-close)');
+    const body = win.querySelector('.window-body');
+
+    if (closeBtn){
+      closeBtn.addEventListener('click', () => {
+        win.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        win.style.opacity = '0';
+        win.style.transform = 'scale(0.97)';
+        setTimeout(() => { win.style.display = 'none'; }, 200);
+      });
+    }
+
+    if (minimizeBtn && body){
+      minimizeBtn.addEventListener('click', () => {
+        body.style.display = body.style.display === 'none' ? '' : 'none';
+      });
+    }
+  });
+
 });

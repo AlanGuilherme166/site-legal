@@ -1,7 +1,8 @@
 /* =====================================================
-   FRUTIGER AERO — BASE DE ESTILO
-   Fundo branco, vidro translúcido, brilho glossy,
-   bolhas de luz azul/verde, taskbar estilo Windows.
+   AERO 11 — MIX Frutiger Aero (Windows Vista) +
+   Fluent Design (Windows 11, tema claro)
+   Fundo branco, vidro/mica translucido, brilho glossy,
+   bolhas de luz, taskbar centralizada estilo Win11.
 ===================================================== */
 
 :root{
@@ -9,15 +10,22 @@
   --blue-light:  #7fc7ff;
   --green-aero:  #8fdc7a;
   --cyan-aero:   #6fe3d6;
-  --glass-fill:  rgba(255, 255, 255, 0.35);
-  --glass-fill-strong: rgba(255, 255, 255, 0.55);
-  --glass-border: rgba(255, 255, 255, 0.75);
-  --glass-shadow: rgba(30, 111, 217, 0.18);
-  --text-dark:   #1c2b3a;
-  --text-soft:   #45586b;
 
-  --font-display: 'Quicksand', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --fluent-accent:   #0067c0;
+  --fluent-accent-soft: #60cdff;
+  --mica-fill:       rgba(255, 255, 255, 0.62);
+  --mica-fill-strong:rgba(255, 255, 255, 0.8);
+  --mica-border:     rgba(255, 255, 255, 0.85);
+  --mica-shadow:     rgba(20, 60, 110, 0.14);
+
+  --text-dark:   #1b2530;
+  --text-soft:   #56636f;
+
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --radius-sm: 6px;
+
+  --font-body: 'Inter', 'Segoe UI', sans-serif;
 }
 
 *{ box-sizing: border-box; }
@@ -32,7 +40,6 @@ html, body{
   overflow-x: hidden;
 }
 
-/* ---------- FUNDO DECORATIVO (bolhas de luz) ---------- */
 .bg-decor{
   position: fixed;
   inset: 0;
@@ -44,8 +51,8 @@ html, body{
 .blob{
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.55;
+  filter: blur(70px);
+  opacity: 0.4;
 }
 
 .blob-blue{
@@ -64,14 +71,14 @@ html, body{
   width: 380px; height: 380px;
   top: 40%; left: 60%;
   background: radial-gradient(circle at 50% 50%, var(--cyan-aero), transparent 70%);
-  opacity: 0.35;
+  opacity: 0.28;
 }
 
 .shine-sweep{
   position: absolute;
   top: 0; left: -50%;
   width: 60%; height: 100%;
-  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.6), transparent);
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.5), transparent);
   animation: sweep 14s ease-in-out infinite;
 }
 
@@ -81,50 +88,45 @@ html, body{
   100% { left: 120%; }
 }
 
-/* ---------- COMPONENTE BASE: VIDRO (glassmorphism aero) ---------- */
-.glass-btn, .window, .sidebar, .start-menu, .taskbar{
-  background: var(--glass-fill);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.6);
+.glass-btn, .window, .sidebar, .start-menu, .taskbar, .search-pill{
+  background: var(--mica-fill);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid var(--mica-border);
+  box-shadow: 0 6px 24px var(--mica-shadow), inset 0 1px 0 rgba(255,255,255,0.7);
 }
 
-/* brilho glossy no topo — marca registrada do Frutiger Aero */
-.glass-btn::before, .window::before{
+.window::before{
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 45%;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.75), rgba(255,255,255,0));
+  height: 40%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.55), rgba(255,255,255,0));
   border-radius: inherit;
   pointer-events: none;
 }
 
-/* ---------- BOTÕES DE VIDRO GENÉRICOS ---------- */
 .glass-btn{
   position: relative;
-  border-radius: 14px;
-  padding: 12px 18px;
-  font-family: var(--font-display);
+  border-radius: var(--radius-md);
+  padding: 11px 18px;
+  font-family: var(--font-body);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   color: var(--text-dark);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .glass-btn:hover{
-  transform: translateY(-2px);
-  box-shadow: 0 12px 36px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.8);
-  background: var(--glass-fill-strong);
+  box-shadow: 0 10px 28px var(--mica-shadow), inset 0 1px 0 rgba(255,255,255,0.85);
+  background: var(--mica-fill-strong);
 }
 
 .glass-btn:active{
-  transform: translateY(0);
+  transform: scale(0.98);
 }
 
-/* ---------- SIDEBAR (barra lateral retrátil) ---------- */
 .sidebar-trigger{
   position: fixed;
   top: 0; left: 0;
@@ -135,16 +137,16 @@ html, body{
 
 .sidebar{
   position: fixed;
-  top: 0; left: 0;
-  height: 100vh;
+  top: 12px; left: 12px;
+  height: calc(100vh - 24px);
   width: 260px;
   z-index: 25;
-  padding: 28px 18px;
-  border-radius: 0 20px 20px 0;
+  padding: 26px 16px;
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
-  transform: translateX(-100%);
-  transition: transform 0.35s cubic-bezier(.2,.9,.3,1);
+  transform: translateX(-120%);
+  transition: transform 0.32s cubic-bezier(.2,.9,.3,1);
 }
 
 .sidebar.open{
@@ -154,9 +156,9 @@ html, body{
 .sidebar-glass-highlight{
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 120px;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.7), transparent);
-  border-radius: 0 20px 0 0;
+  height: 110px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.6), transparent);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   pointer-events: none;
 }
 
@@ -164,26 +166,26 @@ html, body{
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
   position: relative;
 }
 
 .sidebar-brand{
-  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   margin: 0;
   color: var(--text-dark);
+  letter-spacing: -0.01em;
 }
 
 .sidebar-brand span{
-  color: var(--blue-deep);
+  color: var(--fluent-accent);
 }
 
 .sidebar-nav{
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   position: relative;
 }
 
@@ -193,29 +195,29 @@ html, body{
   gap: 10px;
   text-align: left;
   width: 100%;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
 }
 
 .nav-btn.active{
-  background: linear-gradient(135deg, rgba(127,199,255,0.55), rgba(255,255,255,0.4));
-  border-color: rgba(255,255,255,0.9);
+  background: linear-gradient(135deg, rgba(96,205,255,0.35), rgba(255,255,255,0.35));
+  border-left: 3px solid var(--fluent-accent);
 }
 
-.nav-icon{ font-size: 1.05rem; }
+.nav-icon{ font-size: 1rem; }
 
 .sidebar-footer{
   margin-top: auto;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-soft);
   position: relative;
 }
 
-/* ---------- ORBES GLOSSY (logo, start, indicadores) ---------- */
 .orb{
   position: relative;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 25%, #cdeeff, var(--blue-deep) 70%);
-  box-shadow: 0 4px 14px rgba(30,111,217,0.45), inset 0 -4px 8px rgba(0,60,120,0.35);
+  background: radial-gradient(circle at 30% 25%, #cdeeff, var(--fluent-accent) 70%);
+  box-shadow: 0 4px 14px rgba(0,103,192,0.4), inset 0 -4px 8px rgba(0,50,100,0.3);
   overflow: hidden;
 }
 
@@ -228,31 +230,30 @@ html, body{
   transform: rotate(-20deg);
 }
 
-.orb-logo{ width: 42px; height: 42px; }
+.orb-logo{ width: 40px; height: 40px; }
 
 .orb-small{
-  width: 34px; height: 34px;
+  width: 32px; height: 32px;
   margin-bottom: 12px;
 }
 
 .orb-green{
   background: radial-gradient(circle at 30% 25%, #e6ffd9, #4fae3d 70%);
-  box-shadow: 0 4px 14px rgba(79,174,61,0.45), inset 0 -4px 8px rgba(20,80,10,0.35);
+  box-shadow: 0 4px 14px rgba(79,174,61,0.4), inset 0 -4px 8px rgba(20,80,10,0.3);
 }
 
 .orb-cyan{
   background: radial-gradient(circle at 30% 25%, #d9fffb, #21a99a 70%);
-  box-shadow: 0 4px 14px rgba(33,169,154,0.45), inset 0 -4px 8px rgba(10,70,60,0.35);
+  box-shadow: 0 4px 14px rgba(33,169,154,0.4), inset 0 -4px 8px rgba(10,70,60,0.3);
 }
 
 .orb-start{
-  width: 50px; height: 50px;
+  width: 40px; height: 40px;
   border: none;
   cursor: pointer;
   flex-shrink: 0;
 }
 
-/* ---------- CONTEÚDO / JANELAS ---------- */
 .content{
   position: relative;
   z-index: 1;
@@ -263,53 +264,73 @@ html, body{
 
 .window{
   position: relative;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  margin-bottom: 26px;
+  margin-bottom: 24px;
 }
 
 .window-titlebar{
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  padding: 10px 16px;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.55), rgba(255,255,255,0.15));
-  border-bottom: 1px solid rgba(255,255,255,0.5);
-  font-family: var(--font-display);
+  padding: 8px 8px 8px 16px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(255,255,255,0.15));
+  border-bottom: 1px solid rgba(255,255,255,0.55);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--text-soft);
 }
 
-.titlebar-dots{
+.titlebar-title{
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
 }
 
-.dot{
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-  box-shadow: inset 0 1px 1px rgba(255,255,255,0.7);
+.titlebar-icon{ font-size: 0.9rem; }
+
+.titlebar-controls{
+  display: flex;
+  align-items: center;
 }
 
-.dot-red{ background: #ff5f57; }
-.dot-yellow{ background: #febc2e; }
-.dot-green{ background: #28c840; }
+.win-ctrl{
+  width: 34px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.win-ctrl:hover{
+  background: rgba(0,0,0,0.06);
+}
+
+.win-ctrl-close:hover{
+  background: #e81123;
+  color: #ffffff;
+}
 
 .window-body{
   position: relative;
-  padding: 26px 28px 30px;
+  padding: 24px 26px 28px;
 }
 
 .hero-window .window-body{
-  padding: 40px 36px 46px;
+  padding: 38px 34px 44px;
 }
 
 .hero-window h1{
-  font-family: var(--font-display);
-  font-size: 2.2rem;
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   margin: 0 0 14px;
   color: var(--text-dark);
 }
@@ -322,145 +343,182 @@ html, body{
 }
 
 .cta-btn{
-  background: linear-gradient(135deg, rgba(127,199,255,0.65), rgba(255,255,255,0.4));
+  background: linear-gradient(135deg, rgba(96,205,255,0.5), rgba(255,255,255,0.4));
+  border-radius: var(--radius-md);
 }
 
 .window-grid{
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
+  gap: 20px;
 }
 
 .window-grid .window h2{
-  font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: 1.1rem;
+  font-weight: 700;
   margin: 0 0 8px;
 }
 
 .window-grid .window p{
   color: var(--text-soft);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1.5;
   margin: 0;
 }
 
 .taskbar-spacer{
-  height: 90px;
+  height: 88px;
 }
 
-/* ---------- START MENU ---------- */
 .start-menu{
   position: fixed;
-  left: 16px;
-  bottom: 90px;
-  width: 230px;
+  left: 50%;
+  bottom: 76px;
+  transform: translateX(-50%) translateY(12px) scale(0.97);
+  width: 240px;
   z-index: 45;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   opacity: 0;
-  transform: translateY(12px) scale(0.97);
   pointer-events: none;
-  transition: all 0.25s ease;
+  transition: all 0.22s ease;
 }
 
 .start-menu.open{
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translateX(-50%) translateY(0) scale(1);
   pointer-events: auto;
 }
 
 .start-menu-highlight{
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 60px;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.75), transparent);
-  border-radius: 18px 18px 0 0;
+  height: 56px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.7), transparent);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   pointer-events: none;
 }
 
 .start-menu-title{
-  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-soft);
   margin: 0 0 6px;
   position: relative;
+  text-align: center;
 }
 
 .start-item{
   text-align: left;
   width: 100%;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
 }
 
-/* ---------- TASKBAR ---------- */
 .taskbar{
   position: fixed;
-  left: 0; right: 0; bottom: 0;
+  left: 12px; right: 12px; bottom: 10px;
   z-index: 40;
-  height: 68px;
-  display: flex;
+  height: 58px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 14px;
-  padding: 0 16px;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.55), rgba(200,230,255,0.35));
-  border-top: 1px solid rgba(255,255,255,0.8);
-  border-radius: 0;
+  padding: 0 14px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.65), rgba(220,238,255,0.4));
 }
 
-.taskbar-divider{
-  width: 1px;
-  height: 34px;
-  background: rgba(255,255,255,0.8);
+.taskbar-zone{
+  display: flex;
+  align-items: center;
 }
+
+.taskbar-zone-left{
+  justify-content: flex-start;
+}
+
+.taskbar-zone-center{
+  justify-content: center;
+  gap: 10px;
+}
+
+.taskbar-zone-right{
+  justify-content: flex-end;
+}
+
+.search-pill{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  cursor: text;
+  max-width: 220px;
+}
+
+.search-icon{ font-size: 0.85rem; }
 
 .taskbar-apps{
   display: flex;
-  gap: 10px;
-  flex: 1;
+  gap: 6px;
 }
 
 .taskbar-btn{
   position: relative;
-  border: 1px solid rgba(255,255,255,0.7);
-  background: rgba(255,255,255,0.3);
-  backdrop-filter: blur(10px);
-  border-radius: 10px;
-  padding: 9px 16px;
-  font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 0.85rem;
-  color: var(--text-dark);
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .taskbar-btn:hover{
   background: rgba(255,255,255,0.55);
-  transform: translateY(-1px);
+  border-color: rgba(255,255,255,0.7);
 }
 
 .taskbar-btn.active{
-  background: linear-gradient(135deg, rgba(127,199,255,0.6), rgba(255,255,255,0.35));
-  border-color: rgba(127,199,255,0.9);
+  background: rgba(255,255,255,0.5);
+  border-color: rgba(96,205,255,0.7);
+}
+
+.taskbar-btn.active::after{
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--fluent-accent);
 }
 
 .taskbar-tray{
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 6px 14px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.3);
-  border: 1px solid rgba(255,255,255,0.6);
+  gap: 12px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+}
+
+.taskbar-tray:hover{
+  background: rgba(255,255,255,0.4);
 }
 
 .tray-icon{
-  font-size: 1rem;
-  opacity: 0.8;
+  font-size: 0.95rem;
+  opacity: 0.75;
 }
 
 .taskbar-clock{
@@ -468,32 +526,24 @@ html, body{
   flex-direction: column;
   align-items: flex-end;
   line-height: 1.2;
-  font-family: var(--font-body);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--text-dark);
   padding-left: 10px;
-  border-left: 1px solid rgba(255,255,255,0.7);
 }
 
-#clockTime{ font-weight: 600; font-size: 0.85rem; }
-#clockDate{ color: var(--text-soft); font-size: 0.7rem; }
+#clockTime{ font-weight: 600; font-size: 0.82rem; }
+#clockDate{ color: var(--text-soft); font-size: 0.68rem; }
 
-/* ---------- RESPONSIVO ---------- */
 @media (max-width: 720px){
   .window-grid{
     grid-template-columns: 1fr;
   }
 
-  .taskbar-apps .taskbar-btn span{ display: none; }
+  .search-pill .search-label{ display: none; }
+  .search-pill{ padding: 8px; }
 
   .taskbar{
-    gap: 8px;
-    padding: 0 10px;
-  }
-
-  .taskbar-btn{
-    padding: 8px 10px;
-    font-size: 0.75rem;
+    padding: 0 8px;
   }
 
   .sidebar{
@@ -501,7 +551,6 @@ html, body{
   }
 }
 
-/* Acessibilidade: respeita preferência de movimento reduzido */
 @media (prefers-reduced-motion: reduce){
   .shine-sweep{ animation: none; }
   .sidebar, .start-menu, .glass-btn, .taskbar-btn{ transition: none; }

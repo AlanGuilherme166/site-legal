@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aero | Início</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -60,10 +60,12 @@
 
     <section class="window hero-window">
       <div class="window-titlebar">
-        <span class="titlebar-dots">
-          <i class="dot dot-red"></i><i class="dot dot-yellow"></i><i class="dot dot-green"></i>
+        <span class="titlebar-title"><span class="titlebar-icon">🏠</span> bem-vindo.exe</span>
+        <span class="titlebar-controls">
+          <button class="win-ctrl" aria-label="Minimizar">–</button>
+          <button class="win-ctrl" aria-label="Maximizar">▢</button>
+          <button class="win-ctrl win-ctrl-close" aria-label="Fechar">×</button>
         </span>
-        <span class="titlebar-title">bem-vindo.exe</span>
       </div>
       <div class="window-body">
         <h1>Bem-vindo ao seu novo site</h1>
@@ -75,10 +77,12 @@
     <section class="window-grid">
       <div class="window">
         <div class="window-titlebar">
-          <span class="titlebar-dots">
-            <i class="dot dot-red"></i><i class="dot dot-yellow"></i><i class="dot dot-green"></i>
+          <span class="titlebar-title"><span class="titlebar-icon">🗔</span> painel_01</span>
+          <span class="titlebar-controls">
+            <button class="win-ctrl" aria-label="Minimizar">–</button>
+            <button class="win-ctrl" aria-label="Maximizar">▢</button>
+            <button class="win-ctrl win-ctrl-close" aria-label="Fechar">×</button>
           </span>
-          <span class="titlebar-title">painel_01</span>
         </div>
         <div class="window-body">
           <div class="orb orb-small"><span class="orb-shine"></span></div>
@@ -89,10 +93,12 @@
 
       <div class="window">
         <div class="window-titlebar">
-          <span class="titlebar-dots">
-            <i class="dot dot-red"></i><i class="dot dot-yellow"></i><i class="dot dot-green"></i>
+          <span class="titlebar-title"><span class="titlebar-icon">🗔</span> painel_02</span>
+          <span class="titlebar-controls">
+            <button class="win-ctrl" aria-label="Minimizar">–</button>
+            <button class="win-ctrl" aria-label="Maximizar">▢</button>
+            <button class="win-ctrl win-ctrl-close" aria-label="Fechar">×</button>
           </span>
-          <span class="titlebar-title">painel_02</span>
         </div>
         <div class="window-body">
           <div class="orb orb-small orb-green"><span class="orb-shine"></span></div>
@@ -103,10 +109,12 @@
 
       <div class="window">
         <div class="window-titlebar">
-          <span class="titlebar-dots">
-            <i class="dot dot-red"></i><i class="dot dot-yellow"></i><i class="dot dot-green"></i>
+          <span class="titlebar-title"><span class="titlebar-icon">🗔</span> painel_03</span>
+          <span class="titlebar-controls">
+            <button class="win-ctrl" aria-label="Minimizar">–</button>
+            <button class="win-ctrl" aria-label="Maximizar">▢</button>
+            <button class="win-ctrl win-ctrl-close" aria-label="Fechar">×</button>
           </span>
-          <span class="titlebar-title">painel_03</span>
         </div>
         <div class="window-body">
           <div class="orb orb-small orb-cyan"><span class="orb-shine"></span></div>
@@ -131,27 +139,37 @@
     <button class="glass-btn start-item">✉️ Contato</button>
   </div>
 
-  <!-- Barra de tarefas estilo Windows -->
+  <!-- Barra de tarefas: layout centralizado do Windows 11 + vidro do Aero -->
   <footer class="taskbar">
-    <button class="orb orb-start" id="startButton" aria-label="Abrir menu iniciar">
-      <span class="orb-shine"></span>
-    </button>
 
-    <div class="taskbar-divider"></div>
-
-    <div class="taskbar-apps">
-      <button class="taskbar-btn active" data-app="inicio">🏠 Início</button>
-      <button class="taskbar-btn" data-app="janela1">🗔 Painel 01</button>
-      <button class="taskbar-btn" data-app="janela2">🗔 Painel 02</button>
+    <div class="taskbar-zone taskbar-zone-left">
+      <div class="search-pill">
+        <span class="search-icon">🔍</span>
+        <span class="search-label">Pesquisar</span>
+      </div>
     </div>
 
-    <div class="taskbar-tray">
-      <span class="tray-icon">🔊</span>
-      <span class="tray-icon">📶</span>
-      <span class="tray-icon">🔋</span>
-      <div class="taskbar-clock" id="taskbarClock">
-        <span id="clockTime">00:00</span>
-        <span id="clockDate">01/01/2026</span>
+    <div class="taskbar-zone taskbar-zone-center">
+      <button class="orb orb-start" id="startButton" aria-label="Abrir menu iniciar">
+        <span class="orb-shine"></span>
+      </button>
+
+      <div class="taskbar-apps">
+        <button class="taskbar-btn active" data-app="inicio" aria-label="Início">🏠</button>
+        <button class="taskbar-btn" data-app="janela1" aria-label="Painel 01">🗔</button>
+        <button class="taskbar-btn" data-app="janela2" aria-label="Painel 02">🗔</button>
+      </div>
+    </div>
+
+    <div class="taskbar-zone taskbar-zone-right">
+      <div class="taskbar-tray">
+        <span class="tray-icon">🔊</span>
+        <span class="tray-icon">📶</span>
+        <span class="tray-icon">🔋</span>
+        <div class="taskbar-clock" id="taskbarClock">
+          <span id="clockTime">00:00</span>
+          <span id="clockDate">01/01/2026</span>
+        </div>
       </div>
     </div>
   </footer>
