@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aero | Início</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Fundo decorativo: bolhas de luz ao estilo Frutiger Aero -->
+  <div class="bg-decor" aria-hidden="true">
+    <div class="blob blob-blue"></div>
+    <div class="blob blob-green"></div>
+    <div class="blob blob-cyan"></div>
+    <div class="shine-sweep"></div>
+  </div>
+
+  <!-- Faixa sensível que revela a barra lateral -->
+  <div class="sidebar-trigger" id="sidebarTrigger"></div>
+
+  <!-- Barra lateral em vidro translúcido -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-glass-highlight"></div>
+
+    <div class="sidebar-logo">
+      <div class="orb orb-logo">
+        <span class="orb-shine"></span>
+      </div>
+      <p class="sidebar-brand">Aero<span>Site</span></p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="glass-btn nav-btn active" data-page="inicio">
+        <span class="nav-icon">🏠</span> Início
+      </button>
+      <button class="glass-btn nav-btn" data-page="sobre">
+        <span class="nav-icon">💠</span> Sobre
+      </button>
+      <button class="glass-btn nav-btn" data-page="servicos">
+        <span class="nav-icon">⚙️</span> Serviços
+      </button>
+      <button class="glass-btn nav-btn" data-page="portfolio">
+        <span class="nav-icon">🖼️</span> Portfólio
+      </button>
+      <button class="glass-btn nav-btn" data-page="contato">
+        <span class="nav-icon">✉️</span> Contato
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <p>v0.1 — base placeholder</p>
+    </div>
+  </aside>
+
+  <!-- Conteúdo principal -->
+  <main class="content">
+
+    <section class="window hero-window">
+      <div class="window-titlebar">
+        <span class="titlebar-dots">
+          <i class="dot dot-red"></i><i class="dot dot-yellow"></i><i class="dot dot-green"></i>
+        </span>
+        <span class="titlebar-title">bem-vindo.exe</span>
+      </div>
+      <div class="window-body">
+        <h1>Bem-vindo ao seu novo site</h1>
+        <p>Esta é a base do layout no estilo <strong>Frutiger Aero</strong>: vidro fosco, brilho, bolhas de luz e muita transparência sobre um fundo branco limpo. Passe o mouse na borda esquerda para abrir o menu.</p>
+        <button class="glass-btn cta-btn">Explorar ➜</button>
+      </div>
+    </section>
+
+    <section class="window-grid">
+      <div class="window">
+        <div class="window-titlebar">
+          <span class="titlebar-dots">
+            <i class="dot dot-red"></i><i class="dot dot-yellow"></i><i class="dot dot-green"></i>
+          </span>
+          <span class="titlebar-title">painel_01</span>
+        </div>
+        <div class="window-body">
+          <div class="orb orb-small"><span class="orb-shine"></span></div>
+          <h2>Placeholder</h2>
+          <p>Conteúdo de exemplo para este cartão de vidro. Substitua pelo texto real da futura página.</p>
+        </div>
+      </div>
+
+      <div class="window">
+        <div class="window-titlebar">
+          <span class="titlebar-dots">
+            <i class="dot dot-red"></i><i class="dot dot-yellow"></i><i class="dot dot-green"></i>
+          </span>
+          <span class="titlebar-title">painel_02</span>
+        </div>
+        <div class="window-body">
+          <div class="orb orb-small orb-green"><span class="orb-shine"></span></div>
+          <h2>Placeholder</h2>
+          <p>Outro bloco de vidro translúcido, pronto para receber imagens, textos ou formulários.</p>
+        </div>
+      </div>
+
+      <div class="window">
+        <div class="window-titlebar">
+          <span class="titlebar-dots">
+            <i class="dot dot-red"></i><i class="dot dot-yellow"></i><i class="dot dot-green"></i>
+          </span>
+          <span class="titlebar-title">painel_03</span>
+        </div>
+        <div class="window-body">
+          <div class="orb orb-small orb-cyan"><span class="orb-shine"></span></div>
+          <h2>Placeholder</h2>
+          <p>Use esta grade de janelas para destacar serviços, cards ou funcionalidades.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Espaço reservado para não ficar por baixo da barra de tarefas -->
+    <div class="taskbar-spacer" aria-hidden="true"></div>
+  </main>
+
+  <!-- Menu iniciar (pop-up de vidro acima da taskbar) -->
+  <div class="start-menu" id="startMenu">
+    <div class="start-menu-highlight"></div>
+    <p class="start-menu-title">Menu</p>
+    <button class="glass-btn start-item">🏠 Início</button>
+    <button class="glass-btn start-item">💠 Sobre</button>
+    <button class="glass-btn start-item">⚙️ Serviços</button>
+    <button class="glass-btn start-item">🖼️ Portfólio</button>
+    <button class="glass-btn start-item">✉️ Contato</button>
+  </div>
+
+  <!-- Barra de tarefas estilo Windows -->
+  <footer class="taskbar">
+    <button class="orb orb-start" id="startButton" aria-label="Abrir menu iniciar">
+      <span class="orb-shine"></span>
+    </button>
+
+    <div class="taskbar-divider"></div>
+
+    <div class="taskbar-apps">
+      <button class="taskbar-btn active" data-app="inicio">🏠 Início</button>
+      <button class="taskbar-btn" data-app="janela1">🗔 Painel 01</button>
+      <button class="taskbar-btn" data-app="janela2">🗔 Painel 02</button>
+    </div>
+
+    <div class="taskbar-tray">
+      <span class="tray-icon">🔊</span>
+      <span class="tray-icon">📶</span>
+      <span class="tray-icon">🔋</span>
+      <div class="taskbar-clock" id="taskbarClock">
+        <span id="clockTime">00:00</span>
+        <span id="clockDate">01/01/2026</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
