@@ -303,6 +303,10 @@ html, body{
 .window{
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 260px;
+  min-height: 150px;
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin-bottom: 24px;
@@ -317,6 +321,42 @@ html, body{
   box-shadow: 0 0 0 1px rgba(255,255,255,0.7), 0 26px 56px var(--mica-shadow);
 }
 
+/* enquanto a janela esta sendo redimensionada: sem transicao, sem selecionar texto */
+.window.is-resizing{
+  transition: none;
+  user-select: none;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.7), 0 26px 56px var(--mica-shadow);
+}
+
+/* alca de redimensionar no canto inferior direito */
+.window-resize-handle{
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 20px;
+  height: 20px;
+  cursor: nwse-resize;
+  touch-action: none;
+  z-index: 6;
+}
+
+.window-resize-handle::before{
+  content: "";
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 9px;
+  height: 9px;
+  background-image:
+    repeating-linear-gradient(135deg, var(--text-soft) 0 1.5px, transparent 1.5px 4px);
+  opacity: 0.45;
+  transition: opacity 0.15s ease;
+}
+
+.window-resize-handle:hover::before{
+  opacity: 0.85;
+}
+
 /* barra de titulo em vidro azulado, com brilho diagonal (assinatura Aero/Vista) */
 .window-titlebar{
   position: relative;
@@ -326,6 +366,7 @@ html, body{
   gap: 10px;
   padding: 7px 6px 7px 14px;
   overflow: hidden;
+  flex-shrink: 0;
   background: linear-gradient(to bottom, var(--titlebar-grad-top) 0%, var(--titlebar-grad-mid) 50%, var(--titlebar-grad-bottom) 100%);
   border-bottom: 1px solid rgba(255,255,255,0.65);
   font-weight: 700;
@@ -400,6 +441,9 @@ html, body{
 
 .window-body{
   position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   padding: 24px 26px 28px;
   transition: none;
 }
@@ -426,6 +470,243 @@ html, body{
 .cta-btn{
   background: linear-gradient(135deg, rgba(127,199,255,0.55), rgba(255,255,255,0.4));
   border-radius: var(--radius-md);
+}
+
+/* ---------- APP: NAVEGADOR (GUGLE + YOUTUBE) ---------- */
+.navegador-window{
+  max-width: 780px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.browser-body{
+  padding: 16px 16px 20px;
+}
+
+.browser-app{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.browser-toolbar{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.browser-nav-btn{
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--mica-border);
+  background: var(--mica-fill);
+  color: var(--text-dark);
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+}
+
+.browser-nav-btn:hover{
+  background: var(--mica-fill-strong);
+  box-shadow: 0 4px 12px var(--mica-shadow);
+}
+
+.browser-nav-btn:active{
+  transform: scale(0.95);
+}
+
+.browser-nav-btn:disabled{
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.browser-address-row{
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--mica-border);
+  background: var(--mica-fill-strong);
+}
+
+.browser-address-lock{
+  font-size: 0.75rem;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.browser-address-input{
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-dark);
+}
+
+.browser-address-input::placeholder{
+  color: var(--text-soft);
+  opacity: 0.75;
+}
+
+.browser-go-btn{
+  flex-shrink: 0;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  background: linear-gradient(135deg, rgba(127,199,255,0.65), rgba(255,255,255,0.45));
+  color: var(--text-dark);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+  transition: box-shadow 0.15s ease, transform 0.12s ease;
+}
+
+.browser-go-btn:hover{
+  box-shadow: 0 4px 12px var(--mica-shadow), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+.browser-go-btn:active{
+  transform: scale(0.97);
+}
+
+.browser-viewport{
+  position: relative;
+  min-height: 380px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--mica-border);
+  background: var(--mica-fill-strong);
+  overflow: hidden;
+}
+
+.browser-page{
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 32px 20px;
+  text-align: center;
+}
+
+/* ----- pagina inicial: "Gugle" ----- */
+.gugle-logo{
+  font-family: var(--font-body);
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.gugle-c1{ color: #4285f4; }
+.gugle-c2{ color: #ea4335; }
+.gugle-c3{ color: #fbbc05; }
+.gugle-c4{ color: #34a853; }
+
+.gugle-search-row{
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--mica-border);
+  background: var(--mica-fill);
+  box-shadow: 0 4px 14px var(--mica-shadow), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+.gugle-search-icon{
+  font-size: 0.9rem;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.gugle-search-input{
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  text-align: left;
+}
+
+.gugle-search-input::placeholder{
+  color: var(--text-soft);
+  opacity: 0.75;
+}
+
+.gugle-hint{
+  max-width: 380px;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+/* ----- pagina de video ----- */
+.browser-video{
+  padding: 0;
+  min-height: 380px;
+}
+
+.browser-video-frame{
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 */
+}
+
+.browser-video-frame iframe{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* ----- pagina de erro ----- */
+.browser-error-icon{
+  font-size: 2.2rem;
+}
+
+.browser-error-title{
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.browser-error-msg{
+  max-width: 360px;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  line-height: 1.5;
+  margin: 0;
+}
+
+@media (max-width: 560px){
+  .browser-toolbar{
+    flex-wrap: wrap;
+  }
+  .browser-address-row{
+    order: 1;
+    width: 100%;
+  }
 }
 
 /* ---------- APP: CASSINO (ROLETA) ---------- */
@@ -898,6 +1179,7 @@ body.custom-wallpaper .bg-decor{
   gap: 4px;
   height: calc(100vh - 90px);
   width: calc(100vw - 32px);
+  pointer-events: none;
 }
 
 .desktop-icons.icons-hidden{
@@ -917,6 +1199,7 @@ body.custom-wallpaper .bg-decor{
   cursor: pointer;
   user-select: none;
   touch-action: none;
+  pointer-events: auto;
 }
 
 .desktop-icon:hover{
@@ -1272,7 +1555,8 @@ body.custom-wallpaper .bg-decor{
 .cmd-terminal{
   display: flex;
   flex-direction: column;
-  height: 340px;
+  height: 100%;
+  min-height: 340px;
   background: #0c0c0c;
   font-family: 'Courier New', monospace;
   font-size: 0.82rem;
@@ -1633,6 +1917,553 @@ body.custom-wallpaper .bg-decor{
   color: var(--text-soft);
   max-width: 300px;
   margin: 0;
+}
+
+/* ---------- APP: AICOMIDA (DELIVERY) ---------- */
+.aicomida-window{
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.aicomida-app{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.aicomida-heading{
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--text-dark);
+}
+
+.aicomida-sub{
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  max-width: 380px;
+}
+
+.aicomida-balance{
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aicomida-balance-label{
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+.aicomida-balance-value{
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.aicomida-balance-value.negative{
+  color: #d5311f;
+}
+
+/* Abas reaproveitando o visual das abas do cassino */
+.aicomida-tabs, .vitrine-tabs{
+  display: flex;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.aicomida-tab, .vitrine-tab{
+  padding: 7px 16px;
+  border: 1px solid var(--mica-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  cursor: pointer;
+}
+
+.aicomida-tab.active, .vitrine-tab.active{
+  background: var(--mica-fill-strong);
+  color: var(--text-dark);
+  border-color: rgba(120,190,255,0.7);
+}
+
+.aicomida-panel{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.aicomida-stim-sub{
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--text-soft);
+  max-width: 340px;
+}
+
+.aicomida-feedback, .vitrine-feedback{
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1e9d5c;
+}
+
+.aicomida-feedback.error, .vitrine-feedback.error{
+  color: #d5311f;
+}
+
+.aicomida-list{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aicomida-item{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--mica-fill-strong);
+  border: 1px solid var(--mica-border);
+  box-shadow: 0 4px 14px var(--mica-shadow), inset 0 1px 0 rgba(255,255,255,0.6);
+  text-align: left;
+}
+
+.aicomida-item-emoji{
+  font-size: 1.6rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.aicomida-item-info{
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.aicomida-item-name{
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.aicomida-item-price{
+  font-size: 0.74rem;
+  color: var(--text-soft);
+}
+
+.aicomida-item-heal{
+  font-size: 0.7rem;
+  color: #1e9d5c;
+  font-weight: 600;
+}
+
+.aicomida-buy-btn{
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--mica-border);
+  background: var(--mica-fill);
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.74rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.aicomida-buy-btn:hover{
+  background: var(--mica-fill-strong);
+}
+
+.aicomida-buy-btn:active{
+  transform: scale(0.94);
+}
+
+.aicomida-buy-btn:disabled{
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ---------- APP: INVENTÁRIO ---------- */
+.inventario-window{
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.inventario-app{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.inventario-heading{
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--text-dark);
+}
+
+.inventario-sub{
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  max-width: 380px;
+}
+
+.inventario-categories{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inventario-category{
+  width: 100%;
+  text-align: left;
+}
+
+.inventario-category-title{
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-soft);
+  font-weight: 700;
+}
+
+.inventario-category-empty{
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--text-soft);
+  font-style: italic;
+}
+
+.inventario-list{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inventario-item{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  background: var(--mica-fill-strong);
+  border: 1px solid var(--mica-border);
+  box-shadow: 0 4px 14px var(--mica-shadow), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.inventario-item-emoji{
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.inventario-item-info{
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.inventario-item-name{
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.inventario-item-qty{
+  font-size: 0.72rem;
+  color: var(--text-soft);
+}
+
+.inventario-use-btn{
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--mica-border);
+  background: var(--mica-fill);
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.74rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.inventario-use-btn:hover{
+  background: var(--mica-fill-strong);
+}
+
+.inventario-use-btn:active{
+  transform: scale(0.94);
+}
+
+/* ---------- APP: VITRINE (LOJA + BIBLIOTECA + JOGO) ---------- */
+.vitrine-window{
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.vitrine-app{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  width: 100%;
+}
+
+.vitrine-shell{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.vitrine-panel{
+  width: 100%;
+}
+
+.vitrine-grid{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vitrine-empty-msg{
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.vitrine-card{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--mica-fill-strong);
+  border: 1px solid var(--mica-border);
+  box-shadow: 0 4px 14px var(--mica-shadow), inset 0 1px 0 rgba(255,255,255,0.6);
+  text-align: left;
+}
+
+.vitrine-card-cover{
+  font-size: 2.2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: rgba(0,0,0,0.15);
+}
+
+.vitrine-card-info{
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.vitrine-card-name{
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.vitrine-card-desc{
+  font-size: 0.72rem;
+  color: var(--text-soft);
+}
+
+.vitrine-card-price{
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.vitrine-card-btn{
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--mica-border);
+  background: var(--mica-fill);
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.76rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.vitrine-card-btn:hover{
+  background: var(--mica-fill-strong);
+}
+
+.vitrine-card-btn:disabled{
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.vitrine-card-btn.owned{
+  background: rgba(30,157,92,0.25);
+  border-color: rgba(30,157,92,0.6);
+}
+
+/* ---------- JOGO: FUGA DA POLÍCIA (turnos em grade) ---------- */
+.vitrine-game-screen{
+  width: 100%;
+}
+
+.escape-game{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.escape-back-btn{
+  align-self: flex-start;
+  border: none;
+  background: none;
+  color: var(--text-soft);
+  font-family: var(--font-body);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.escape-back-btn:hover{
+  color: var(--text-dark);
+}
+
+.escape-heading{
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-dark);
+}
+
+.escape-status{
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  max-width: 340px;
+}
+
+.escape-status.win{
+  color: #1e9d5c;
+  font-weight: 700;
+}
+
+.escape-status.lose{
+  color: #d5311f;
+  font-weight: 700;
+}
+
+.escape-grid{
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 3px;
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 1 / 1;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  background: rgba(0,0,0,0.18);
+  border: 2px solid var(--mica-border);
+}
+
+.escape-cell{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.14);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.escape-cell.escape-exit{
+  background: rgba(120,190,255,0.35);
+}
+
+.escape-cell.escape-player{
+  background: rgba(120,190,255,0.55);
+}
+
+.escape-cell.escape-guard{
+  background: rgba(213,49,31,0.4);
+}
+
+.escape-cell.escape-guard-trapped{
+  background: rgba(120,120,120,0.4);
+}
+
+.escape-controls{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.escape-controls-row{
+  display: flex;
+  gap: 4px;
+}
+
+.escape-ctrl-btn{
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.escape-ctrl-btn:disabled{
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.escape-reset-btn{
+  margin-top: 4px;
 }
 
 /* ---------- APP: TRABALHO (ESCAVAÇÃO COM A PÁ) ---------- */

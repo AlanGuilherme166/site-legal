@@ -62,6 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const body = win.querySelector('.window-body');
     if (body) body.style.display = minimized ? 'none' : '';
 
+    const handle = win.querySelector('.window-resize-handle');
+    if (handle) handle.style.display = minimized ? 'none' : '';
+
     const btn = getTaskbarBtn(win);
     if (btn) btn.classList.toggle('active', !minimized && !win.classList.contains('is-closed'));
   }
@@ -255,6 +258,94 @@ document.addEventListener('DOMContentLoaded', () => {
     win.addEventListener('mousedown', () => bringToFront(win));
   }
 
+  /* ---------- REDIMENSIONAR JANELAS (alca no canto inferior direito) ---------- */
+  function makeResizable(win){
+    const handle = document.createElement('span');
+    handle.className = 'window-resize-handle';
+    handle.setAttribute('aria-hidden', 'true');
+    win.appendChild(handle);
+
+    let resizing = false;
+    let startX = 0;
+    let startY = 0;
+    let startWidth = 0;
+    let startHeight = 0;
+
+    function getPoint(e){
+      return e.touches ? e.touches[0] : e;
+    }
+
+    function onResizeStart(e){
+      if (isMinimized(win)) return;
+
+      const point = getPoint(e);
+      const rect = win.getBoundingClientRect();
+
+      // se a janela ainda nao foi arrastada, ela esta no fluxo normal:
+      // fixa a posicao atual antes de comecar a redimensionar, igual ao arrastar
+      if (win.style.position !== 'fixed'){
+        win.style.position = 'fixed';
+        win.style.left = rect.left + 'px';
+        win.style.top = rect.top + 'px';
+        win.style.margin = '0';
+      }
+
+      // remove o max-width de apps especificos (cassino, navegador etc.) pra permitir crescer
+      win.style.maxWidth = 'none';
+
+      resizing = true;
+      startX = point.clientX;
+      startY = point.clientY;
+      startWidth = rect.width;
+      startHeight = rect.height;
+
+      win.classList.add('is-resizing');
+      bringToFront(win);
+
+      document.addEventListener('mousemove', onResizeMove);
+      document.addEventListener('touchmove', onResizeMove, { passive: false });
+      document.addEventListener('mouseup', onResizeEnd);
+      document.addEventListener('touchend', onResizeEnd);
+
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    function onResizeMove(e){
+      if (!resizing) return;
+      if (e.cancelable) e.preventDefault();
+
+      const point = getPoint(e);
+      const rect = win.getBoundingClientRect();
+
+      const minWidth = 280;
+      const minHeight = 160;
+      const maxWidth = window.innerWidth - rect.left - 12;
+      const maxHeight = window.innerHeight - rect.top - 12;
+
+      let newWidth = startWidth + (point.clientX - startX);
+      let newHeight = startHeight + (point.clientY - startY);
+
+      newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
+      newHeight = Math.max(minHeight, Math.min(newHeight, maxHeight));
+
+      win.style.width = newWidth + 'px';
+      win.style.height = newHeight + 'px';
+    }
+
+    function onResizeEnd(){
+      resizing = false;
+      win.classList.remove('is-resizing');
+      document.removeEventListener('mousemove', onResizeMove);
+      document.removeEventListener('touchmove', onResizeMove);
+      document.removeEventListener('mouseup', onResizeEnd);
+      document.removeEventListener('touchend', onResizeEnd);
+    }
+
+    handle.addEventListener('mousedown', onResizeStart);
+    handle.addEventListener('touchstart', onResizeStart, { passive: false });
+  }
+
   /* ---------- CONTROLES DE JANELA ESTILO VISTA ---------- */
   document.querySelectorAll('.window').forEach(win => {
     const closeBtn = win.querySelector('.vista-close');
@@ -277,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     makeDraggable(win);
+    makeResizable(win);
   });
 
   /* ---------- TROCA DE TEMA: CLARO <-> ESCURO ---------- */
@@ -688,6 +780,274 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /* =====================================================
+     INVENTÁRIO (compartilhado entre aicomida e vitrine,
+     persistido em localStorage, separado por categoria)
+  ===================================================== */
+  const AERO_INVENTORY_KEY = 'aero-inventario';
+
+  const INVENTORY_CATEGORIES = [
+    { id: 'comida',  label: '🍔 Comida',  empty: 'Nenhuma comida no inventário ainda. Compre no aicomida.' },
+    { id: 'defesas', label: '💉 Defesas', empty: 'Nenhum estimulante no inventário ainda. Compre no aicomida (aba Stim).' },
+    { id: 'jogos',   label: '🎮 Jogos',   empty: 'Nenhum jogo na biblioteca ainda. Compre na Vitrine.' }
+  ];
+
+  const FOOD_CATALOG = [
+    { id: 'pizza',   emoji: '🍕', name: 'Pizza Marguerita',     price: 650, heal: 15 },
+    { id: 'burger',  emoji: '🍔', name: 'Hambúrguer Artesanal', price: 550, heal: 12 },
+    { id: 'sushi',   emoji: '🍣', name: 'Combinado de Sushi',   price: 900, heal: 20 },
+    { id: 'massa',   emoji: '🍝', name: 'Macarrão à Carbonara', price: 700, heal: 16 },
+    { id: 'acai',    emoji: '🍧', name: 'Açaí na Tigela',       price: 500, heal: 10 },
+    { id: 'coxinha', emoji: '🧉', name: 'Coxinha (unidade)',    price: 500, heal: 8  },
+    { id: 'salada',  emoji: '🥗', name: 'Salada Caesar',        price: 600, heal: 14 },
+    { id: 'refri',   emoji: '🥤', name: 'Refrigerante Lata',    price: 500, heal: 5  }
+  ];
+
+  const STIM_CATALOG = [
+    { id: 'stim_leve',  emoji: '💉', name: 'Stim Leve',   price: 1200, heal: 35  },
+    { id: 'stim_turbo', emoji: '💊', name: 'Stim Turbo',  price: 2500, heal: 70  },
+    { id: 'stim_max',   emoji: '🧪', name: 'Stim Máximo', price: 4000, heal: 100 }
+  ];
+
+  const GAME_CATALOG = [
+    {
+      id: 'fuga_policia',
+      emoji: '🚓',
+      name: 'Fuga da Polícia',
+      price: 15000,
+      desc: 'Turno a turno: fuja de 2 guardas e prenda eles contra a parede pra abrir caminho até a porta.'
+    }
+  ];
+
+  function findCatalogItem(categoria, itemId){
+    const catalogo = categoria === 'comida' ? FOOD_CATALOG : (categoria === 'defesas' ? STIM_CATALOG : GAME_CATALOG);
+    return catalogo.find(i => i.id === itemId);
+  }
+
+  let inventory = { comida: {}, defesas: {}, jogos: {} };
+
+  function loadInventory(){
+    try{
+      const saved = localStorage.getItem(AERO_INVENTORY_KEY);
+      if (saved){
+        const parsed = JSON.parse(saved);
+        inventory = {
+          comida:  (parsed && parsed.comida)  || {},
+          defesas: (parsed && parsed.defesas) || {},
+          jogos:   (parsed && parsed.jogos)   || {}
+        };
+      }
+    }catch(err){
+      inventory = { comida: {}, defesas: {}, jogos: {} };
+    }
+  }
+
+  function saveInventory(){
+    try{ localStorage.setItem(AERO_INVENTORY_KEY, JSON.stringify(inventory)); }catch(err){}
+  }
+
+  function addToInventory(categoria, itemId, qtd){
+    if (!inventory[categoria]) inventory[categoria] = {};
+    inventory[categoria][itemId] = (inventory[categoria][itemId] || 0) + qtd;
+    saveInventory();
+    renderInventory();
+  }
+
+  function removeFromInventory(categoria, itemId, qtd){
+    if (!inventory[categoria] || !inventory[categoria][itemId]) return;
+    inventory[categoria][itemId] -= qtd;
+    if (inventory[categoria][itemId] <= 0) delete inventory[categoria][itemId];
+    saveInventory();
+    renderInventory();
+  }
+
+  const inventarioCategoriesEl = document.getElementById('inventarioCategories');
+
+  function renderInventory(){
+    if (!inventarioCategoriesEl) return;
+    inventarioCategoriesEl.innerHTML = '';
+
+    INVENTORY_CATEGORIES.forEach(cat => {
+      const wrap = document.createElement('div');
+      wrap.className = 'inventario-category';
+
+      const title = document.createElement('p');
+      title.className = 'inventario-category-title';
+      title.textContent = cat.label;
+      wrap.appendChild(title);
+
+      const ids = Object.keys(inventory[cat.id] || {}).filter(id => inventory[cat.id][id] > 0);
+
+      if (ids.length === 0){
+        const empty = document.createElement('p');
+        empty.className = 'inventario-category-empty';
+        empty.textContent = cat.empty;
+        wrap.appendChild(empty);
+      } else {
+        const list = document.createElement('div');
+        list.className = 'inventario-list';
+
+        ids.forEach(itemId => {
+          const item = findCatalogItem(cat.id, itemId);
+          if (!item) return;
+          const qtd = inventory[cat.id][itemId];
+
+          let actionLabel = 'Usar';
+          if (cat.id === 'comida') actionLabel = 'Comer';
+          if (cat.id === 'jogos') actionLabel = 'Jogar';
+
+          const qtyText = cat.id === 'jogos' ? 'Adquirido ✅' : `Quantidade: ${qtd} · cura ${item.heal} de energia`;
+
+          const row = document.createElement('div');
+          row.className = 'inventario-item';
+          row.innerHTML = `
+            <span class="inventario-item-emoji">${item.emoji}</span>
+            <span class="inventario-item-info">
+              <span class="inventario-item-name">${item.name}</span>
+              <span class="inventario-item-qty">${qtyText}</span>
+            </span>
+            <button class="inventario-use-btn" type="button" data-cat="${cat.id}" data-item="${itemId}">${actionLabel}</button>
+          `;
+          list.appendChild(row);
+        });
+
+        wrap.appendChild(list);
+      }
+
+      inventarioCategoriesEl.appendChild(wrap);
+    });
+
+    inventarioCategoriesEl.querySelectorAll('.inventario-use-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cat = btn.getAttribute('data-cat');
+        const itemId = btn.getAttribute('data-item');
+        if (cat === 'jogos'){
+          playGameFromInventory(itemId);
+        } else {
+          useConsumable(cat, itemId);
+        }
+      });
+    });
+  }
+
+  // useConsumable() mexe em digEnergy/renderDigEnergy/saveDigEnergy/digResultEl,
+  // que sao declarados mais abaixo (bloco do Trabalho) — funciona pois essa
+  // funcao so roda quando o usuario clica em "Comer/Usar", muito depois do
+  // carregamento inicial do script (sem problema de TDZ).
+  function useConsumable(categoria, itemId){
+    const item = findCatalogItem(categoria, itemId);
+    if (!item) return;
+    if (!inventory[categoria] || !inventory[categoria][itemId]) return;
+
+    digEnergy = Math.min(DIG_MAX_ENERGY, digEnergy + item.heal);
+    saveDigEnergy();
+    renderDigEnergy();
+    renderDigBalance();
+
+    removeFromInventory(categoria, itemId, 1);
+
+    if (digResultEl) digResultEl.textContent = `Você usou ${item.name} e recuperou ${item.heal} de energia!`;
+  }
+
+  // playGameFromInventory() mexe no app Vitrine, declarado mais abaixo —
+  // mesmo raciocinio: so roda em resposta a clique do usuario.
+  function playGameFromInventory(itemId){
+    openWindow(windowsByApp['vitrine']);
+    vitrineSwitchTab('biblioteca');
+    launchGame(itemId);
+  }
+
+  loadInventory();
+  if (inventarioCategoriesEl) renderInventory();
+
+  /* =====================================================
+     APP: AICOMIDA — LOJA DE COMIDA E STIM (saldo
+     compartilhado via casinoBalance, itens vao pro
+     Inventário em vez de serem consumidos na hora)
+  ===================================================== */
+  const aicomidaBalanceEl = document.getElementById('aicomidaBalance');
+  const aicomidaFoodListEl = document.getElementById('aicomidaFoodList');
+  const aicomidaStimListEl = document.getElementById('aicomidaStimList');
+  const aicomidaFeedbackEl = document.getElementById('aicomidaFeedback');
+
+  const aicomidaTabs = document.querySelectorAll('.aicomida-tab');
+  const aicomidaPanels = document.querySelectorAll('.aicomida-panel');
+
+  aicomidaTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      aicomidaTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const target = tab.dataset.tab;
+      aicomidaPanels.forEach(p => { p.hidden = p.dataset.panel !== target; });
+    });
+  });
+
+  function renderAicomidaBalance(){
+    if (!aicomidaBalanceEl) return;
+    aicomidaBalanceEl.textContent = `R$ ${casinoBalance}`;
+    aicomidaBalanceEl.classList.toggle('negative', casinoBalance < 0);
+  }
+
+  let aicomidaFeedbackTimeout = null;
+  function showAicomidaFeedback(text, isError){
+    if (!aicomidaFeedbackEl) return;
+    aicomidaFeedbackEl.textContent = text;
+    aicomidaFeedbackEl.classList.toggle('error', !!isError);
+    aicomidaFeedbackEl.hidden = false;
+    if (aicomidaFeedbackTimeout) clearTimeout(aicomidaFeedbackTimeout);
+    aicomidaFeedbackTimeout = setTimeout(() => { aicomidaFeedbackEl.hidden = true; }, 2200);
+  }
+
+  function comprarAicomida(categoria, itemId){
+    const item = findCatalogItem(categoria, itemId);
+    if (!item) return;
+
+    if (casinoBalance < item.price){
+      showAicomidaFeedback('Saldo insuficiente pra essa compra.', true);
+      return;
+    }
+
+    casinoBalance -= item.price;
+    saveCasinoBalance();
+    renderCasinoBalance();
+
+    addToInventory(categoria, itemId, 1);
+    showAicomidaFeedback(`${item.emoji} ${item.name} comprado! Foi pro seu Inventário.`, false);
+  }
+
+  function buildAicomidaCatalogList(containerEl, catalogo, categoria){
+    if (!containerEl) return;
+    containerEl.innerHTML = '';
+
+    catalogo.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'aicomida-item';
+      row.innerHTML = `
+        <span class="aicomida-item-emoji">${item.emoji}</span>
+        <span class="aicomida-item-info">
+          <span class="aicomida-item-name">${item.name}</span>
+          <span class="aicomida-item-price">R$ ${item.price}</span>
+          <span class="aicomida-item-heal">+${item.heal} de energia</span>
+        </span>
+        <button class="aicomida-buy-btn" type="button" data-cat="${categoria}" data-item="${item.id}">Comprar</button>
+      `;
+      containerEl.appendChild(row);
+    });
+
+    containerEl.querySelectorAll('.aicomida-buy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const categoriaBtn = btn.getAttribute('data-cat');
+        const itemId = btn.getAttribute('data-item');
+        comprarAicomida(categoriaBtn, itemId);
+      });
+    });
+  }
+
+  if (aicomidaFoodListEl || aicomidaStimListEl){
+    buildAicomidaCatalogList(aicomidaFoodListEl, FOOD_CATALOG, 'comida');
+    buildAicomidaCatalogList(aicomidaStimListEl, STIM_CATALOG, 'defesas');
+  }
+
   /* ---------- APP TRABALHO / ESCAVAÇÃO (tambem hoisted aqui em cima:
      renderDigBalance() e chamada la embaixo, dentro de updateCasinoNegativeWatch,
      que roda toda vez que o saldo do cassino muda) ---------- */
@@ -705,7 +1065,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const DIG_ENERGY_TS_KEY = 'aero-trabalho-energia-ts';
   const DIG_MAX_ENERGY = 100;
   const DIG_ENERGY_COST = 20;
-  const DIG_ENERGY_REGEN_MS = 1500; // recupera 1 de energia a cada 1.5s
+  const DIG_ENERGY_REGEN_MS = 4500; // recupera 1 de energia a cada 4.5s (bem mais devagar — use comida/stim pra acelerar)
 
   const DIG_FINDS = [
     { label: 'Pedrinha',          emoji: '🪨', weight: 40,  min: 100,  max: 250 },
@@ -861,6 +1221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     casinoBalanceEl.classList.toggle('negative', casinoBalance < 0);
     if (casinoNegativeWarning) casinoNegativeWarning.hidden = casinoBalance >= 0;
     updateCasinoNegativeWatch();
+    renderAicomidaBalance();
   }
 
   function casinoNumberColor(n){
@@ -1273,7 +1634,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ---------- NERD SABIDO: responde por palavras-chave ---------- */
   const nerdGreetingReplies = ['eae', 'salve', 'o que você quer?', 'qual foi?'];
   const nerdHelpReply = 'ajudar com o que?';
-  const nerdVirusReply = 'abre o cmd e escreve \\system -apt uninstal virus';
+  const nerdVirusReply = 'abre o cmd e escreve /system -apt virus uninstall';
   const nerdThanksReply = 'tmj 👍';
 
   const nerdHelpKeywords = ['ajuda', 'ajude', 'ajudar', 'socorro', 'sos', 'me ajuda', 'preciso de ajuda', 'help'];
@@ -1562,6 +1923,298 @@ document.addEventListener('DOMContentLoaded', () => {
   renderPlayerPlaylist();
 
   /* =====================================================
+     APP: VITRINE — LOJA + BIBLIOTECA (estilo Steam) E
+     O JOGO "FUGA DA POLÍCIA" (turnos em grade 6x6)
+  ===================================================== */
+  const vitrineShellEl = document.getElementById('vitrineShell');
+  const vitrineGameScreenEl = document.getElementById('vitrineGameScreen');
+  const vitrineLojaGridEl = document.getElementById('vitrineLojaGrid');
+  const vitrineBibliotecaGridEl = document.getElementById('vitrineBibliotecaGrid');
+  const vitrineBibliotecaEmptyEl = document.getElementById('vitrineBibliotecaEmpty');
+  const vitrineFeedbackEl = document.getElementById('vitrineFeedback');
+
+  const vitrineTabs = document.querySelectorAll('.vitrine-tab');
+  const vitrinePanels = document.querySelectorAll('.vitrine-panel');
+
+  function vitrineSwitchTab(target){
+    vitrineTabs.forEach(t => t.classList.toggle('active', t.dataset.tab === target));
+    vitrinePanels.forEach(p => { p.hidden = p.dataset.panel !== target; });
+  }
+
+  vitrineTabs.forEach(tab => {
+    tab.addEventListener('click', () => vitrineSwitchTab(tab.dataset.tab));
+  });
+
+  let vitrineFeedbackTimeout = null;
+  function showVitrineFeedback(text, isError){
+    if (!vitrineFeedbackEl) return;
+    vitrineFeedbackEl.textContent = text;
+    vitrineFeedbackEl.classList.toggle('error', !!isError);
+    vitrineFeedbackEl.hidden = false;
+    if (vitrineFeedbackTimeout) clearTimeout(vitrineFeedbackTimeout);
+    vitrineFeedbackTimeout = setTimeout(() => { vitrineFeedbackEl.hidden = true; }, 2400);
+  }
+
+  function renderVitrineLoja(){
+    if (!vitrineLojaGridEl) return;
+    vitrineLojaGridEl.innerHTML = '';
+
+    GAME_CATALOG.forEach(game => {
+      const owned = !!(inventory.jogos && inventory.jogos[game.id] > 0);
+      const card = document.createElement('div');
+      card.className = 'vitrine-card';
+      card.innerHTML = `
+        <span class="vitrine-card-cover">${game.emoji}</span>
+        <span class="vitrine-card-info">
+          <span class="vitrine-card-name">${game.name}</span>
+          <span class="vitrine-card-desc">${game.desc}</span>
+          <span class="vitrine-card-price">R$ ${game.price.toLocaleString('pt-BR')}</span>
+        </span>
+        <button class="vitrine-card-btn${owned ? ' owned' : ''}" type="button" data-game="${game.id}"${owned ? ' disabled' : ''}>${owned ? '✅ Adquirido' : 'Comprar'}</button>
+      `;
+      vitrineLojaGridEl.appendChild(card);
+    });
+
+    vitrineLojaGridEl.querySelectorAll('.vitrine-card-btn').forEach(btn => {
+      btn.addEventListener('click', () => comprarJogo(btn.getAttribute('data-game')));
+    });
+  }
+
+  function renderVitrineBiblioteca(){
+    if (!vitrineBibliotecaGridEl) return;
+    vitrineBibliotecaGridEl.innerHTML = '';
+
+    const ownedIds = Object.keys(inventory.jogos || {}).filter(id => inventory.jogos[id] > 0);
+    if (vitrineBibliotecaEmptyEl) vitrineBibliotecaEmptyEl.hidden = ownedIds.length > 0;
+
+    ownedIds.forEach(gameId => {
+      const game = GAME_CATALOG.find(g => g.id === gameId);
+      if (!game) return;
+      const card = document.createElement('div');
+      card.className = 'vitrine-card';
+      card.innerHTML = `
+        <span class="vitrine-card-cover">${game.emoji}</span>
+        <span class="vitrine-card-info">
+          <span class="vitrine-card-name">${game.name}</span>
+          <span class="vitrine-card-desc">${game.desc}</span>
+        </span>
+        <button class="vitrine-card-btn" type="button" data-game="${game.id}">▶ Jogar</button>
+      `;
+      vitrineBibliotecaGridEl.appendChild(card);
+    });
+
+    vitrineBibliotecaGridEl.querySelectorAll('.vitrine-card-btn').forEach(btn => {
+      btn.addEventListener('click', () => launchGame(btn.getAttribute('data-game')));
+    });
+  }
+
+  function comprarJogo(gameId){
+    const game = GAME_CATALOG.find(g => g.id === gameId);
+    if (!game) return;
+    if (inventory.jogos && inventory.jogos[gameId] > 0) return;
+
+    if (casinoBalance < game.price){
+      showVitrineFeedback('Saldo insuficiente pra comprar esse jogo.', true);
+      return;
+    }
+
+    casinoBalance -= game.price;
+    saveCasinoBalance();
+    renderCasinoBalance();
+
+    addToInventory('jogos', gameId, 1);
+    showVitrineFeedback(`${game.emoji} ${game.name} comprado! Já tá na sua Biblioteca.`, false);
+    renderVitrineLoja();
+    renderVitrineBiblioteca();
+  }
+
+  function launchGame(gameId){
+    if (gameId !== 'fuga_policia') return; // por enquanto so tem esse jogo
+    if (vitrineShellEl) vitrineShellEl.hidden = true;
+    if (vitrineGameScreenEl) vitrineGameScreenEl.hidden = false;
+    escapeResetGame();
+  }
+
+  function closeGame(){
+    if (vitrineGameScreenEl) vitrineGameScreenEl.hidden = true;
+    if (vitrineShellEl) vitrineShellEl.hidden = false;
+    vitrineSwitchTab('biblioteca');
+  }
+
+  if (vitrineLojaGridEl || vitrineBibliotecaGridEl){
+    renderVitrineLoja();
+    renderVitrineBiblioteca();
+  }
+
+  /* ---------- JOGO: FUGA DA POLÍCIA (grade 6x6, turnos, 2 guardas) ----------
+     Regra de "prender contra a parede": a cada turno, cada guarda tenta
+     se mover pra célula vizinha que mais aproxima dele de você. Se ele
+     nao tiver NENHUMA célula livre pra ir (bloqueado pelas bordas da
+     grade, por você ou pelo outro guarda), ele fica preso (🔒) e para
+     de perseguir — abrindo caminho até a porta 🚪. */
+  const ESCAPE_GRID_SIZE = 6;
+  const escapeGridEl = document.getElementById('escapeGrid');
+  const escapeStatusEl = document.getElementById('escapeStatus');
+  const escapeCtrlBtns = document.querySelectorAll('.escape-ctrl-btn');
+  const escapeResetBtn = document.getElementById('escapeResetBtn');
+  const escapeBackBtn = document.getElementById('escapeBackBtn');
+
+  let escapeState = null;
+
+  function escapeInBounds(r, c){
+    return r >= 0 && r < ESCAPE_GRID_SIZE && c >= 0 && c < ESCAPE_GRID_SIZE;
+  }
+
+  function escapeCellBlocked(r, c, excludeGuard){
+    return escapeState.guards.some(g => g !== excludeGuard && g.r === r && g.c === c);
+  }
+
+  function escapeResetGame(){
+    escapeState = {
+      player: { r: 5, c: 2 },
+      guards: [
+        { r: 0, c: 0, trapped: false },
+        { r: 0, c: 5, trapped: false }
+      ],
+      exit: { r: 0, c: 2 },
+      over: false,
+      won: false,
+      turns: 0
+    };
+    escapeRender();
+  }
+
+  function escapeRender(){
+    if (!escapeGridEl || !escapeState) return;
+    escapeGridEl.innerHTML = '';
+
+    for (let r = 0; r < ESCAPE_GRID_SIZE; r++){
+      for (let c = 0; c < ESCAPE_GRID_SIZE; c++){
+        const cell = document.createElement('div');
+        cell.className = 'escape-cell';
+
+        const guardHere = escapeState.guards.find(g => g.r === r && g.c === c);
+        const isPlayer = escapeState.player.r === r && escapeState.player.c === c;
+        const isExit = escapeState.exit.r === r && escapeState.exit.c === c;
+
+        if (isPlayer){
+          cell.classList.add('escape-player');
+          cell.textContent = '🏃';
+        } else if (guardHere){
+          cell.classList.add(guardHere.trapped ? 'escape-guard-trapped' : 'escape-guard');
+          cell.textContent = guardHere.trapped ? '🔒' : '👮';
+        } else if (isExit){
+          cell.classList.add('escape-exit');
+          cell.textContent = '🚪';
+        }
+
+        escapeGridEl.appendChild(cell);
+      }
+    }
+
+    if (escapeStatusEl){
+      if (escapeState.won){
+        escapeStatusEl.textContent = 'Você escapou! 🎉 A polícia ficou pra trás.';
+        escapeStatusEl.className = 'escape-status win';
+      } else if (escapeState.over){
+        escapeStatusEl.textContent = 'Você foi pego! 🚨 Aperte "Recomeçar" pra tentar de novo.';
+        escapeStatusEl.className = 'escape-status lose';
+      } else {
+        const presos = escapeState.guards.filter(g => g.trapped).length;
+        escapeStatusEl.textContent = presos > 0
+          ? `${presos} guarda(s) preso(s) na parede! Corre pra porta 🚪. (Turno ${escapeState.turns})`
+          : `Fuja dos guardas e chegue até a porta 🚪. (Turno ${escapeState.turns})`;
+        escapeStatusEl.className = 'escape-status';
+      }
+    }
+
+    escapeCtrlBtns.forEach(btn => { btn.disabled = escapeState.over; });
+  }
+
+  function escapeMove(dir){
+    if (!escapeState || escapeState.over) return;
+
+    let dr = 0, dc = 0;
+    if (dir === 'up') dr = -1;
+    else if (dir === 'down') dr = 1;
+    else if (dir === 'left') dc = -1;
+    else if (dir === 'right') dc = 1;
+
+    if (dir !== 'wait'){
+      const targetR = escapeState.player.r + dr;
+      const targetC = escapeState.player.c + dc;
+
+      if (!escapeInBounds(targetR, targetC)){
+        if (escapeStatusEl) escapeStatusEl.textContent = 'Não dá pra passar da parede ali!';
+        return;
+      }
+      if (escapeCellBlocked(targetR, targetC, null)){
+        if (escapeStatusEl) escapeStatusEl.textContent = 'Tem um guarda no caminho!';
+        return;
+      }
+      escapeState.player = { r: targetR, c: targetC };
+    }
+
+    // Chegou na porta -> venceu
+    if (escapeState.player.r === escapeState.exit.r && escapeState.player.c === escapeState.exit.c){
+      escapeState.won = true;
+      escapeState.over = true;
+      escapeRender();
+      return;
+    }
+
+    // Turno dos guardas: cada um anda 1 célula em direção a você
+    escapeState.guards.forEach(guard => {
+      if (guard.trapped) return;
+
+      const candidatos = [
+        { r: guard.r - 1, c: guard.c },
+        { r: guard.r + 1, c: guard.c },
+        { r: guard.r, c: guard.c - 1 },
+        { r: guard.r, c: guard.c + 1 }
+      ].filter(pos => escapeInBounds(pos.r, pos.c) && !escapeCellBlocked(pos.r, pos.c, guard));
+
+      if (candidatos.length === 0){
+        guard.trapped = true; // preso na parede — sem pra onde ir
+        return;
+      }
+
+      let melhores = [];
+      let melhorDist = Infinity;
+      candidatos.forEach(pos => {
+        const dist = Math.abs(pos.r - escapeState.player.r) + Math.abs(pos.c - escapeState.player.c);
+        if (dist < melhorDist){
+          melhorDist = dist;
+          melhores = [pos];
+        } else if (dist === melhorDist){
+          melhores.push(pos);
+        }
+      });
+
+      const escolhido = melhores[Math.floor(Math.random() * melhores.length)];
+      guard.r = escolhido.r;
+      guard.c = escolhido.c;
+    });
+
+    const pego = escapeState.guards.some(g => !g.trapped && g.r === escapeState.player.r && g.c === escapeState.player.c);
+    if (pego){
+      escapeState.over = true;
+      escapeState.won = false;
+    } else {
+      escapeState.turns += 1;
+    }
+
+    escapeRender();
+  }
+
+  escapeCtrlBtns.forEach(btn => {
+    btn.addEventListener('click', () => escapeMove(btn.getAttribute('data-dir')));
+  });
+
+  if (escapeResetBtn) escapeResetBtn.addEventListener('click', escapeResetGame);
+  if (escapeBackBtn) escapeBackBtn.addEventListener('click', closeGame);
+
+  /* =====================================================
      APP: PROMPT DE COMANDO (CMD) — comando secreto pra
      "hackear" e desligar o virus de popups do agiota
   ===================================================== */
@@ -1706,6 +2359,161 @@ document.addEventListener('DOMContentLoaded', () => {
       cmdInputEl.value = '';
       cmdHandleCommand(value);
     });
+  }
+
+  /* ---------- NAVEGADOR (GUGLE + YOUTUBE) ---------- */
+  const browserBackBtn = document.getElementById('browserBackBtn');
+  const browserForwardBtn = document.getElementById('browserForwardBtn');
+  const browserReloadBtn = document.getElementById('browserReloadBtn');
+  const browserHomeBtn = document.getElementById('browserHomeBtn');
+  const browserAddressForm = document.getElementById('browserAddressForm');
+  const browserAddressInput = document.getElementById('browserAddressInput');
+  const gugleSearchForm = document.getElementById('gugleSearchForm');
+  const gugleSearchInput = document.getElementById('gugleSearchInput');
+  const browserHomePage = document.getElementById('browserHomePage');
+  const browserVideoPage = document.getElementById('browserVideoPage');
+  const browserErrorPage = document.getElementById('browserErrorPage');
+  const browserVideoIframe = document.getElementById('browserVideoIframe');
+  const browserErrorMsg = document.getElementById('browserErrorMsg');
+  const browserErrorHomeBtn = document.getElementById('browserErrorHomeBtn');
+
+  if (browserAddressForm && browserVideoIframe){
+
+    // Aceita varios formatos de link do YouTube e devolve so o ID do video (11 caracteres)
+    function extractYouTubeId(raw){
+      if (!raw) return null;
+      let str = raw.trim();
+      if (!str) return null;
+
+      if (!/^https?:\/\//i.test(str) && /youtu/i.test(str)){
+        str = 'https://' + str.replace(/^\/\//, '');
+      }
+
+      try{
+        const url = new URL(str);
+        const host = url.hostname.toLowerCase().replace(/^www\.|^m\./, '');
+
+        if (host === 'youtu.be'){
+          const id = url.pathname.slice(1).split('/')[0];
+          return /^[\w-]{11}$/.test(id) ? id : null;
+        }
+
+        if (host === 'youtube.com' || host === 'youtube-nocookie.com'){
+          if (url.pathname === '/watch'){
+            const id = url.searchParams.get('v');
+            return id && /^[\w-]{11}$/.test(id) ? id : null;
+          }
+          const match = url.pathname.match(/^\/(embed|shorts|live)\/([\w-]{11})/);
+          if (match) return match[2];
+        }
+      }catch(err){
+        if (/^[\w-]{11}$/.test(str)) return str;
+      }
+
+      return null;
+    }
+
+    let browserHistory = [{ type: 'home' }];
+    let browserHistoryIndex = 0;
+
+    function updateBrowserNavButtons(){
+      if (browserBackBtn) browserBackBtn.disabled = browserHistoryIndex <= 0;
+      if (browserForwardBtn) browserForwardBtn.disabled = browserHistoryIndex >= browserHistory.length - 1;
+    }
+
+    function renderBrowserState(state){
+      browserHomePage.hidden = state.type !== 'home';
+      browserVideoPage.hidden = state.type !== 'video';
+      browserErrorPage.hidden = state.type !== 'error';
+
+      if (state.type === 'video'){
+        browserVideoIframe.src = `https://www.youtube.com/embed/${state.id}?autoplay=1&rel=0`;
+        browserAddressInput.value = `https://www.youtube.com/watch?v=${state.id}`;
+      } else if (state.type === 'error'){
+        browserVideoIframe.src = '';
+        if (browserErrorMsg) browserErrorMsg.textContent = 'Isso não parece um link do YouTube. Por enquanto o navegador só abre vídeos de lá.';
+        browserAddressInput.value = state.raw || '';
+      } else {
+        browserVideoIframe.src = '';
+        browserAddressInput.value = '';
+      }
+
+      updateBrowserNavButtons();
+    }
+
+    function navigateBrowser(state){
+      browserHistory = browserHistory.slice(0, browserHistoryIndex + 1);
+      browserHistory.push(state);
+      browserHistoryIndex++;
+      renderBrowserState(state);
+    }
+
+    function browserGoHome(){
+      if (browserHistory[browserHistoryIndex].type !== 'home'){
+        navigateBrowser({ type: 'home' });
+      }
+    }
+
+    function browserGoToUrl(raw){
+      const trimmed = (raw || '').trim();
+      if (!trimmed) return;
+
+      const id = extractYouTubeId(trimmed);
+      if (id){
+        navigateBrowser({ type: 'video', id });
+      } else {
+        navigateBrowser({ type: 'error', raw: trimmed });
+      }
+    }
+
+    browserAddressForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      browserGoToUrl(browserAddressInput.value);
+    });
+
+    if (gugleSearchForm && gugleSearchInput){
+      gugleSearchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const value = gugleSearchInput.value;
+        gugleSearchInput.value = '';
+        browserGoToUrl(value);
+      });
+    }
+
+    if (browserBackBtn){
+      browserBackBtn.addEventListener('click', () => {
+        if (browserHistoryIndex > 0){
+          browserHistoryIndex--;
+          renderBrowserState(browserHistory[browserHistoryIndex]);
+        }
+      });
+    }
+
+    if (browserForwardBtn){
+      browserForwardBtn.addEventListener('click', () => {
+        if (browserHistoryIndex < browserHistory.length - 1){
+          browserHistoryIndex++;
+          renderBrowserState(browserHistory[browserHistoryIndex]);
+        }
+      });
+    }
+
+    if (browserReloadBtn){
+      browserReloadBtn.addEventListener('click', () => {
+        const state = browserHistory[browserHistoryIndex];
+        if (state.type === 'video'){
+          browserVideoIframe.src = '';
+          requestAnimationFrame(() => {
+            browserVideoIframe.src = `https://www.youtube.com/embed/${state.id}?autoplay=1&rel=0`;
+          });
+        }
+      });
+    }
+
+    if (browserHomeBtn) browserHomeBtn.addEventListener('click', browserGoHome);
+    if (browserErrorHomeBtn) browserErrorHomeBtn.addEventListener('click', browserGoHome);
+
+    renderBrowserState(browserHistory[browserHistoryIndex]);
   }
 
 });
