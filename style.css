@@ -1,7 +1,8 @@
 /* =====================================================
    AERO VISTA/7 — Janelas estilo Windows Vista (Aero Glass)
    + Barra de tarefas estilo Windows 7
-   Tema padrao colorido, com alternancia para tema branco.
+   Tema claro (padrao, janelas azuis) com alternancia
+   para tema escuro (fundo preto, janelas roxas).
 ===================================================== */
 
 :root{
@@ -20,8 +21,11 @@
   --titlebar-grad-bottom: rgba(117,177,241,0.55);
   --titlebar-text: #1b3a63;
 
-  --taskbar-grad-top: rgba(214,232,250,0.6);
-  --taskbar-grad-bottom: rgba(110,155,205,0.5);
+  --taskbar-grad-top: rgba(148, 194, 245, 0.92);
+  --taskbar-grad-bottom: rgba(30, 100, 185, 0.92);
+  --taskbar-text: #ffffff;
+  --taskbar-text-soft: rgba(255,255,255,0.75);
+  --taskbar-border: rgba(255,255,255,0.5);
 
   --text-dark:   #1b2530;
   --text-soft:   #56636f;
@@ -35,37 +39,130 @@
   --bg-page: #ffffff;
 }
 
-/* ---------- TEMA BRANCO (alternavel via JS) ---------- */
-body.theme-white{
-  --mica-fill:       rgba(255, 255, 255, 0.85);
-  --mica-fill-strong:rgba(255, 255, 255, 0.96);
-  --mica-border:     rgba(230, 232, 235, 0.9);
-  --mica-shadow:     rgba(60, 60, 70, 0.1);
+/* ---------- TEMA ESCURO (alternavel via JS - fundo preto, janelas roxas) ---------- */
+body.theme-dark{
+  --bg-page: #08060c;
 
-  --titlebar-grad-top:    #ffffff;
-  --titlebar-grad-mid:    #f2f3f5;
-  --titlebar-grad-bottom: #e4e6e9;
-  --titlebar-text: #2b2f36;
+  --mica-fill:       rgba(70, 25, 110, 0.55);
+  --mica-fill-strong:rgba(90, 35, 135, 0.75);
+  --mica-border:     rgba(196, 140, 255, 0.4);
+  --mica-shadow:     rgba(0, 0, 0, 0.55);
 
-  --taskbar-grad-top: rgba(255,255,255,0.92);
-  --taskbar-grad-bottom: rgba(240,241,243,0.92);
+  --titlebar-grad-top:    rgba(96, 42, 145, 0.95);
+  --titlebar-grad-mid:    rgba(72, 26, 115, 0.88);
+  --titlebar-grad-bottom: rgba(44, 14, 78, 0.92);
+  --titlebar-text: #f1e6ff;
+
+  --taskbar-grad-top: rgba(96, 32, 160, 0.95);
+  --taskbar-grad-bottom: rgba(32, 8, 58, 0.97);
+  --taskbar-text: #f2ebff;
+  --taskbar-text-soft: rgba(242,235,255,0.7);
+  --taskbar-border: rgba(196,140,255,0.5);
+
+  --text-dark:   #f2ebff;
+  --text-soft:   #cbb0e8;
 }
 
-body.theme-white .bg-decor{
+html.theme-dark{
+  background: #08060c;
+}
+
+body.theme-dark .bg-decor{
   display: none;
 }
 
-body.theme-white .orb{
-  background: radial-gradient(circle at 30% 25%, #f4f6f8, #9aa2ab 70%);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.18), inset 0 -4px 8px rgba(60,60,70,0.25);
+body.theme-dark .orb,
+body.theme-dark .orb-green,
+body.theme-dark .orb-cyan{
+  background: radial-gradient(circle at 30% 25%, #ecd9ff, #7a2fc4 70%);
+  box-shadow: 0 4px 14px rgba(122,47,196,0.5), inset 0 -4px 8px rgba(40,0,65,0.4);
+}
+
+body.theme-dark .window{
+  box-shadow: 0 0 0 1px rgba(196,140,255,0.25), 0 14px 32px var(--mica-shadow);
+}
+
+body.theme-dark .window-titlebar{
+  border-bottom: 1px solid rgba(196,140,255,0.3);
+}
+
+body.theme-dark .window-titlebar::after{
+  background: linear-gradient(120deg, rgba(255,255,255,0.18), rgba(255,255,255,0) 65%);
+}
+
+body.theme-dark .vista-btn{
+  background: linear-gradient(to bottom, rgba(130,65,175,0.9), rgba(75,28,120,0.75));
+  color: #f1e6ff;
+  border-color: rgba(196,140,255,0.5);
+}
+
+body.theme-dark .vista-btn:hover{
+  background: linear-gradient(to bottom, rgba(160,90,210,0.95), rgba(95,38,150,0.9));
+  box-shadow: 0 0 8px rgba(196,140,255,0.7), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+body.theme-dark .vista-close:hover{
+  background: linear-gradient(to bottom, #ff9086, #d5311f);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(255,70,60,0.75), inset 0 1px 0 rgba(255,255,255,0.5);
+}
+
+body.theme-dark .cta-btn{
+  background: linear-gradient(135deg, rgba(160,90,210,0.55), rgba(80,30,120,0.4));
+}
+
+body.theme-dark .taskbar{
+  box-shadow: inset 0 1px 0 rgba(196,140,255,0.25), 0 -6px 20px var(--mica-shadow);
+}
+
+body.theme-dark .taskbar-divider{
+  background: rgba(196,140,255,0.4);
+}
+
+body.theme-dark .taskbar-btn:hover{
+  background: linear-gradient(to bottom, rgba(160,90,210,0.4), rgba(95,38,150,0.2));
+  border-color: rgba(196,140,255,0.5);
+}
+
+body.theme-dark .taskbar-btn.active{
+  background: linear-gradient(to bottom, rgba(160,90,210,0.5), rgba(95,38,150,0.35));
+  border-color: rgba(196,140,255,0.8);
+  box-shadow: 0 0 10px rgba(180,110,230,0.6), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+body.theme-dark .theme-toggle-btn{
+  background: linear-gradient(to bottom, rgba(96,42,145,0.9), rgba(50,16,85,0.85));
+  border-color: rgba(196,140,255,0.6);
+}
+
+body.theme-dark .theme-toggle-btn:hover{
+  box-shadow: 0 0 10px rgba(196,140,255,0.7), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+body.theme-dark .start-menu-highlight{
+  background: linear-gradient(to bottom, rgba(196,140,255,0.35), transparent);
+}
+
+body.theme-dark .show-desktop-btn{
+  background: rgba(196,140,255,0.15);
+  border-left: 1px solid rgba(196,140,255,0.4);
+}
+
+body.theme-dark .show-desktop-btn:hover{
+  background: rgba(196,140,255,0.35);
 }
 
 *{ box-sizing: border-box; }
+
+html{
+  color-scheme: light only;
+}
 
 html, body{
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  background-color: var(--bg-page);
   background: var(--bg-page);
   font-family: var(--font-body);
   color: var(--text-dark);
@@ -205,11 +302,19 @@ html, body{
 
 .window{
   position: relative;
+  z-index: 1;
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin-bottom: 24px;
   box-shadow: 0 0 0 1px rgba(255,255,255,0.6), 0 14px 32px var(--mica-shadow);
   transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+/* enquanto a janela esta sendo arrastada: sem transicao, sombra mais forte */
+.window.is-dragging{
+  transition: none;
+  user-select: none;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.7), 0 26px 56px var(--mica-shadow);
 }
 
 /* barra de titulo em vidro azulado, com brilho diagonal (assinatura Aero/Vista) */
@@ -226,6 +331,12 @@ html, body{
   font-weight: 700;
   font-size: 0.85rem;
   color: var(--titlebar-text);
+  cursor: grab;
+  touch-action: none;
+}
+
+.window.is-dragging .window-titlebar{
+  cursor: grabbing;
 }
 
 .window-titlebar::after{
@@ -287,20 +398,6 @@ html, body{
   box-shadow: 0 0 10px rgba(255,70,60,0.75), inset 0 1px 0 rgba(255,255,255,0.5);
 }
 
-body.theme-white .window-titlebar::after{
-  background: linear-gradient(120deg, rgba(255,255,255,0.5), rgba(255,255,255,0) 65%);
-}
-
-body.theme-white .vista-btn{
-  background: linear-gradient(to bottom, #ffffff, #e9ebee);
-  color: #3a3f46;
-}
-
-body.theme-white .vista-btn:hover{
-  background: linear-gradient(to bottom, #ffffff, #dfe2e6);
-  box-shadow: 0 0 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.9);
-}
-
 .window-body{
   position: relative;
   padding: 24px 26px 28px;
@@ -331,26 +428,170 @@ body.theme-white .vista-btn:hover{
   border-radius: var(--radius-md);
 }
 
-.window-grid{
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+/* ---------- APP: CASSINO (ROLETA) ---------- */
+.cassino-window{
+  max-width: 460px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.window-grid .window h2{
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0 0 8px;
+.casino-app{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
 }
 
-.window-grid .window p{
+.casino-balance{
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.casino-balance-label{
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: var(--text-soft);
-  font-size: 0.88rem;
-  line-height: 1.5;
-  margin: 0;
+  font-weight: 600;
 }
 
-/* estado "fechado" (placeholder, sem remover do DOM) */
+.casino-balance-value{
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.casino-wheel-wrap{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  background: var(--mica-fill-strong);
+  border: 1px solid var(--mica-border);
+  box-shadow: 0 4px 14px var(--mica-shadow), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.casino-wheel{
+  font-size: 2.6rem;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.casino-wheel.spinning{
+  animation: casino-spin 0.7s linear infinite;
+}
+
+@keyframes casino-spin{
+  from{ transform: rotate(0deg); }
+  to{ transform: rotate(360deg); }
+}
+
+.casino-result{
+  min-height: 2.4em;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  margin: 0;
+  max-width: 320px;
+}
+
+.casino-bet-types{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.casino-bet-btn{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: #ffffff;
+  transition: transform 0.12s ease, border-color 0.15s ease;
+}
+
+.casino-bet-btn:active{
+  transform: scale(0.97);
+}
+
+.casino-bet-btn.selected{
+  border-color: var(--text-dark);
+}
+
+.casino-bet-red{ background: linear-gradient(to bottom, #ef5350, #b71c1c); }
+.casino-bet-black{ background: linear-gradient(to bottom, #4a4a4a, #101010); }
+.casino-bet-green{ background: linear-gradient(to bottom, #43b581, #1b6b45); }
+
+.casino-bet-payout{
+  font-size: 0.68rem;
+  opacity: 0.85;
+  font-weight: 700;
+}
+
+.casino-controls{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.casino-amount-label{
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+.casino-amount-input{
+  width: 90px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--mica-border);
+  background: var(--mica-fill-strong);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.casino-amount-input:focus{
+  outline: 2px solid rgba(120,190,255,0.6);
+}
+
+.casino-spin-btn{
+  padding: 10px 20px;
+}
+
+.casino-spin-btn:disabled{
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.casino-reset-link{
+  border: none;
+  background: transparent;
+  color: var(--text-soft);
+  font-size: 0.72rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.casino-reset-link:hover{
+  color: var(--text-dark);
+}
+
+/* estado "fechado" (janela fica invisivel, mas continua no DOM pra poder reabrir) */
 .window.is-closed{
   opacity: 0;
   transform: scale(0.96);
@@ -367,19 +608,19 @@ body.theme-white .vista-btn:hover{
   height: 70px;
 }
 
-/* ---------- MENU INICIAR ---------- */
+/* ---------- MENU INICIAR (estilo Windows 11: busca + grade de apps) ---------- */
 .start-menu{
   position: fixed;
   left: 10px;
   bottom: 56px;
   transform: translateY(12px) scale(0.97);
-  width: 230px;
+  width: 280px;
   z-index: 45;
   border-radius: var(--radius-lg);
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
   opacity: 0;
   pointer-events: none;
   box-shadow: 0 -8px 30px var(--mica-shadow);
@@ -401,18 +642,87 @@ body.theme-white .vista-btn:hover{
   pointer-events: none;
 }
 
+.start-search{
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--mica-fill-strong);
+  border: 1px solid var(--mica-border);
+}
+
+.start-search-icon{
+  font-size: 0.85rem;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.start-search-input{
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-dark);
+}
+
+.start-search-input::placeholder{
+  color: var(--text-soft);
+}
+
 .start-menu-title{
   font-weight: 700;
   font-size: 0.8rem;
   color: var(--text-soft);
-  margin: 0 0 6px;
+  margin: 0;
   position: relative;
 }
 
-.start-item{
-  text-align: left;
-  width: 100%;
-  border-radius: var(--radius-sm);
+.start-apps-grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.start-app-tile{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.start-app-tile:hover{
+  background: var(--mica-fill-strong);
+  border-color: var(--mica-border);
+}
+
+.start-app-icon{
+  font-size: 1.4rem;
+}
+
+.start-app-name{
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.start-no-results{
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  text-align: center;
+  margin: 4px 0 0;
 }
 
 /* ---------- BARRA DE TAREFAS ESTILO WINDOWS 7 ---------- */
@@ -429,14 +739,15 @@ body.theme-white .vista-btn:hover{
   border-right: none;
   border-bottom: none;
   background: linear-gradient(to bottom, var(--taskbar-grad-top), var(--taskbar-grad-bottom));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 -6px 20px var(--mica-shadow);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 -8px 24px var(--mica-shadow);
+  border-top: 1px solid var(--taskbar-border);
 }
 
 .taskbar-divider{
   width: 1px;
   height: 28px;
   margin: 0 8px;
-  background: rgba(255,255,255,0.55);
+  background: var(--taskbar-border);
   flex-shrink: 0;
 }
 
@@ -480,7 +791,7 @@ body.theme-white .vista-btn:hover{
   height: 100%;
   padding: 0 12px;
   margin-left: auto;
-  border-left: 1px solid rgba(255,255,255,0.45);
+  border-left: 1px solid var(--taskbar-border);
 }
 
 .tray-icon{
@@ -514,12 +825,12 @@ body.theme-white .vista-btn:hover{
   align-items: flex-end;
   line-height: 1.2;
   font-size: 0.76rem;
-  color: var(--text-dark);
+  color: var(--taskbar-text);
   min-width: 62px;
 }
 
 #clockTime{ font-weight: 700; font-size: 0.82rem; }
-#clockDate{ color: var(--text-soft); font-size: 0.66rem; }
+#clockDate{ color: var(--taskbar-text-soft); font-size: 0.66rem; }
 
 /* faixa "mostrar area de trabalho", bem fina na ponta direita, como no Win7 */
 .show-desktop-btn{
@@ -527,7 +838,7 @@ body.theme-white .vista-btn:hover{
   height: 100%;
   flex-shrink: 0;
   border: none;
-  border-left: 1px solid rgba(255,255,255,0.5);
+  border-left: 1px solid var(--taskbar-border);
   background: rgba(255,255,255,0.12);
   cursor: pointer;
   transition: background 0.15s ease;
@@ -539,10 +850,6 @@ body.theme-white .vista-btn:hover{
 
 /* ---------- RESPONSIVO ---------- */
 @media (max-width: 720px){
-  .window-grid{
-    grid-template-columns: 1fr;
-  }
-
   .taskbar-tray{
     gap: 8px;
     padding: 0 8px;

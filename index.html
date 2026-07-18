@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#ffffff">
 <title>Aero | Início</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -10,7 +12,7 @@
 </head>
 <body>
 
-  <!-- Fundo decorativo: bolhas de luz ao estilo Frutiger Aero (somem no tema branco) -->
+  <!-- Fundo decorativo: bolhas de luz ao estilo Frutiger Aero (somem no tema escuro) -->
   <div class="bg-decor" id="bgDecor" aria-hidden="true">
     <div class="blob blob-blue"></div>
     <div class="blob blob-green"></div>
@@ -32,74 +34,88 @@
       </div>
       <div class="window-body">
         <h1>Bem-vindo ao seu novo site</h1>
-        <p>Esta é a base do layout misturando o <strong>Frutiger Aero do Windows Vista</strong> (janelas de vidro, brilho glossy) com a <strong>barra de tarefas do Windows 7</strong>. Use o botão de tema no canto direito da barra de tarefas para alternar entre o visual Aero colorido e o tema branco.</p>
+        <p>Esta é a base do layout misturando o <strong>Frutiger Aero do Windows Vista</strong> (janelas de vidro, brilho glossy) com a <strong>barra de tarefas do Windows 7</strong>. Arraste esta janela pela barra de título pra movê-la, feche pelo "×" e reabra clicando no ícone dela na barra de tarefas — igual num sistema operacional de verdade.</p>
         <button class="glass-btn cta-btn">Explorar ➜</button>
       </div>
     </section>
 
-    <section class="window-grid">
-      <div class="window" id="janela1">
-        <div class="window-titlebar">
-          <span class="titlebar-title"><span class="titlebar-icon">🗔</span> painel_01</span>
-          <span class="titlebar-controls">
-            <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
-            <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
-            <button class="vista-btn vista-close" aria-label="Fechar">×</button>
-          </span>
-        </div>
-        <div class="window-body">
-          <div class="orb orb-small"><span class="orb-shine"></span></div>
-          <h2>Placeholder</h2>
-          <p>Conteúdo de exemplo para este cartão de vidro. Substitua pelo texto real da futura página.</p>
-        </div>
+    <section class="window cassino-window" id="cassino">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">🎰</span> cassino.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
       </div>
+      <div class="window-body">
+        <div class="casino-app">
 
-      <div class="window" id="janela2">
-        <div class="window-titlebar">
-          <span class="titlebar-title"><span class="titlebar-icon">🗔</span> painel_02</span>
-          <span class="titlebar-controls">
-            <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
-            <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
-            <button class="vista-btn vista-close" aria-label="Fechar">×</button>
-          </span>
-        </div>
-        <div class="window-body">
-          <div class="orb orb-small orb-green"><span class="orb-shine"></span></div>
-          <h2>Placeholder</h2>
-          <p>Outro bloco de vidro translúcido, pronto para receber imagens, textos ou formulários.</p>
-        </div>
-      </div>
+          <div class="casino-balance">
+            <span class="casino-balance-label">Saldo</span>
+            <span class="casino-balance-value" id="casinoBalance">R$ 0</span>
+          </div>
 
-      <div class="window" id="janela3">
-        <div class="window-titlebar">
-          <span class="titlebar-title"><span class="titlebar-icon">🗔</span> painel_03</span>
-          <span class="titlebar-controls">
-            <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
-            <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
-            <button class="vista-btn vista-close" aria-label="Fechar">×</button>
-          </span>
-        </div>
-        <div class="window-body">
-          <div class="orb orb-small orb-cyan"><span class="orb-shine"></span></div>
-          <h2>Placeholder</h2>
-          <p>Use esta grade de janelas para destacar serviços, cards ou funcionalidades.</p>
+          <div class="casino-wheel-wrap">
+            <div class="casino-wheel" id="casinoWheel">🎡</div>
+          </div>
+
+          <p class="casino-result" id="casinoResult">Escolha uma cor, defina o valor e gire a roleta.</p>
+
+          <div class="casino-bet-types" id="casinoBetTypes">
+            <button class="casino-bet-btn casino-bet-red" data-bet="vermelho" type="button">
+              Vermelho <span class="casino-bet-payout">2x</span>
+            </button>
+            <button class="casino-bet-btn casino-bet-black" data-bet="preto" type="button">
+              Preto <span class="casino-bet-payout">2x</span>
+            </button>
+            <button class="casino-bet-btn casino-bet-green" data-bet="verde" type="button">
+              Verde (0) <span class="casino-bet-payout">14x</span>
+            </button>
+          </div>
+
+          <div class="casino-controls">
+            <label class="casino-amount-label" for="casinoAmount">Aposta (R$)</label>
+            <input type="number" id="casinoAmount" class="casino-amount-input" min="10" step="10" value="50">
+            <button class="glass-btn casino-spin-btn" id="casinoSpinBtn" type="button">Girar 🎲</button>
+          </div>
+
+          <button class="casino-reset-link" id="casinoResetBtn" type="button">Reiniciar saldo</button>
         </div>
       </div>
     </section>
-
-    <!-- Espaço reservado para não ficar por baixo da barra de tarefas -->
     <div class="taskbar-spacer" aria-hidden="true"></div>
   </main>
 
   <!-- Menu iniciar (pop-up de vidro acima do botão iniciar) -->
   <div class="start-menu" id="startMenu">
     <div class="start-menu-highlight"></div>
-    <p class="start-menu-title">Menu</p>
-    <button class="glass-btn start-item">🏠 Início</button>
-    <button class="glass-btn start-item">💠 Sobre</button>
-    <button class="glass-btn start-item">⚙️ Serviços</button>
-    <button class="glass-btn start-item">🖼️ Portfólio</button>
-    <button class="glass-btn start-item">✉️ Contato</button>
+
+    <div class="start-search">
+      <span class="start-search-icon">🔍</span>
+      <input
+        type="text"
+        id="startSearchInput"
+        class="start-search-input"
+        placeholder="Pesquisar apps"
+        autocomplete="off"
+      >
+    </div>
+
+    <p class="start-menu-title">Apps</p>
+
+    <div class="start-apps-grid" id="startAppsGrid">
+      <button class="start-app-tile" data-app="inicio" type="button">
+        <span class="start-app-icon">🏠</span>
+        <span class="start-app-name">Início</span>
+      </button>
+      <button class="start-app-tile" data-app="cassino" type="button">
+        <span class="start-app-icon">🎰</span>
+        <span class="start-app-name">Cassino</span>
+      </button>
+    </div>
+
+    <p class="start-no-results" id="startNoResults" hidden>Nenhum app encontrado.</p>
   </div>
 
   <!-- Barra de tarefas estilo Windows 7 -->
@@ -113,9 +129,7 @@
 
     <div class="taskbar-apps">
       <button class="taskbar-btn active" data-app="inicio" aria-label="Início">🏠</button>
-      <button class="taskbar-btn active" data-app="janela1" aria-label="Painel 01">🗔</button>
-      <button class="taskbar-btn active" data-app="janela2" aria-label="Painel 02">🗔</button>
-      <button class="taskbar-btn active" data-app="janela3" aria-label="Painel 03">🗔</button>
+      <button class="taskbar-btn active" data-app="cassino" aria-label="Cassino">🎰</button>
     </div>
 
     <div class="taskbar-tray">
@@ -123,8 +137,8 @@
       <span class="tray-icon">📶</span>
       <span class="tray-icon">🔋</span>
 
-      <button class="theme-toggle-btn" id="themeToggle" aria-label="Alternar para tema branco" title="Alternar tema">
-        <span id="themeToggleIcon">🎨</span>
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Alternar para tema escuro" title="Alternar tema">
+        <span id="themeToggleIcon">☀️</span>
       </button>
 
       <div class="taskbar-clock" id="taskbarClock">
