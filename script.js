@@ -1180,8 +1180,8 @@ document.addEventListener('DOMContentLoaded', () => {
      + upload de arquivos locais (fica so na sessao atual)
   ===================================================== */
   const PLAYER_DEFAULT_TRACKS = [
-    { name: 'Música 1', src: 'áudios/musica 1.mp3' },
-    { name: 'Música 2', src: 'áudios/musica 2.mp3' }
+    { name: 'Música 1', src: 'audios/musica-1.mp3' },
+    { name: 'Música 2', src: 'audios/musica-2.mp3' }
   ];
 
   const playerAudio = document.getElementById('playerAudio');
@@ -1251,7 +1251,7 @@ document.addEventListener('DOMContentLoaded', () => {
     playerAudio.src = track.src;
     playerAudio.play().catch(() => {
       if (playerStatusEl){
-        playerStatusEl.textContent = `Não consegui tocar "${track.name}". Verifique se o arquivo está na pasta "áudios".`;
+        playerStatusEl.textContent = `Não consegui tocar "${track.name}". Verifique se o arquivo está na pasta "audios".`;
       }
     });
 
@@ -1321,7 +1321,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (playerCurrentIndex === -1) return;
       const track = playerTracks[playerCurrentIndex];
       if (playerStatusEl && track){
-        playerStatusEl.textContent = `Não encontrei o arquivo de "${track.name}". Confira se ele está na pasta "áudios" (ou tente enviar o arquivo pelo botão "Enviar áudio").`;
+        playerStatusEl.textContent = `Não encontrei o arquivo de "${track.name}". Confira se ele está na pasta "audios" (ou tente enviar o arquivo pelo botão "Enviar áudio").`;
       }
       if (playerDisc) playerDisc.classList.remove('spinning');
       if (playerPlayBtn) playerPlayBtn.textContent = '▶';
