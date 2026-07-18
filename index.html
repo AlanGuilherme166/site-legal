@@ -20,6 +20,55 @@
     <div class="shine-sweep"></div>
   </div>
 
+  <!-- Camada de wallpaper (fica atras do bg-decor / conteudo, trocavel em Personalizar) -->
+  <div class="wallpaper-layer" id="wallpaperLayer" aria-hidden="true"></div>
+
+  <!-- Icones da area de trabalho (clique = selecionar, duplo clique = abrir) -->
+  <div class="desktop-icons" id="desktopIcons">
+    <button class="desktop-icon" data-app="inicio" data-icon="🏠" data-name="Início" type="button">
+      <span class="desktop-icon-glyph">🏠</span>
+      <span class="desktop-icon-label">Início</span>
+    </button>
+    <button class="desktop-icon" data-app="cassino" data-icon="🎰" data-name="Cassino" type="button">
+      <span class="desktop-icon-glyph">🎰</span>
+      <span class="desktop-icon-label">Cassino</span>
+    </button>
+    <button class="desktop-icon" data-app="msn" data-icon="💬" data-name="MSN" type="button">
+      <span class="desktop-icon-glyph">💬</span>
+      <span class="desktop-icon-label">MSN</span>
+    </button>
+    <button class="desktop-icon" data-app="notepad" data-icon="📝" data-name="Bloco de Notas" type="button">
+      <span class="desktop-icon-glyph">📝</span>
+      <span class="desktop-icon-label">Bloco de Notas</span>
+    </button>
+    <button class="desktop-icon" data-app="meucomputador" data-icon="🖥️" data-name="Meu Computador" type="button">
+      <span class="desktop-icon-glyph">🖥️</span>
+      <span class="desktop-icon-label">Meu Computador</span>
+    </button>
+    <button class="desktop-icon" data-app="lixeira" data-icon="🗑️" data-name="Lixeira" type="button">
+      <span class="desktop-icon-glyph">🗑️</span>
+      <span class="desktop-icon-label">Lixeira</span>
+    </button>
+    <button class="desktop-icon" data-app="personalizar" data-icon="🎨" data-name="Personalizar" type="button">
+      <span class="desktop-icon-glyph">🎨</span>
+      <span class="desktop-icon-label">Personalizar</span>
+    </button>
+  </div>
+
+  <!-- Menu de contexto (botao direito na area de trabalho) -->
+  <div class="context-menu" id="desktopContextMenu" role="menu">
+    <button class="context-item" data-action="exibir-icones" role="menuitem">
+      <span class="context-check" id="exibirIconesCheck">✔</span> Exibir ícones da área de trabalho
+    </button>
+    <button class="context-item" data-action="organizar" role="menuitem">🧲 Organizar ícones automaticamente</button>
+    <div class="context-sep"></div>
+    <button class="context-item" data-action="atualizar" role="menuitem">🔄 Atualizar</button>
+    <div class="context-sep"></div>
+    <button class="context-item" data-action="novo-bloco" role="menuitem">📝 Novo &gt; Bloco de Notas</button>
+    <div class="context-sep"></div>
+    <button class="context-item" data-action="personalizar" role="menuitem">🎨 Personalizar...</button>
+  </div>
+
   <!-- Conteúdo principal -->
   <main class="content">
 
@@ -34,7 +83,7 @@
       </div>
       <div class="window-body">
         <h1>Bem-vindo ao seu novo site</h1>
-        <p>Esta é a base do layout misturando o <strong>Frutiger Aero do Windows Vista</strong> (janelas de vidro, brilho glossy) com a <strong>barra de tarefas do Windows 7</strong>. Arraste esta janela pela barra de título pra movê-la, feche pelo "×" e reabra clicando no ícone dela na barra de tarefas — igual num sistema operacional de verdade.</p>
+        <p>Esta é a base do layout misturando o <strong>Frutiger Aero do Windows Vista</strong> (janelas de vidro, brilho glossy) com a <strong>barra de tarefas do Windows 7</strong>. Arraste esta janela pela barra de título pra movê-la, feche pelo "×" e reabra clicando no ícone dela na barra de tarefas — igual num sistema operacional de verdade. Clique com o botão direito na área de trabalho pra ver mais opções.</p>
         <button class="glass-btn cta-btn">Explorar ➜</button>
       </div>
     </section>
@@ -51,39 +100,214 @@
       <div class="window-body">
         <div class="casino-app">
 
+          <div class="casino-tabs" role="tablist">
+            <button class="casino-tab active" data-tab="roleta" type="button">🎡 Roleta</button>
+            <button class="casino-tab" data-tab="slots" type="button">🍒 Slots</button>
+          </div>
+
           <div class="casino-balance">
             <span class="casino-balance-label">Saldo</span>
             <span class="casino-balance-value" id="casinoBalance">R$ 0</span>
           </div>
 
-          <div class="casino-wheel-wrap">
-            <div class="casino-wheel" id="casinoWheel">🎡</div>
+          <!-- ===== ABA ROLETA ===== -->
+          <div class="casino-panel" data-panel="roleta">
+            <div class="casino-wheel-wrap">
+              <div class="casino-wheel" id="casinoWheel">🎡</div>
+            </div>
+
+            <p class="casino-result" id="casinoResult">Escolha uma cor, defina o valor e gire a roleta.</p>
+
+            <div class="casino-bet-types" id="casinoBetTypes">
+              <button class="casino-bet-btn casino-bet-red" data-bet="vermelho" type="button">
+                Vermelho <span class="casino-bet-payout">2x</span>
+              </button>
+              <button class="casino-bet-btn casino-bet-black" data-bet="preto" type="button">
+                Preto <span class="casino-bet-payout">2x</span>
+              </button>
+              <button class="casino-bet-btn casino-bet-green" data-bet="verde" type="button">
+                Verde (0) <span class="casino-bet-payout">14x</span>
+              </button>
+            </div>
+
+            <div class="casino-controls">
+              <label class="casino-amount-label" for="casinoAmount">Aposta (R$)</label>
+              <input type="number" id="casinoAmount" class="casino-amount-input" min="10" step="10" value="50">
+              <button class="glass-btn casino-spin-btn" id="casinoSpinBtn" type="button">Girar 🎲</button>
+            </div>
           </div>
 
-          <p class="casino-result" id="casinoResult">Escolha uma cor, defina o valor e gire a roleta.</p>
+          <!-- ===== ABA SLOTS ===== -->
+          <div class="casino-panel" data-panel="slots" hidden>
+            <div class="slots-reels" id="slotsReels">
+              <span class="slot-reel" id="slotReel0">🍒</span>
+              <span class="slot-reel" id="slotReel1">🍋</span>
+              <span class="slot-reel" id="slotReel2">🔔</span>
+            </div>
 
-          <div class="casino-bet-types" id="casinoBetTypes">
-            <button class="casino-bet-btn casino-bet-red" data-bet="vermelho" type="button">
-              Vermelho <span class="casino-bet-payout">2x</span>
-            </button>
-            <button class="casino-bet-btn casino-bet-black" data-bet="preto" type="button">
-              Preto <span class="casino-bet-payout">2x</span>
-            </button>
-            <button class="casino-bet-btn casino-bet-green" data-bet="verde" type="button">
-              Verde (0) <span class="casino-bet-payout">14x</span>
-            </button>
+            <p class="casino-result" id="slotsResult">Aperte "Girar" e tente a sorte nos três rolos.</p>
+
+            <div class="casino-controls">
+              <label class="casino-amount-label" for="slotsAmount">Aposta (R$)</label>
+              <input type="number" id="slotsAmount" class="casino-amount-input" min="10" step="10" value="50">
+              <button class="glass-btn casino-spin-btn" id="slotsSpinBtn" type="button">Girar 🎲</button>
+            </div>
+
+            <p class="slots-paytable">🍒🍒🍒 5x · 🍋🍋🍋 8x · 🔔🔔🔔 15x · 💎💎💎 30x · 7️⃣7️⃣7️⃣ 50x</p>
           </div>
 
-          <div class="casino-controls">
-            <label class="casino-amount-label" for="casinoAmount">Aposta (R$)</label>
-            <input type="number" id="casinoAmount" class="casino-amount-input" min="10" step="10" value="50">
-            <button class="glass-btn casino-spin-btn" id="casinoSpinBtn" type="button">Girar 🎲</button>
-          </div>
+          <p class="casino-negative-warning" id="casinoNegativeWarning" hidden>⚠️ Seu saldo está negativo! Quite a dívida antes que o agiota apareça no seu MSN.</p>
 
           <button class="casino-reset-link" id="casinoResetBtn" type="button">Reiniciar saldo</button>
         </div>
       </div>
     </section>
+
+    <!-- ===== JANELA: MSN ===== -->
+    <section class="window msn-window" id="msn">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">💬</span> aero messenger.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body msn-body">
+        <div class="msn-contacts" id="msnContacts">
+          <div class="msn-contact active" data-contact="carachato">
+            <span class="msn-contact-avatar">🙂</span>
+            <span class="msn-contact-info">
+              <span class="msn-contact-name">Cara Chato</span>
+              <span class="msn-contact-status">● Online</span>
+            </span>
+            <span class="msn-contact-badge" id="badgeCarachato" hidden>0</span>
+          </div>
+          <div class="msn-contact" data-contact="agiota" id="msnAgiotaContact" hidden>
+            <span class="msn-contact-avatar">🕴️</span>
+            <span class="msn-contact-info">
+              <span class="msn-contact-name">Agiota</span>
+              <span class="msn-contact-status">● Online</span>
+            </span>
+            <span class="msn-contact-badge" id="badgeAgiota" hidden>0</span>
+          </div>
+        </div>
+        <div class="msn-chat">
+          <div class="msn-chat-header" id="msnChatHeader">Cara Chato</div>
+          <div class="msn-chat-messages" id="msnMessages"></div>
+          <form class="msn-compose" id="msnComposeForm">
+            <input type="text" id="msnComposeInput" class="msn-compose-input" placeholder="Digite uma mensagem..." autocomplete="off">
+            <button type="submit" class="glass-btn msn-send-btn">Enviar</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== JANELA: BLOCO DE NOTAS ===== -->
+    <section class="window notepad-window" id="notepad">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">📝</span> bloco-de-notas.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body">
+        <textarea class="notepad-textarea" id="notepadTextarea" placeholder="Digite aqui... (salvo automaticamente)"></textarea>
+      </div>
+    </section>
+
+    <!-- ===== JANELA: MEU COMPUTADOR ===== -->
+    <section class="window meucomputador-window" id="meucomputador">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">🖥️</span> meu-computador.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body">
+        <div class="drives-grid">
+          <div class="drive-item">
+            <span class="drive-icon">💽</span>
+            <span class="drive-name">Disco Local (C:)</span>
+            <span class="drive-bar"><span class="drive-bar-fill" style="width:63%"></span></span>
+            <span class="drive-info">63% usado</span>
+          </div>
+          <div class="drive-item">
+            <span class="drive-icon">💾</span>
+            <span class="drive-name">Dados (D:)</span>
+            <span class="drive-bar"><span class="drive-bar-fill" style="width:22%"></span></span>
+            <span class="drive-info">22% usado</span>
+          </div>
+          <div class="drive-item">
+            <span class="drive-icon">💿</span>
+            <span class="drive-name">Unidade de CD (E:)</span>
+            <span class="drive-bar"><span class="drive-bar-fill" style="width:0%"></span></span>
+            <span class="drive-info">Sem mídia</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== JANELA: LIXEIRA ===== -->
+    <section class="window lixeira-window" id="lixeira">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">🗑️</span> lixeira.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body">
+        <p class="lixeira-empty-msg" id="lixeiraMsg">A Lixeira está vazia.</p>
+        <button class="glass-btn" id="lixeiraEsvaziarBtn" type="button">Esvaziar Lixeira</button>
+      </div>
+    </section>
+
+    <!-- ===== JANELA: PERSONALIZAR ===== -->
+    <section class="window personalizar-window" id="personalizar">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">🎨</span> personalizar.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body">
+        <h2 class="personalizar-heading">Papel de parede</h2>
+        <div class="wallpaper-grid" id="wallpaperGrid">
+          <button class="wallpaper-swatch" data-wallpaper="aero" style="background:linear-gradient(135deg,#7fc7ff,#1e6fd9)" title="Aero Azul"></button>
+          <button class="wallpaper-swatch" data-wallpaper="sunset" style="background:linear-gradient(135deg,#ffb37f,#d9426f)" title="Pôr do Sol"></button>
+          <button class="wallpaper-swatch" data-wallpaper="forest" style="background:linear-gradient(135deg,#8fdc7a,#1e7d47)" title="Floresta"></button>
+          <button class="wallpaper-swatch" data-wallpaper="purple" style="background:linear-gradient(135deg,#c98fff,#5a1e9d)" title="Roxo Vista"></button>
+          <button class="wallpaper-swatch" data-wallpaper="dark" style="background:linear-gradient(135deg,#2a2a2a,#08060c)" title="Escuro"></button>
+          <button class="wallpaper-swatch" data-wallpaper="cyan" style="background:linear-gradient(135deg,#6fe3d6,#0e7a6e)" title="Ciano"></button>
+        </div>
+
+        <h2 class="personalizar-heading">Cor das janelas</h2>
+        <p class="personalizar-sub">Escolha a cor de destaque usada nas barras de título, botões e barra de tarefas.</p>
+        <div class="accent-grid" id="accentGrid">
+          <button class="accent-swatch" data-accent="#1e6fd9" style="background:#1e6fd9" title="Azul (padrão)"></button>
+          <button class="accent-swatch" data-accent="#7a2fc4" style="background:#7a2fc4" title="Roxo"></button>
+          <button class="accent-swatch" data-accent="#1e9d5c" style="background:#1e9d5c" title="Verde"></button>
+          <button class="accent-swatch" data-accent="#d9426f" style="background:#d9426f" title="Rosa"></button>
+          <button class="accent-swatch" data-accent="#d98c1e" style="background:#d98c1e" title="Laranja"></button>
+          <button class="accent-swatch" data-accent="#2199a8" style="background:#2199a8" title="Ciano"></button>
+        </div>
+
+        <label class="accent-custom-label" for="accentCustomInput">Cor personalizada:
+          <input type="color" id="accentCustomInput" value="#1e6fd9">
+        </label>
+
+        <button class="glass-btn" id="personalizarResetBtn" type="button">Restaurar padrão</button>
+      </div>
+    </section>
+
     <div class="taskbar-spacer" aria-hidden="true"></div>
   </main>
 
@@ -113,6 +337,26 @@
         <span class="start-app-icon">🎰</span>
         <span class="start-app-name">Cassino</span>
       </button>
+      <button class="start-app-tile" data-app="msn" type="button">
+        <span class="start-app-icon">💬</span>
+        <span class="start-app-name">MSN</span>
+      </button>
+      <button class="start-app-tile" data-app="notepad" type="button">
+        <span class="start-app-icon">📝</span>
+        <span class="start-app-name">Bloco de Notas</span>
+      </button>
+      <button class="start-app-tile" data-app="meucomputador" type="button">
+        <span class="start-app-icon">🖥️</span>
+        <span class="start-app-name">Meu Computador</span>
+      </button>
+      <button class="start-app-tile" data-app="lixeira" type="button">
+        <span class="start-app-icon">🗑️</span>
+        <span class="start-app-name">Lixeira</span>
+      </button>
+      <button class="start-app-tile" data-app="personalizar" type="button">
+        <span class="start-app-icon">🎨</span>
+        <span class="start-app-name">Personalizar</span>
+      </button>
     </div>
 
     <p class="start-no-results" id="startNoResults" hidden>Nenhum app encontrado.</p>
@@ -127,9 +371,10 @@
 
     <div class="taskbar-divider"></div>
 
-    <div class="taskbar-apps">
-      <button class="taskbar-btn active" data-app="inicio" aria-label="Início">🏠</button>
-      <button class="taskbar-btn active" data-app="cassino" aria-label="Cassino">🎰</button>
+    <div class="taskbar-apps" id="taskbarApps">
+      <button class="taskbar-btn active pinned" data-app="inicio" aria-label="Início">🏠</button>
+      <button class="taskbar-btn active pinned" data-app="cassino" aria-label="Cassino">🎰</button>
+      <button class="taskbar-btn pinned" data-app="msn" aria-label="MSN">💬</button>
     </div>
 
     <div class="taskbar-tray">
