@@ -688,6 +688,159 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /* ---------- APP TRABALHO / ESCAVAÇÃO (tambem hoisted aqui em cima:
+     renderDigBalance() e chamada la embaixo, dentro de updateCasinoNegativeWatch,
+     que roda toda vez que o saldo do cassino muda) ---------- */
+  const digBalanceEl = document.getElementById('digBalance');
+  const digEnergyFillEl = document.getElementById('digEnergyFill');
+  const digEnergyValueEl = document.getElementById('digEnergyValue');
+  const digHoleEl = document.getElementById('digHole');
+  const digShovelEl = document.getElementById('digShovel');
+  const digFindPopupEl = document.getElementById('digFindPopup');
+  const digResultEl = document.getElementById('digResult');
+  const digBtn = document.getElementById('digBtn');
+  const digHistoryEl = document.getElementById('digHistory');
+
+  const DIG_ENERGY_KEY = 'aero-trabalho-energia';
+  const DIG_ENERGY_TS_KEY = 'aero-trabalho-energia-ts';
+  const DIG_MAX_ENERGY = 100;
+  const DIG_ENERGY_COST = 20;
+  const DIG_ENERGY_REGEN_MS = 1500; // recupera 1 de energia a cada 1.5s
+
+  const DIG_FINDS = [
+    { label: 'Pedrinha',          emoji: '🪨', weight: 40,  min: 100,  max: 250 },
+    { label: 'Pedra boa',         emoji: '🪨', weight: 25,  min: 250,  max: 500 },
+    { label: 'Prata',             emoji: '🥈', weight: 15,  min: 500,  max: 1000 },
+    { label: 'Ouro',              emoji: '🥇', weight: 10,  min: 1000, max: 2500 },
+    { label: 'Ouro grande',       emoji: '💰', weight: 6,   min: 2500, max: 4500 },
+    { label: 'Diamante',          emoji: '💎', weight: 3,   min: 4500, max: 7000 },
+    { label: 'Diamante gigante',  emoji: '💎', weight: 0.8, min: 7000, max: 9500 },
+    { label: 'Diamante lendário', emoji: '👑', weight: 0.2, min: 9500, max: 10000 }
+  ];
+  const DIG_TOTAL_WEIGHT = DIG_FINDS.reduce((soma, f) => soma + f.weight, 0);
+
+  let digEnergy = DIG_MAX_ENERGY;
+  let digging = false;
+
+  function loadDigEnergy(){
+    try{
+      const savedEnergy = localStorage.getItem(DIG_ENERGY_KEY);
+      const savedTs = localStorage.getItem(DIG_ENERGY_TS_KEY);
+      let energy = savedEnergy !== null ? parseFloat(savedEnergy) : DIG_MAX_ENERGY;
+      if (Number.isNaN(energy)) energy = DIG_MAX_ENERGY;
+
+      if (savedTs){
+        const elapsedMs = Date.now() - parseInt(savedTs, 10);
+        if (elapsedMs > 0){
+          energy = Math.min(DIG_MAX_ENERGY, energy + (elapsedMs / DIG_ENERGY_REGEN_MS));
+        }
+      }
+      digEnergy = energy;
+    }catch(err){
+      digEnergy = DIG_MAX_ENERGY;
+    }
+  }
+
+  function saveDigEnergy(){
+    try{
+      localStorage.setItem(DIG_ENERGY_KEY, String(digEnergy));
+      localStorage.setItem(DIG_ENERGY_TS_KEY, String(Date.now()));
+    }catch(err){}
+  }
+
+  function renderDigBalance(){
+    if (!digBalanceEl) return;
+    digBalanceEl.textContent = `R$ ${casinoBalance}`;
+    digBalanceEl.classList.toggle('negative', casinoBalance < 0);
+  }
+
+  function renderDigEnergy(){
+    const pct = Math.max(0, Math.min(100, (digEnergy / DIG_MAX_ENERGY) * 100));
+    if (digEnergyFillEl) digEnergyFillEl.style.width = `${pct}%`;
+    if (digEnergyValueEl) digEnergyValueEl.textContent = Math.floor(digEnergy);
+    if (digBtn) digBtn.disabled = digging || digEnergy < DIG_ENERGY_COST;
+  }
+
+  function pickDigFind(){
+    let r = Math.random() * DIG_TOTAL_WEIGHT;
+    for (const find of DIG_FINDS){
+      if (r < find.weight) return find;
+      r -= find.weight;
+    }
+    return DIG_FINDS[0];
+  }
+
+  function addDigHistory(find, valor){
+    if (!digHistoryEl) return;
+    const item = document.createElement('span');
+    item.className = 'dig-history-item';
+    item.textContent = `${find.emoji} R$ ${valor}`;
+    digHistoryEl.insertBefore(item, digHistoryEl.firstChild);
+    while (digHistoryEl.children.length > 6){
+      digHistoryEl.removeChild(digHistoryEl.lastChild);
+    }
+  }
+
+  if (digBtn){
+    loadDigEnergy();
+    renderDigEnergy();
+    renderDigBalance();
+
+    digBtn.addEventListener('click', () => {
+      if (digging || digEnergy < DIG_ENERGY_COST) return;
+
+      digging = true;
+      digEnergy -= DIG_ENERGY_COST;
+      renderDigEnergy();
+      saveDigEnergy();
+
+      if (digResultEl) digResultEl.textContent = 'Cavando...';
+      if (digHoleEl) digHoleEl.classList.add('digging');
+      if (digShovelEl) digShovelEl.classList.add('digging');
+      if (digFindPopupEl) digFindPopupEl.hidden = true;
+
+      setTimeout(() => {
+        const find = pickDigFind();
+        const valor = Math.floor(Math.random() * (find.max - find.min + 1)) + find.min;
+
+        casinoBalance += valor;
+        renderCasinoBalance();
+        saveCasinoBalance();
+        renderDigBalance();
+
+        if (digResultEl){
+          digResultEl.textContent = `${find.emoji} Você achou: ${find.label}! Ganhou R$ ${valor}.`;
+        }
+        addDigHistory(find, valor);
+
+        if (digHoleEl){
+          digHoleEl.classList.remove('digging');
+          digHoleEl.classList.add('found');
+          setTimeout(() => digHoleEl.classList.remove('found'), 400);
+        }
+        if (digShovelEl) digShovelEl.classList.remove('digging');
+
+        if (digFindPopupEl){
+          digFindPopupEl.textContent = find.emoji;
+          digFindPopupEl.hidden = false;
+          void digFindPopupEl.offsetWidth; // reinicia a animação
+          setTimeout(() => { digFindPopupEl.hidden = true; }, 950);
+        }
+
+        digging = false;
+        renderDigEnergy();
+      }, 1100);
+    });
+
+    setInterval(() => {
+      if (digEnergy < DIG_MAX_ENERGY){
+        digEnergy = Math.min(DIG_MAX_ENERGY, digEnergy + (1000 / DIG_ENERGY_REGEN_MS));
+        renderDigEnergy();
+        saveDigEnergy();
+      }
+    }, 1000);
+  }
+
   function loadCasinoBalance(){
     try{
       const saved = localStorage.getItem(CASINO_STORAGE_KEY);
@@ -854,10 +1007,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const msnAgiotaContact = document.getElementById('msnAgiotaContact');
   const badgeCarachato = document.getElementById('badgeCarachato');
   const badgeAgiota = document.getElementById('badgeAgiota');
+  const badgeNerdsabido = document.getElementById('badgeNerdsabido');
 
-  const contactNames = { carachato: 'Cara Chato', agiota: 'Agiota' };
-  const chatHistory = { carachato: [], agiota: [] };
-  const unread = { carachato: 0, agiota: 0 };
+  const contactNames = { carachato: 'Cara Chato', agiota: 'Agiota', nerdsabido: 'Nerd Sabido' };
+  const chatHistory = { carachato: [], agiota: [], nerdsabido: [] };
+  const unread = { carachato: 0, agiota: 0, nerdsabido: 0 };
   let activeContact = 'carachato';
 
   function formatTime(){
@@ -884,7 +1038,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateBadge(contact){
-    const badgeEl = contact === 'carachato' ? badgeCarachato : badgeAgiota;
+    const badgeEl = contact === 'carachato' ? badgeCarachato : (contact === 'agiota' ? badgeAgiota : badgeNerdsabido);
     if (!badgeEl) return;
     if (unread[contact] > 0 && activeContact !== contact){
       badgeEl.hidden = false;
@@ -1107,6 +1261,7 @@ document.addEventListener('DOMContentLoaded', () => {
       negativeSince = null;
     }
     renderNubonk();
+    renderDigBalance();
   }
 
   setInterval(() => {
@@ -1114,6 +1269,38 @@ document.addEventListener('DOMContentLoaded', () => {
       showAgiota();
     }
   }, 1000);
+
+  /* ---------- NERD SABIDO: responde por palavras-chave ---------- */
+  const nerdGreetingReplies = ['eae', 'salve', 'o que você quer?', 'qual foi?'];
+  const nerdHelpReply = 'ajudar com o que?';
+  const nerdVirusReply = 'abre o cmd e escreve \\system -apt uninstal virus';
+  const nerdThanksReply = 'tmj 👍';
+
+  const nerdHelpKeywords = ['ajuda', 'ajude', 'ajudar', 'socorro', 'sos', 'me ajuda', 'preciso de ajuda', 'help'];
+  const nerdThanksKeywords = ['obrigado', 'obrigada', 'obg', 'valeu', 'vlw', 'brigado', 'brigada', 'thanks', 'thank you'];
+
+  function normalizeNerdText(text){
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
+  function nerdSabidoReply(text){
+    const normalized = normalizeNerdText(text);
+
+    if (normalized.includes('virus')){
+      return nerdVirusReply;
+    }
+    if (nerdHelpKeywords.some(k => normalized.includes(k))){
+      return nerdHelpReply;
+    }
+    if (nerdThanksKeywords.some(k => normalized.includes(k))){
+      return nerdThanksReply;
+    }
+    return pickRandom(nerdGreetingReplies);
+  }
 
   function sendMsnMessage(){
     if (!msnComposeInput) return;
@@ -1135,6 +1322,10 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         addMessage('carachato', 'them', pickRandom(carachatoMessages));
       }, 600 + Math.random() * 900);
+    } else if (activeContact === 'nerdsabido'){
+      setTimeout(() => {
+        addMessage('nerdsabido', 'them', nerdSabidoReply(text));
+      }, 500 + Math.random() * 700);
     }
   }
 
@@ -1369,5 +1560,152 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   renderPlayerPlaylist();
+
+  /* =====================================================
+     APP: PROMPT DE COMANDO (CMD) — comando secreto pra
+     "hackear" e desligar o virus de popups do agiota
+  ===================================================== */
+  const cmdOutputEl = document.getElementById('cmdOutput');
+  const cmdInputForm = document.getElementById('cmdInputForm');
+  const cmdInputEl = document.getElementById('cmdInput');
+
+  const VIRUS_UNINSTALL_COMMAND = '/system -apt virus uninstall';
+
+  const agiotaHackedLines = [
+    'Achou mesmo que ia se livrar de mim assim, seu moleque de terminal de meia tigela?!',
+    'Pode ter apagado meu vírus, mas a dívida continua e agora eu tô com MUITO mais raiva!',
+    'Muito engraçadinho hackeando meu sistema, hein? Isso não paga o que você me deve, sabia?!',
+    'Se acha esperto mexendo no CMD, mas eu volto, pode escrever!',
+    'Tá de sacanagem comigo? Achei que era chique, mas é só um moleque de prompt de comando!'
+  ];
+
+  function cmdAddLine(text, className){
+    if (!cmdOutputEl) return;
+    const p = document.createElement('p');
+    p.className = 'cmd-line' + (className ? ' ' + className : '');
+    p.textContent = text;
+    cmdOutputEl.appendChild(p);
+    cmdOutputEl.scrollTop = cmdOutputEl.scrollHeight;
+  }
+
+  /* ---------- JANELA POPUP DE "HACKEAMENTO" ---------- */
+  const HACK_CODE_CHARS = '0123456789ABCDEFabcdef';
+
+  function hackRandomHex(len){
+    let out = '';
+    for (let i = 0; i < len; i++){
+      out += HACK_CODE_CHARS[Math.floor(Math.random() * HACK_CODE_CHARS.length)];
+    }
+    return out;
+  }
+
+  function hackRandomCodeLine(){
+    const templates = [
+      () => `0x${hackRandomHex(8)}  MOV  AX, 0x${hackRandomHex(4)}`,
+      () => `[proc] kill -9 virus_${hackRandomHex(4)}.exe`,
+      () => `scanning sector 0x${hackRandomHex(6)}... OK`,
+      () => `patch memory 0x${hackRandomHex(8)} -> 0x${hackRandomHex(8)}`,
+      () => `checksum ${hackRandomHex(16)}`,
+      () => `removing payload ${hackRandomHex(4)}-${hackRandomHex(4)}-${hackRandomHex(4)}`
+    ];
+    return pickRandom(templates)();
+  }
+
+  function spawnHackPopup(onFinished){
+    const popup = document.createElement('div');
+    popup.className = 'hack-popup';
+    popup.innerHTML = `
+      <div class="hack-popup-titlebar">
+        <span>sistema.exe</span>
+        <button class="hack-popup-close" type="button" aria-label="Fechar">×</button>
+      </div>
+      <div class="hack-popup-body" id="hackPopupBody"></div>
+    `;
+    document.body.appendChild(popup);
+
+    const closeBtn = popup.querySelector('.hack-popup-close');
+    const bodyEl = popup.querySelector('#hackPopupBody');
+
+    closeBtn.addEventListener('click', () => popup.remove());
+
+    let linesAdded = 0;
+    const totalLines = 26;
+
+    const codeInterval = setInterval(() => {
+      const line = document.createElement('p');
+      line.className = 'hack-popup-code-line';
+      line.textContent = hackRandomCodeLine();
+      bodyEl.appendChild(line);
+      bodyEl.scrollTop = bodyEl.scrollHeight;
+
+      linesAdded++;
+      if (linesAdded >= totalLines){
+        clearInterval(codeInterval);
+
+        setTimeout(() => {
+          bodyEl.innerHTML = `
+            <div class="hack-popup-result">
+              <span class="hack-popup-result-title">Vírus removido!</span>
+              <span class="hack-popup-result-sub">Pode fechar esta janela.</span>
+            </div>
+          `;
+          if (onFinished) onFinished();
+        }, 400);
+      }
+    }, 90);
+  }
+
+  function cmdExecuteVirusUninstall(){
+    cmdAddLine('Iniciando verificação do sistema...', 'cmd-line-info');
+    cmdAddLine('Escaneando processos maliciosos...', 'cmd-line-info');
+
+    spawnHackPopup(() => {
+      cmdAddLine('VÍRUS REMOVIDO', 'cmd-line-success');
+
+      if (virusActive || agiotaDebt > 0){
+        stopVirus();
+        cmdAddLine('Janelas de "ME PAGUE" encerradas com sucesso.', 'cmd-line-success');
+
+        if (agiotaDebt > 0){
+          if (msnAgiotaContact) msnAgiotaContact.hidden = false;
+          addMessage('agiota', 'them', pickRandom(agiotaHackedLines));
+          cmdAddLine('O Agiota parece ter percebido... confira o MSN.', 'cmd-line-error');
+        }
+      } else {
+        cmdAddLine('Nenhum vírus ativo foi encontrado no momento.', 'cmd-line-info');
+      }
+    });
+  }
+
+  function cmdHandleCommand(raw){
+    const trimmed = raw.trim();
+    cmdAddLine(`C:\\Users\\você>${trimmed}`, 'cmd-line-echo');
+
+    if (!trimmed) return;
+
+    const normalized = trimmed.toLowerCase().replace(/\s+/g, ' ');
+
+    if (normalized === VIRUS_UNINSTALL_COMMAND){
+      cmdExecuteVirusUninstall();
+      return;
+    }
+
+    cmdAddLine(`'${trimmed}' não é reconhecido como um comando interno ou externo, um programa operável ou um arquivo em lotes.`, 'cmd-line-error');
+  }
+
+  if (cmdOutputEl){
+    cmdAddLine('Microsoft Windows [Versão 6.1.7601]', 'cmd-line-info');
+    cmdAddLine('Copyright (c) Microsoft Corporation. Todos os direitos reservados.', 'cmd-line-info');
+    cmdAddLine('');
+  }
+
+  if (cmdInputForm && cmdInputEl){
+    cmdInputForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const value = cmdInputEl.value;
+      cmdInputEl.value = '';
+      cmdHandleCommand(value);
+    });
+  }
 
 });

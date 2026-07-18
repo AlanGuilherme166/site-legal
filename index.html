@@ -41,6 +41,10 @@
       <span class="desktop-icon-glyph">🏦</span>
       <span class="desktop-icon-label">Nubonk</span>
     </button>
+    <button class="desktop-icon" data-app="trabalho" data-icon="🪏" data-name="Trabalho" type="button">
+      <span class="desktop-icon-glyph">🪏</span>
+      <span class="desktop-icon-label">Trabalho</span>
+    </button>
     <button class="desktop-icon" data-app="player" data-icon="🎵" data-name="Player" type="button">
       <span class="desktop-icon-glyph">🎵</span>
       <span class="desktop-icon-label">Player</span>
@@ -48,6 +52,10 @@
     <button class="desktop-icon" data-app="notepad" data-icon="📝" data-name="Bloco de Notas" type="button">
       <span class="desktop-icon-glyph">📝</span>
       <span class="desktop-icon-label">Bloco de Notas</span>
+    </button>
+    <button class="desktop-icon" data-app="cmd" data-icon="⬛" data-name="Prompt de Comando" type="button">
+      <span class="desktop-icon-glyph">⬛</span>
+      <span class="desktop-icon-label">Prompt de Comando</span>
     </button>
     <button class="desktop-icon" data-app="meucomputador" data-icon="🖥️" data-name="Meu Computador" type="button">
       <span class="desktop-icon-glyph">🖥️</span>
@@ -199,6 +207,14 @@
             </span>
             <span class="msn-contact-badge" id="badgeAgiota" hidden>0</span>
           </div>
+          <div class="msn-contact" data-contact="nerdsabido">
+            <span class="msn-contact-avatar">🤓</span>
+            <span class="msn-contact-info">
+              <span class="msn-contact-name">Nerd Sabido</span>
+              <span class="msn-contact-status">● Online</span>
+            </span>
+            <span class="msn-contact-badge" id="badgeNerdsabido" hidden>0</span>
+          </div>
         </div>
         <div class="msn-chat">
           <div class="msn-chat-header" id="msnChatHeader">Cara Chato</div>
@@ -238,6 +254,50 @@
 
           <button class="glass-btn nubonk-pay-btn" id="nubonkPayBtn" type="button" disabled>Pagar agiota</button>
           <p class="nubonk-msg" id="nubonkMsg">Quando o saldo em conta cobrir a dívida, você pode quitar por aqui.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== JANELA: TRABALHO (ESCAVAÇÃO COM A PÁ) ===== -->
+    <section class="window trabalho-window" id="trabalho">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">🪏</span> escavação.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body">
+        <div class="dig-app">
+          <h2 class="dig-heading">Escavação</h2>
+          <p class="dig-sub">Pegue a pá e cave buracos pra trabalhar. Às vezes acha pedra, às vezes acha ouro... e raríssimas vezes, um diamante gigante. O dinheiro cai direto na sua conta do Nubonk.</p>
+
+          <div class="dig-balance">
+            <span class="dig-balance-label">Saldo</span>
+            <span class="dig-balance-value" id="digBalance">R$ 0</span>
+          </div>
+
+          <div class="dig-energy-row">
+            <span class="dig-energy-label">⚡ Energia</span>
+            <span class="dig-energy-bar"><span class="dig-energy-fill" id="digEnergyFill" style="width:100%"></span></span>
+            <span class="dig-energy-value" id="digEnergyValue">100</span>
+          </div>
+
+          <div class="dig-hole-wrap">
+            <span class="dig-hole" id="digHole">🕳️</span>
+            <span class="dig-shovel" id="digShovel">🪏</span>
+            <span class="dig-find-popup" id="digFindPopup" hidden></span>
+          </div>
+
+          <p class="dig-result" id="digResult">Clique em "Cavar" pra começar a trabalhar.</p>
+
+          <button class="glass-btn dig-btn" id="digBtn" type="button">Cavar ⛏️</button>
+
+          <div class="dig-history-wrap">
+            <p class="dig-history-title">Últimos achados</p>
+            <div class="dig-history" id="digHistory"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -304,6 +364,27 @@
       </div>
       <div class="window-body">
         <textarea class="notepad-textarea" id="notepadTextarea" placeholder="Digite aqui... (salvo automaticamente)"></textarea>
+      </div>
+    </section>
+
+    <!-- ===== JANELA: PROMPT DE COMANDO (CMD) ===== -->
+    <section class="window cmd-window" id="cmd">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">⬛</span> cmd.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body cmd-body">
+        <div class="cmd-terminal">
+          <div class="cmd-output" id="cmdOutput"></div>
+          <form class="cmd-input-row" id="cmdInputForm">
+            <span class="cmd-prompt">C:\Users\você&gt;</span>
+            <input type="text" id="cmdInput" class="cmd-input" autocomplete="off" spellcheck="false" autocapitalize="off">
+          </form>
+        </div>
       </div>
     </section>
 
@@ -434,6 +515,10 @@
         <span class="start-app-icon">🏦</span>
         <span class="start-app-name">Nubonk</span>
       </button>
+      <button class="start-app-tile" data-app="trabalho" type="button">
+        <span class="start-app-icon">🪏</span>
+        <span class="start-app-name">Trabalho</span>
+      </button>
       <button class="start-app-tile" data-app="player" type="button">
         <span class="start-app-icon">🎵</span>
         <span class="start-app-name">Player</span>
@@ -441,6 +526,10 @@
       <button class="start-app-tile" data-app="notepad" type="button">
         <span class="start-app-icon">📝</span>
         <span class="start-app-name">Bloco de Notas</span>
+      </button>
+      <button class="start-app-tile" data-app="cmd" type="button">
+        <span class="start-app-icon">⬛</span>
+        <span class="start-app-name">Prompt de Comando</span>
       </button>
       <button class="start-app-tile" data-app="meucomputador" type="button">
         <span class="start-app-icon">🖥️</span>
