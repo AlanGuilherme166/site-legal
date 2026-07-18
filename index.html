@@ -367,7 +367,7 @@
           </div>
 
           <div class="aicomida-panel" data-panel="stim" hidden>
-            <p class="aicomida-stim-sub">Estimulantes recuperam bem mais energia que a comida, mas custam mais caro.</p>
+            <p class="aicomida-stim-sub">Estimulantes recuperam bem mais energia que a comida, mas custam mais caro. Tem também poções especiais que multiplicam seu saldo na hora.</p>
             <div class="aicomida-list" id="aicomidaStimList"></div>
           </div>
         </div>
@@ -424,33 +424,65 @@
             </div>
           </div>
 
-          <!-- Tela do jogo (some a loja/biblioteca enquanto se joga) -->
-          <div class="vitrine-game-screen" id="vitrineGameScreen" hidden>
-            <div class="escape-game">
-              <button class="escape-back-btn" id="escapeBackBtn" type="button">◀ Voltar à Biblioteca</button>
-              <h2 class="escape-heading">🚓 Fuga da Polícia</h2>
-              <p class="escape-status" id="escapeStatus">Fuja dos dois guardas e chegue até a porta 🚪. Prenda os guardas contra as paredes pra abrir caminho.</p>
+        </div>
+      </div>
+    </section>
 
-              <div class="escape-grid" id="escapeGrid"></div>
+    <!-- ===== JANELA: JOGO "FUGA DA POLÍCIA" (aberto a partir da Vitrine) ===== -->
+    <section class="window jogo-fuga-policia-window" id="jogo-fuga-policia">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">🚓</span> fuga-da-policia.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body">
+        <div class="escape-game">
+          <h2 class="escape-heading">🚓 Fuga da Polícia</h2>
+          <p class="escape-status" id="escapeStatus">Fuja dos dois guardas e chegue até a porta 🚪. Prenda os guardas contra as paredes pra abrir caminho.</p>
 
-              <div class="escape-controls">
-                <div class="escape-controls-row">
-                  <button class="glass-btn escape-ctrl-btn" data-dir="up" type="button">⬆️</button>
-                </div>
-                <div class="escape-controls-row">
-                  <button class="glass-btn escape-ctrl-btn" data-dir="left" type="button">⬅️</button>
-                  <button class="glass-btn escape-ctrl-btn" data-dir="wait" type="button">✋</button>
-                  <button class="glass-btn escape-ctrl-btn" data-dir="right" type="button">➡️</button>
-                </div>
-                <div class="escape-controls-row">
-                  <button class="glass-btn escape-ctrl-btn" data-dir="down" type="button">⬇️</button>
-                </div>
-              </div>
+          <div class="escape-grid" id="escapeGrid"></div>
 
-              <button class="glass-btn escape-reset-btn" id="escapeResetBtn" type="button">🔄 Recomeçar</button>
+          <div class="escape-controls">
+            <div class="escape-controls-row">
+              <button class="glass-btn escape-ctrl-btn" data-dir="up" type="button">⬆️</button>
+            </div>
+            <div class="escape-controls-row">
+              <button class="glass-btn escape-ctrl-btn" data-dir="left" type="button">⬅️</button>
+              <button class="glass-btn escape-ctrl-btn" data-dir="wait" type="button">✋</button>
+              <button class="glass-btn escape-ctrl-btn" data-dir="right" type="button">➡️</button>
+            </div>
+            <div class="escape-controls-row">
+              <button class="glass-btn escape-ctrl-btn" data-dir="down" type="button">⬇️</button>
             </div>
           </div>
 
+          <button class="glass-btn escape-reset-btn" id="escapeResetBtn" type="button">🔄 Recomeçar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== JANELA: JOGO "XADREZ" (aberto a partir da Vitrine) ===== -->
+    <section class="window jogo-xadrez-window" id="jogo-xadrez">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">♟️</span> xadrez.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body">
+        <div class="chess-app">
+          <h2 class="chess-heading">♟️ Xadrez</h2>
+          <p class="chess-sub">Dois jogadores revezando no mesmo computador. Clique numa peça pra ver os movimentos possíveis e clique no destino pra mover. Sem cheque/xeque-mate oficial: vence quem capturar o rei adversário primeiro.</p>
+          <p class="chess-status" id="chessStatus">Vez das brancas ♙</p>
+
+          <div class="chess-board" id="chessBoard"></div>
+
+          <button class="glass-btn chess-reset-btn" id="chessResetBtn" type="button">🔄 Recomeçar</button>
         </div>
       </div>
     </section>

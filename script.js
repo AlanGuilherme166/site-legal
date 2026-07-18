@@ -804,9 +804,11 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   const STIM_CATALOG = [
-    { id: 'stim_leve',  emoji: '💉', name: 'Stim Leve',   price: 1200, heal: 35  },
-    { id: 'stim_turbo', emoji: '💊', name: 'Stim Turbo',  price: 2500, heal: 70  },
-    { id: 'stim_max',   emoji: '🧪', name: 'Stim Máximo', price: 4000, heal: 100 }
+    { id: 'stim_leve',    emoji: '💉', name: 'Stim Leve',      price: 1200, heal: 35  },
+    { id: 'stim_turbo',   emoji: '💊', name: 'Stim Turbo',     price: 2500, heal: 70  },
+    { id: 'stim_max',     emoji: '🧪', name: 'Stim Máximo',    price: 4000, heal: 100 },
+    { id: 'pocao_sorte',    emoji: '🍀', name: 'Poção da Sorte',    price: 6000,  moneyMult: 1.5 },
+    { id: 'pocao_milagre',  emoji: '🌟', name: 'Poção Milagrosa',   price: 15000, moneyMult: 2.0 }
   ];
 
   const GAME_CATALOG = [
@@ -816,6 +818,13 @@ document.addEventListener('DOMContentLoaded', () => {
       name: 'Fuga da Polícia',
       price: 15000,
       desc: 'Turno a turno: fuja de 2 guardas e prenda eles contra a parede pra abrir caminho até a porta.'
+    },
+    {
+      id: 'xadrez',
+      emoji: '♟️',
+      name: 'Xadrez',
+      price: 20000,
+      desc: 'Duelo de tabuleiro pra dois jogadores no mesmo PC. Capture o rei do adversário pra vencer.'
     }
   ];
 
@@ -896,7 +905,9 @@ document.addEventListener('DOMContentLoaded', () => {
           if (cat.id === 'comida') actionLabel = 'Comer';
           if (cat.id === 'jogos') actionLabel = 'Jogar';
 
-          const qtyText = cat.id === 'jogos' ? 'Adquirido ✅' : `Quantidade: ${qtd} · cura ${item.heal} de energia`;
+          const qtyText = cat.id === 'jogos'
+            ? 'Adquirido ✅'
+            : (item.moneyMult ? `Quantidade: ${qtd} · multiplica o saldo por ${item.moneyMult}x` : `Quantidade: ${qtd} · cura ${item.heal} de energia`);
 
           const row = document.createElement('div');
           row.className = 'inventario-item';
@@ -938,6 +949,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const item = findCatalogItem(categoria, itemId);
     if (!item) return;
     if (!inventory[categoria] || !inventory[categoria][itemId]) return;
+
+    if (item.moneyMult){
+      const saldoAntes = casinoBalance;
+      casinoBalance = Math.round(casinoBalance * item.moneyMult);
+      saveCasinoBalance();
+      renderCasinoBalance();
+      renderDigBalance();
+
+      removeFromInventory(categoria, itemId, 1);
+
+      if (digResultEl) digResultEl.textContent = `Você usou ${item.name} e seu saldo saltou de R$ ${saldoAntes} pra R$ ${casinoBalance}!`;
+      return;
+    }
 
     digEnergy = Math.min(DIG_MAX_ENERGY, digEnergy + item.heal);
     saveDigEnergy();
@@ -1022,12 +1046,15 @@ document.addEventListener('DOMContentLoaded', () => {
     catalogo.forEach(item => {
       const row = document.createElement('div');
       row.className = 'aicomida-item';
+      const efeitoHtml = item.moneyMult
+        ? `<span class="aicomida-item-heal">multiplica o saldo por ${item.moneyMult}x</span>`
+        : `<span class="aicomida-item-heal">+${item.heal} de energia</span>`;
       row.innerHTML = `
         <span class="aicomida-item-emoji">${item.emoji}</span>
         <span class="aicomida-item-info">
           <span class="aicomida-item-name">${item.name}</span>
           <span class="aicomida-item-price">R$ ${item.price}</span>
-          <span class="aicomida-item-heal">+${item.heal} de energia</span>
+          ${efeitoHtml}
         </span>
         <button class="aicomida-buy-btn" type="button" data-cat="${categoria}" data-item="${item.id}">Comprar</button>
       `;
@@ -1926,8 +1953,6 @@ document.addEventListener('DOMContentLoaded', () => {
      APP: VITRINE — LOJA + BIBLIOTECA (estilo Steam) E
      O JOGO "FUGA DA POLÍCIA" (turnos em grade 6x6)
   ===================================================== */
-  const vitrineShellEl = document.getElementById('vitrineShell');
-  const vitrineGameScreenEl = document.getElementById('vitrineGameScreen');
   const vitrineLojaGridEl = document.getElementById('vitrineLojaGrid');
   const vitrineBibliotecaGridEl = document.getElementById('vitrineBibliotecaGrid');
   const vitrineBibliotecaEmptyEl = document.getElementById('vitrineBibliotecaEmpty');
@@ -2029,16 +2054,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function launchGame(gameId){
-    if (gameId !== 'fuga_policia') return; // por enquanto so tem esse jogo
-    if (vitrineShellEl) vitrineShellEl.hidden = true;
-    if (vitrineGameScreenEl) vitrineGameScreenEl.hidden = false;
-    escapeResetGame();
-  }
+    const windowId = gameId === 'fuga_policia' ? 'jogo-fuga-policia' : (gameId === 'xadrez' ? 'jogo-xadrez' : null);
+    if (!windowId) return;
+    const win = windowsByApp[windowId];
+    if (!win) return;
 
-  function closeGame(){
-    if (vitrineGameScreenEl) vitrineGameScreenEl.hidden = true;
-    if (vitrineShellEl) vitrineShellEl.hidden = false;
-    vitrineSwitchTab('biblioteca');
+    if (gameId === 'fuga_policia') escapeResetGame();
+    if (gameId === 'xadrez') chessResetGame();
+
+    openWindow(win);
   }
 
   if (vitrineLojaGridEl || vitrineBibliotecaGridEl){
@@ -2057,7 +2081,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const escapeStatusEl = document.getElementById('escapeStatus');
   const escapeCtrlBtns = document.querySelectorAll('.escape-ctrl-btn');
   const escapeResetBtn = document.getElementById('escapeResetBtn');
-  const escapeBackBtn = document.getElementById('escapeBackBtn');
 
   let escapeState = null;
 
@@ -2212,7 +2235,231 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   if (escapeResetBtn) escapeResetBtn.addEventListener('click', escapeResetGame);
-  if (escapeBackBtn) escapeBackBtn.addEventListener('click', closeGame);
+
+  /* ---------- JOGO: XADREZ (2 jogadores locais, regras simplificadas —
+     sem cheque/xeque-mate oficial: vence quem capturar o rei adversário) ---------- */
+  const chessBoardEl = document.getElementById('chessBoard');
+  const chessStatusEl = document.getElementById('chessStatus');
+  const chessResetBtn = document.getElementById('chessResetBtn');
+
+  const CHESS_SYMBOLS = {
+    w: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
+    b: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' }
+  };
+
+  const CHESS_DIRS = {
+    bishop: [[-1, -1], [-1, 1], [1, -1], [1, 1]],
+    rook:   [[-1, 0], [1, 0], [0, -1], [0, 1]],
+    queen:  [[-1, -1], [-1, 1], [1, -1], [1, 1], [-1, 0], [1, 0], [0, -1], [0, 1]]
+  };
+
+  const CHESS_KNIGHT_STEPS = [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]];
+  const CHESS_KING_STEPS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+
+  let chessBoard = null;
+  let chessTurn = 'w';
+  let chessSelected = null;
+  let chessLegal = [];
+  let chessGameOver = false;
+  let chessWinner = null;
+
+  function chessInBounds(r, c){
+    return r >= 0 && r < 8 && c >= 0 && c < 8;
+  }
+
+  function chessInitialBoard(){
+    const back = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
+    const board = [];
+    board[0] = back.map(t => ({ type: t, color: 'b' }));
+    board[1] = Array.from({ length: 8 }, () => ({ type: 'p', color: 'b' }));
+    board[2] = Array(8).fill(null);
+    board[3] = Array(8).fill(null);
+    board[4] = Array(8).fill(null);
+    board[5] = Array(8).fill(null);
+    board[6] = Array.from({ length: 8 }, () => ({ type: 'p', color: 'w' }));
+    board[7] = back.map(t => ({ type: t, color: 'w' }));
+    return board;
+  }
+
+  function chessSlideMoves(board, row, col, color, dirs){
+    const moves = [];
+    dirs.forEach(([dr, dc]) => {
+      let r = row + dr;
+      let c = col + dc;
+      while (chessInBounds(r, c)){
+        const target = board[r][c];
+        if (!target){
+          moves.push({ row: r, col: c });
+        } else {
+          if (target.color !== color) moves.push({ row: r, col: c });
+          break;
+        }
+        r += dr;
+        c += dc;
+      }
+    });
+    return moves;
+  }
+
+  function chessStepMoves(board, row, col, color, steps){
+    const moves = [];
+    steps.forEach(([dr, dc]) => {
+      const r = row + dr;
+      const c = col + dc;
+      if (!chessInBounds(r, c)) return;
+      const target = board[r][c];
+      if (!target || target.color !== color) moves.push({ row: r, col: c });
+    });
+    return moves;
+  }
+
+  function chessPawnMoves(board, row, col, color){
+    const moves = [];
+    const dir = color === 'w' ? -1 : 1;
+    const startRow = color === 'w' ? 6 : 1;
+
+    const oneRow = row + dir;
+    if (chessInBounds(oneRow, col) && !board[oneRow][col]){
+      moves.push({ row: oneRow, col });
+      const twoRow = row + dir * 2;
+      if (row === startRow && !board[twoRow][col]){
+        moves.push({ row: twoRow, col });
+      }
+    }
+
+    [-1, 1].forEach(dc => {
+      const nr = row + dir;
+      const nc = col + dc;
+      if (chessInBounds(nr, nc) && board[nr][nc] && board[nr][nc].color !== color){
+        moves.push({ row: nr, col: nc });
+      }
+    });
+
+    return moves;
+  }
+
+  function chessLegalMoves(board, row, col){
+    const piece = board[row][col];
+    if (!piece) return [];
+    switch (piece.type){
+      case 'p': return chessPawnMoves(board, row, col, piece.color);
+      case 'n': return chessStepMoves(board, row, col, piece.color, CHESS_KNIGHT_STEPS);
+      case 'b': return chessSlideMoves(board, row, col, piece.color, CHESS_DIRS.bishop);
+      case 'r': return chessSlideMoves(board, row, col, piece.color, CHESS_DIRS.rook);
+      case 'q': return chessSlideMoves(board, row, col, piece.color, CHESS_DIRS.queen);
+      case 'k': return chessStepMoves(board, row, col, piece.color, CHESS_KING_STEPS);
+      default: return [];
+    }
+  }
+
+  function chessRender(){
+    if (!chessBoardEl || !chessBoard) return;
+    chessBoardEl.innerHTML = '';
+
+    for (let r = 0; r < 8; r++){
+      for (let c = 0; c < 8; c++){
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = `chess-cell ${(r + c) % 2 === 0 ? 'chess-cell-light' : 'chess-cell-dark'}`;
+        cell.dataset.row = String(r);
+        cell.dataset.col = String(c);
+
+        const piece = chessBoard[r][c];
+        if (piece) cell.textContent = CHESS_SYMBOLS[piece.color][piece.type];
+
+        if (chessSelected && chessSelected.row === r && chessSelected.col === c){
+          cell.classList.add('chess-cell-selected');
+        }
+        if (chessLegal.some(m => m.row === r && m.col === c)){
+          cell.classList.add('chess-cell-legal');
+        }
+
+        chessBoardEl.appendChild(cell);
+      }
+    }
+
+    if (chessStatusEl){
+      if (chessGameOver){
+        chessStatusEl.textContent = chessWinner === 'w'
+          ? 'As brancas venceram! Rei preto capturado. ♔'
+          : 'As pretas venceram! Rei branco capturado. ♚';
+        chessStatusEl.classList.add('win');
+      } else {
+        chessStatusEl.textContent = chessTurn === 'w' ? 'Vez das brancas ♙' : 'Vez das pretas ♟';
+        chessStatusEl.classList.remove('win');
+      }
+    }
+  }
+
+  function chessMakeMove(fromRow, fromCol, toRow, toCol){
+    const piece = chessBoard[fromRow][fromCol];
+    const captured = chessBoard[toRow][toCol];
+
+    if (captured && captured.type === 'k'){
+      chessGameOver = true;
+      chessWinner = piece.color;
+    }
+
+    chessBoard[toRow][toCol] = piece;
+    chessBoard[fromRow][fromCol] = null;
+
+    // promocao simples: peao que chega na ultima linha vira rainha
+    if (piece.type === 'p' && (toRow === 0 || toRow === 7)){
+      piece.type = 'q';
+    }
+
+    if (!chessGameOver){
+      chessTurn = chessTurn === 'w' ? 'b' : 'w';
+    }
+  }
+
+  function chessHandleCellClick(row, col){
+    if (chessGameOver || !chessBoard) return;
+    const piece = chessBoard[row][col];
+
+    if (chessSelected){
+      const isLegal = chessLegal.some(m => m.row === row && m.col === col);
+      if (isLegal){
+        chessMakeMove(chessSelected.row, chessSelected.col, row, col);
+        chessSelected = null;
+        chessLegal = [];
+        chessRender();
+        return;
+      }
+    }
+
+    if (piece && piece.color === chessTurn){
+      chessSelected = { row, col };
+      chessLegal = chessLegalMoves(chessBoard, row, col);
+    } else {
+      chessSelected = null;
+      chessLegal = [];
+    }
+
+    chessRender();
+  }
+
+  function chessResetGame(){
+    chessBoard = chessInitialBoard();
+    chessTurn = 'w';
+    chessSelected = null;
+    chessLegal = [];
+    chessGameOver = false;
+    chessWinner = null;
+    chessRender();
+  }
+
+  if (chessBoardEl){
+    chessBoardEl.addEventListener('click', (e) => {
+      const cell = e.target.closest('.chess-cell');
+      if (!cell) return;
+      chessHandleCellClick(Number(cell.dataset.row), Number(cell.dataset.col));
+    });
+
+    chessResetGame();
+  }
+
+  if (chessResetBtn) chessResetBtn.addEventListener('click', chessResetGame);
 
   /* =====================================================
      APP: PROMPT DE COMANDO (CMD) — comando secreto pra
