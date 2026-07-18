@@ -37,6 +37,14 @@
       <span class="desktop-icon-glyph">💬</span>
       <span class="desktop-icon-label">MSN</span>
     </button>
+    <button class="desktop-icon" data-app="nubonk" data-icon="🏦" data-name="Nubonk" type="button">
+      <span class="desktop-icon-glyph">🏦</span>
+      <span class="desktop-icon-label">Nubonk</span>
+    </button>
+    <button class="desktop-icon" data-app="player" data-icon="🎵" data-name="Player" type="button">
+      <span class="desktop-icon-glyph">🎵</span>
+      <span class="desktop-icon-label">Player</span>
+    </button>
     <button class="desktop-icon" data-app="notepad" data-icon="📝" data-name="Bloco de Notas" type="button">
       <span class="desktop-icon-glyph">📝</span>
       <span class="desktop-icon-label">Bloco de Notas</span>
@@ -197,8 +205,89 @@
           <div class="msn-chat-messages" id="msnMessages"></div>
           <form class="msn-compose" id="msnComposeForm">
             <input type="text" id="msnComposeInput" class="msn-compose-input" placeholder="Digite uma mensagem..." autocomplete="off">
-            <button type="submit" class="glass-btn msn-send-btn">Enviar</button>
+            <button type="button" class="glass-btn msn-send-btn">Enviar</button>
           </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== JANELA: NUBONK (banco) ===== -->
+    <section class="window nubonk-window" id="nubonk">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">🏦</span> nubonk.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body">
+        <div class="nubonk-app">
+          <h2 class="nubonk-heading">Nubonk</h2>
+          <p class="nubonk-sub">Sua conta digital (saldo sincronizado com o Cassino).</p>
+
+          <div class="nubonk-card">
+            <span class="nubonk-card-label">Saldo em conta</span>
+            <span class="nubonk-card-value" id="nubonkBalance">R$ 0</span>
+          </div>
+
+          <div class="nubonk-card nubonk-card-debt">
+            <span class="nubonk-card-label">Dívida com o agiota</span>
+            <span class="nubonk-card-value" id="nubonkDebt">Nenhuma</span>
+          </div>
+
+          <button class="glass-btn nubonk-pay-btn" id="nubonkPayBtn" type="button" disabled>Pagar agiota</button>
+          <p class="nubonk-msg" id="nubonkMsg">Quando o saldo em conta cobrir a dívida, você pode quitar por aqui.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== JANELA: PLAYER DE AUDIO ===== -->
+    <section class="window player-window" id="player">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">🎵</span> player.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body">
+        <div class="player-app">
+          <audio id="playerAudio" preload="metadata"></audio>
+
+          <div class="player-disc-wrap">
+            <span class="player-disc" id="playerDisc">💿</span>
+          </div>
+
+          <p class="player-track-title" id="playerTrackTitle">Nenhuma música selecionada</p>
+
+          <div class="player-seek-row">
+            <span class="player-time" id="playerCurrentTime">0:00</span>
+            <input type="range" class="player-seek" id="playerSeek" min="0" max="100" step="0.1" value="0">
+            <span class="player-time" id="playerDuration">0:00</span>
+          </div>
+
+          <div class="player-controls">
+            <button class="glass-btn player-ctrl-btn" id="playerPrevBtn" type="button" aria-label="Anterior">⏮</button>
+            <button class="glass-btn player-ctrl-btn player-play-btn" id="playerPlayBtn" type="button" aria-label="Tocar/Pausar">▶</button>
+            <button class="glass-btn player-ctrl-btn" id="playerNextBtn" type="button" aria-label="Próxima">⏭</button>
+          </div>
+
+          <div class="player-volume-row">
+            <span class="player-volume-icon">🔊</span>
+            <input type="range" class="player-volume" id="playerVolume" min="0" max="100" step="1" value="80">
+          </div>
+
+          <p class="player-status" id="playerStatus"></p>
+
+          <div class="player-playlist-header">
+            <span>Playlist</span>
+            <label class="player-upload-label" for="playerUploadInput">📤 Enviar áudio</label>
+            <input type="file" id="playerUploadInput" accept="audio/*" multiple hidden>
+          </div>
+
+          <div class="player-playlist" id="playerPlaylist"></div>
         </div>
       </div>
     </section>
@@ -341,6 +430,14 @@
         <span class="start-app-icon">💬</span>
         <span class="start-app-name">MSN</span>
       </button>
+      <button class="start-app-tile" data-app="nubonk" type="button">
+        <span class="start-app-icon">🏦</span>
+        <span class="start-app-name">Nubonk</span>
+      </button>
+      <button class="start-app-tile" data-app="player" type="button">
+        <span class="start-app-icon">🎵</span>
+        <span class="start-app-name">Player</span>
+      </button>
       <button class="start-app-tile" data-app="notepad" type="button">
         <span class="start-app-icon">📝</span>
         <span class="start-app-name">Bloco de Notas</span>
@@ -372,8 +469,8 @@
     <div class="taskbar-divider"></div>
 
     <div class="taskbar-apps" id="taskbarApps">
-      <button class="taskbar-btn active pinned" data-app="inicio" aria-label="Início">🏠</button>
-      <button class="taskbar-btn active pinned" data-app="cassino" aria-label="Cassino">🎰</button>
+      <button class="taskbar-btn pinned" data-app="inicio" aria-label="Início">🏠</button>
+      <button class="taskbar-btn pinned" data-app="cassino" aria-label="Cassino">🎰</button>
       <button class="taskbar-btn pinned" data-app="msn" aria-label="MSN">💬</button>
     </div>
 

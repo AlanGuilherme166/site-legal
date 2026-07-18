@@ -46,6 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const taskbarAppsContainer = document.getElementById('taskbarApps');
 
+  // Todos os apps comecam fechados ao entrar no site (abre so quando o usuario clica)
+  Object.values(windowsByApp).forEach(win => closeWindow(win));
+
   function getTaskbarBtn(win){
     return document.querySelector(`.taskbar-btn[data-app="${win.id}"]`);
   }
@@ -441,6 +444,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.wallpaper-swatch').forEach(sw => {
       sw.classList.toggle('selected', sw.dataset.wallpaper === key);
     });
+    // as bolhas decorativas fixas (azuis/verdes/ciano) cobrem boa parte da tela
+    // e escondem a troca de papel de parede; some com elas quando o usuario
+    // escolhe qualquer wallpaper diferente do padrao "aero"
+    document.body.classList.toggle('custom-wallpaper', key !== 'aero');
     if (persist){
       try{ localStorage.setItem('aero-wallpaper', key); }catch(err){}
     }
@@ -489,12 +496,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const lightTop = mix(rgb, white, 0.7);
     const darkBottom = mix(rgb, black, 0.28);
 
+    const darkTitlebarMid = mix(rgb, black, 0.35);
+    const darkTitlebarBottom = mix(rgb, black, 0.55);
+    const darkTaskbarTop = mix(rgb, black, 0.15);
+    const darkTaskbarBottom = mix(rgb, black, 0.68);
+
+    // aplica no <html> (tema claro le as variaveis daqui)
     const root = document.documentElement.style;
     root.setProperty('--blue-deep', hex);
     root.setProperty('--titlebar-grad-mid', rgba(lightMid, 0.78));
     root.setProperty('--titlebar-grad-bottom', rgba(rgb, 0.55));
     root.setProperty('--taskbar-grad-top', rgba(lightTop, 0.92));
     root.setProperty('--taskbar-grad-bottom', rgba(darkBottom, 0.92));
+
+    // aplica tambem no <body>: o tema escuro (body.theme-dark) define essas
+    // mesmas variaveis diretamente no body, o que sobrescreveria a escolha do
+    // usuario se a gente so setasse no <html>. Setando aqui, a cor escolhida
+    // funciona nos dois temas.
+    const bodyStyle = document.body.style;
+    bodyStyle.setProperty('--blue-deep', hex);
+    bodyStyle.setProperty('--titlebar-grad-top', rgba(mix(rgb, white, 0.25), 0.95));
+    bodyStyle.setProperty('--titlebar-grad-mid', rgba(darkTitlebarMid, 0.9));
+    bodyStyle.setProperty('--titlebar-grad-bottom', rgba(darkTitlebarBottom, 0.92));
+    bodyStyle.setProperty('--taskbar-grad-top', rgba(darkTaskbarTop, 0.95));
+    bodyStyle.setProperty('--taskbar-grad-bottom', rgba(darkTaskbarBottom, 0.97));
 
     document.querySelectorAll('.accent-swatch').forEach(sw => {
       sw.classList.toggle('selected', sw.dataset.accent.toLowerCase() === hex.toLowerCase());
@@ -507,9 +532,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function resetAccent(persist){
-    const root = document.documentElement.style;
-    ['--blue-deep', '--titlebar-grad-mid', '--titlebar-grad-bottom', '--taskbar-grad-top', '--taskbar-grad-bottom']
-      .forEach(prop => root.removeProperty(prop));
+    const props = ['--blue-deep', '--titlebar-grad-top', '--titlebar-grad-mid', '--titlebar-grad-bottom', '--taskbar-grad-top', '--taskbar-grad-bottom'];
+    props.forEach(prop => document.documentElement.style.removeProperty(prop));
+    props.forEach(prop => document.body.style.removeProperty(prop));
     document.querySelectorAll('.accent-swatch').forEach(sw => sw.classList.remove('selected'));
     if (accentCustomInput) accentCustomInput.value = '#1e6fd9';
     if (persist){
@@ -580,7 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
      pode ficar negativo)
   ===================================================== */
   const CASINO_STORAGE_KEY = 'aero-cassino-saldo';
-  const CASINO_START_BALANCE = 1000;
+  const CASINO_START_BALANCE = 500;
   const CASINO_RED_NUMBERS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 
   const casinoBalanceEl = document.getElementById('casinoBalance');
@@ -616,6 +641,52 @@ document.addEventListener('DOMContentLoaded', () => {
   let casinoBalance = CASINO_START_BALANCE;
   let casinoSpinning = false;
   let casinoSelectedBet = null;
+
+  /* ---------- AGIOTA / DIVIDA (declarado aqui em cima pra nao dar erro
+     de "temporal dead zone": renderCasinoBalance(), logo abaixo, ja chama
+     funcoes que leem essas variaveis, entao elas precisam existir antes) ---------- */
+  const AGIOTA_DEBT_STORAGE_KEY = 'aero-agiota-divida';
+  let agiotaActive = false;
+  let negativeSince = null;
+  let agiotaDebt = 0;
+  let agiotaNagCount = 0;
+  let virusActive = false;
+  let virusInterval = null;
+
+  function loadAgiotaDebt(){
+    try{
+      const saved = localStorage.getItem(AGIOTA_DEBT_STORAGE_KEY);
+      const parsed = saved !== null ? parseInt(saved, 10) : 0;
+      agiotaDebt = Number.isNaN(parsed) ? 0 : parsed;
+    }catch(err){
+      agiotaDebt = 0;
+    }
+  }
+
+  function saveAgiotaDebt(){
+    try{ localStorage.setItem(AGIOTA_DEBT_STORAGE_KEY, String(agiotaDebt)); }catch(err){}
+  }
+
+  loadAgiotaDebt();
+
+  /* ---------- APP NUBONK (tambem hoisted aqui em cima pelo mesmo motivo:
+     renderNubonk() e chamada logo abaixo, dentro de renderCasinoBalance) ---------- */
+  const nubonkBalanceEl = document.getElementById('nubonkBalance');
+  const nubonkDebtEl = document.getElementById('nubonkDebt');
+  const nubonkPayBtn = document.getElementById('nubonkPayBtn');
+  const nubonkMsgEl = document.getElementById('nubonkMsg');
+
+  function renderNubonk(){
+    if (nubonkBalanceEl) nubonkBalanceEl.textContent = `R$ ${casinoBalance}`;
+    if (nubonkDebtEl){
+      nubonkDebtEl.textContent = agiotaDebt > 0 ? `R$ ${agiotaDebt}` : 'Nenhuma';
+      nubonkDebtEl.classList.toggle('negative', agiotaDebt > 0);
+    }
+    if (nubonkPayBtn){
+      const podePagar = agiotaDebt > 0 && casinoBalance >= agiotaDebt;
+      nubonkPayBtn.disabled = !podePagar;
+    }
+  }
 
   function loadCasinoBalance(){
     try{
@@ -919,30 +990,123 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${pickRandom(insultosCultos)} ${pickRandom(cobrancasCariocas)}`;
   }
 
-  let agiotaActive = false;
-  let negativeSince = null;
+  /* ---------- VIRUS DE TELA (janelas de caveira "ME PAGUE") ---------- */
+  const MAX_VIRUS_POPUPS = 6;
+
+  function spawnVirusWindow(){
+    if (document.querySelectorAll('.virus-popup').length >= MAX_VIRUS_POPUPS) return;
+
+    const popup = document.createElement('div');
+    popup.className = 'virus-popup';
+
+    const maxLeft = Math.max(0, window.innerWidth - 220);
+    const maxTop = Math.max(0, window.innerHeight - 160);
+    popup.style.left = Math.floor(Math.random() * maxLeft) + 'px';
+    popup.style.top = Math.floor(Math.random() * maxTop) + 'px';
+
+    popup.innerHTML = `
+      <button class="virus-close" type="button" aria-label="Fechar">×</button>
+      <span class="virus-skull">💀</span>
+      <span class="virus-text">ME PAGUE</span>
+    `;
+
+    popup.querySelector('.virus-close').addEventListener('click', () => popup.remove());
+    document.body.appendChild(popup);
+  }
+
+  function startVirus(){
+    if (virusActive) return;
+    virusActive = true;
+    spawnVirusWindow();
+    virusInterval = setInterval(spawnVirusWindow, 1600 + Math.random() * 1400);
+  }
+
+  function stopVirus(){
+    virusActive = false;
+    if (virusInterval){
+      clearInterval(virusInterval);
+      virusInterval = null;
+    }
+    document.querySelectorAll('.virus-popup').forEach(el => el.remove());
+  }
+
+  /* ---------- COBRANCA DO AGIOTA ---------- */
+  function agiotaSendNag(prefix){
+    agiotaNagCount++;
+    const line = prefix ? `${prefix} ${randomAgiotaLine()}` : randomAgiotaLine();
+    addMessage('agiota', 'them', line);
+
+    if (agiotaNagCount >= 5 && !virusActive){
+      addMessage('agiota', 'them', 'Já mandei aviso demais e você me ignorou. Agora eu tomo outras providências.');
+      startVirus();
+    }
+  }
+
+  function scheduleAgiotaNag(){
+    if (!agiotaActive) return;
+    const minDelay = 20 * 1000;
+    const maxDelay = 45 * 1000;
+    const delay = minDelay + Math.random() * (maxDelay - minDelay);
+    setTimeout(() => {
+      if (agiotaActive && agiotaDebt > 0) agiotaSendNag();
+      if (agiotaActive) scheduleAgiotaNag();
+    }, delay);
+  }
 
   function showAgiota(){
     if (agiotaActive) return;
     agiotaActive = true;
+    agiotaNagCount = 1;
     if (msnAgiotaContact) msnAgiotaContact.hidden = false;
-    addMessage('agiota', 'them', `Olá, seja bem-vindo à minha lista de cobrança. ${randomAgiotaLine()}`);
+    addMessage('agiota', 'them', `Olá, seja bem-vindo à minha lista de cobrança. Você me deve R$ ${agiotaDebt}. ${randomAgiotaLine()}`);
+    scheduleAgiotaNag();
   }
 
-  function hideAgiota(){
-    if (!agiotaActive) return;
+  // se o usuario ja tinha uma divida de uma sessao anterior (salva no
+  // localStorage), o agiota ja aparece cobrando assim que o MSN carrega,
+  // sem precisar esperar 30s negativo de novo
+  if (agiotaDebt > 0){
+    agiotaActive = true;
+    agiotaNagCount = 0;
+    if (msnAgiotaContact) msnAgiotaContact.hidden = false;
+    addMessage('agiota', 'them', `Você ainda me deve R$ ${agiotaDebt} da última vez. ${randomAgiotaLine()}`);
+    scheduleAgiotaNag();
+  }
+
+  function quitarDividaAgiota(){
+    if (!(agiotaDebt > 0 && casinoBalance >= agiotaDebt)) return;
+
+    const valorPago = agiotaDebt;
+    casinoBalance -= valorPago;
+    saveCasinoBalance();
+
+    agiotaDebt = 0;
+    saveAgiotaDebt();
+    agiotaNagCount = 0;
     agiotaActive = false;
     negativeSince = null;
+    stopVirus();
+
     if (msnAgiotaContact) msnAgiotaContact.hidden = true;
     if (badgeAgiota) badgeAgiota.hidden = true;
+    addMessage('agiota', 'them', 'Valeu, quitado. Mas fica esperto da próxima vez, hein.');
+
+    renderCasinoBalance();
+    renderNubonk();
+    if (nubonkMsgEl) nubonkMsgEl.textContent = `Dívida de R$ ${valorPago} quitada com o agiota.`;
   }
 
   function updateCasinoNegativeWatch(){
     if (casinoBalance < 0){
       if (negativeSince === null) negativeSince = Date.now();
+      if (-casinoBalance > agiotaDebt){
+        agiotaDebt = -casinoBalance;
+        saveAgiotaDebt();
+      }
     } else {
-      hideAgiota();
+      negativeSince = null;
     }
+    renderNubonk();
   }
 
   setInterval(() => {
@@ -951,25 +1115,259 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 1000);
 
-  if (msnComposeForm){
-    msnComposeForm.addEventListener('submit', (e) => {
+  function sendMsnMessage(){
+    if (!msnComposeInput) return;
+    const text = msnComposeInput.value.trim();
+    if (!text) return;
+
+    addMessage(activeContact, 'me', text);
+    msnComposeInput.value = '';
+
+    if (activeContact === 'agiota'){
+      setTimeout(() => {
+        if (agiotaDebt > 0){
+          agiotaSendNag();
+        } else {
+          addMessage('agiota', 'them', 'Tá tudo quitado entre nós, pode ficar tranquilo.');
+        }
+      }, 500 + Math.random() * 700);
+    } else if (activeContact === 'carachato' && Math.random() < 0.4){
+      setTimeout(() => {
+        addMessage('carachato', 'them', pickRandom(carachatoMessages));
+      }, 600 + Math.random() * 900);
+    }
+  }
+
+  if (nubonkPayBtn){
+    nubonkPayBtn.addEventListener('click', () => {
+      quitarDividaAgiota();
+    });
+  }
+
+  renderNubonk();
+
+  const msnSendBtn = msnComposeForm ? msnComposeForm.querySelector('.msn-send-btn') : null;
+
+  // clique no botao "Enviar"
+  if (msnSendBtn){
+    msnSendBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      const text = msnComposeInput.value.trim();
-      if (!text) return;
+      sendMsnMessage();
+    });
+  }
 
-      addMessage(activeContact, 'me', text);
-      msnComposeInput.value = '';
-
-      if (activeContact === 'agiota'){
-        setTimeout(() => {
-          addMessage('agiota', 'them', randomAgiotaLine());
-        }, 500 + Math.random() * 700);
-      } else if (activeContact === 'carachato' && Math.random() < 0.4){
-        setTimeout(() => {
-          addMessage('carachato', 'them', pickRandom(carachatoMessages));
-        }, 600 + Math.random() * 900);
+  // tecla Enter no campo de mensagem
+  if (msnComposeInput){
+    msnComposeInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter'){
+        e.preventDefault();
+        sendMsnMessage();
       }
     });
   }
+
+  // reforco: se por algum motivo o form for submetido (ex.: Enter em navegadores
+  // que ainda tratam isso como submit), nunca deixa a pagina recarregar
+  if (msnComposeForm){
+    msnComposeForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      sendMsnMessage();
+    });
+  }
+
+  /* =====================================================
+     APP: PLAYER DE AUDIO — playlist padrao (pasta "audios/")
+     + upload de arquivos locais (fica so na sessao atual)
+  ===================================================== */
+  const PLAYER_DEFAULT_TRACKS = [
+    { name: 'Música 1', src: 'áudios/musica 1.mp3' },
+    { name: 'Música 2', src: 'áudios/musica 2.mp3' }
+  ];
+
+  const playerAudio = document.getElementById('playerAudio');
+  const playerDisc = document.getElementById('playerDisc');
+  const playerTrackTitle = document.getElementById('playerTrackTitle');
+  const playerPlayBtn = document.getElementById('playerPlayBtn');
+  const playerPrevBtn = document.getElementById('playerPrevBtn');
+  const playerNextBtn = document.getElementById('playerNextBtn');
+  const playerSeek = document.getElementById('playerSeek');
+  const playerCurrentTimeEl = document.getElementById('playerCurrentTime');
+  const playerDurationEl = document.getElementById('playerDuration');
+  const playerVolume = document.getElementById('playerVolume');
+  const playerPlaylistEl = document.getElementById('playerPlaylist');
+  const playerUploadInput = document.getElementById('playerUploadInput');
+  const playerStatusEl = document.getElementById('playerStatus');
+
+  let playerTracks = PLAYER_DEFAULT_TRACKS.map(t => ({ ...t }));
+  let playerCurrentIndex = -1;
+  let playerSeekDragging = false;
+
+  function formatPlayerTime(seconds){
+    if (!isFinite(seconds) || seconds < 0) seconds = 0;
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  function renderPlayerPlaylist(){
+    if (!playerPlaylistEl) return;
+    playerPlaylistEl.innerHTML = '';
+
+    if (!playerTracks.length){
+      const empty = document.createElement('p');
+      empty.className = 'player-empty-msg';
+      empty.textContent = 'Nenhuma música na playlist ainda.';
+      playerPlaylistEl.appendChild(empty);
+      return;
+    }
+
+    playerTracks.forEach((track, i) => {
+      const isActive = i === playerCurrentIndex;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'player-track' + (isActive ? ' active' : '');
+
+      const icon = document.createElement('span');
+      icon.className = 'player-track-icon';
+      icon.textContent = isActive && playerAudio && !playerAudio.paused ? '🔊' : '🎵';
+
+      const name = document.createElement('span');
+      name.className = 'player-track-name';
+      name.textContent = track.name;
+
+      btn.appendChild(icon);
+      btn.appendChild(name);
+      btn.addEventListener('click', () => playPlayerTrackAt(i));
+      playerPlaylistEl.appendChild(btn);
+    });
+  }
+
+  function playPlayerTrackAt(i){
+    if (!playerAudio || i < 0 || i >= playerTracks.length) return;
+    playerCurrentIndex = i;
+    const track = playerTracks[i];
+
+    if (playerStatusEl) playerStatusEl.textContent = '';
+    playerAudio.src = track.src;
+    playerAudio.play().catch(() => {
+      if (playerStatusEl){
+        playerStatusEl.textContent = `Não consegui tocar "${track.name}". Verifique se o arquivo está na pasta "áudios".`;
+      }
+    });
+
+    if (playerTrackTitle) playerTrackTitle.textContent = track.name;
+    renderPlayerPlaylist();
+  }
+
+  if (playerPlayBtn){
+    playerPlayBtn.addEventListener('click', () => {
+      if (!playerAudio) return;
+      if (playerCurrentIndex === -1){
+        if (playerTracks.length) playPlayerTrackAt(0);
+        return;
+      }
+      if (playerAudio.paused) playerAudio.play().catch(() => {});
+      else playerAudio.pause();
+    });
+  }
+
+  if (playerPrevBtn){
+    playerPrevBtn.addEventListener('click', () => {
+      if (!playerTracks.length) return;
+      const prev = (playerCurrentIndex - 1 + playerTracks.length) % playerTracks.length;
+      playPlayerTrackAt(prev);
+    });
+  }
+
+  if (playerNextBtn){
+    playerNextBtn.addEventListener('click', () => {
+      if (!playerTracks.length) return;
+      const next = (playerCurrentIndex + 1) % playerTracks.length;
+      playPlayerTrackAt(next);
+    });
+  }
+
+  if (playerAudio){
+    playerAudio.volume = playerVolume ? playerVolume.value / 100 : 0.8;
+
+    playerAudio.addEventListener('play', () => {
+      if (playerPlayBtn) playerPlayBtn.textContent = '⏸';
+      if (playerDisc) playerDisc.classList.add('spinning');
+      renderPlayerPlaylist();
+    });
+
+    playerAudio.addEventListener('pause', () => {
+      if (playerPlayBtn) playerPlayBtn.textContent = '▶';
+      if (playerDisc) playerDisc.classList.remove('spinning');
+      renderPlayerPlaylist();
+    });
+
+    playerAudio.addEventListener('timeupdate', () => {
+      if (playerSeek && !playerSeekDragging){
+        playerSeek.value = playerAudio.duration ? (playerAudio.currentTime / playerAudio.duration) * 100 : 0;
+      }
+      if (playerCurrentTimeEl) playerCurrentTimeEl.textContent = formatPlayerTime(playerAudio.currentTime);
+    });
+
+    playerAudio.addEventListener('loadedmetadata', () => {
+      if (playerDurationEl) playerDurationEl.textContent = formatPlayerTime(playerAudio.duration);
+    });
+
+    playerAudio.addEventListener('ended', () => {
+      if (playerNextBtn) playerNextBtn.click();
+    });
+
+    playerAudio.addEventListener('error', () => {
+      if (playerCurrentIndex === -1) return;
+      const track = playerTracks[playerCurrentIndex];
+      if (playerStatusEl && track){
+        playerStatusEl.textContent = `Não encontrei o arquivo de "${track.name}". Confira se ele está na pasta "áudios" (ou tente enviar o arquivo pelo botão "Enviar áudio").`;
+      }
+      if (playerDisc) playerDisc.classList.remove('spinning');
+      if (playerPlayBtn) playerPlayBtn.textContent = '▶';
+    });
+  }
+
+  if (playerSeek){
+    playerSeek.addEventListener('mousedown', () => { playerSeekDragging = true; });
+    playerSeek.addEventListener('touchstart', () => { playerSeekDragging = true; }, { passive: true });
+
+    playerSeek.addEventListener('change', () => {
+      if (playerAudio && playerAudio.duration){
+        playerAudio.currentTime = (playerSeek.value / 100) * playerAudio.duration;
+      }
+      playerSeekDragging = false;
+    });
+  }
+
+  if (playerVolume){
+    playerVolume.addEventListener('input', () => {
+      if (playerAudio) playerAudio.volume = playerVolume.value / 100;
+    });
+  }
+
+  if (playerUploadInput){
+    playerUploadInput.addEventListener('change', () => {
+      const files = Array.from(playerUploadInput.files || []);
+      if (!files.length) return;
+
+      files.forEach(file => {
+        const url = URL.createObjectURL(file);
+        const label = file.name.replace(/\.[^./]+$/, '');
+        playerTracks.push({ name: label, src: url });
+      });
+
+      renderPlayerPlaylist();
+      playerUploadInput.value = '';
+
+      if (playerStatusEl){
+        playerStatusEl.textContent = files.length === 1
+          ? `"${files[0].name}" adicionado à playlist.`
+          : `${files.length} áudios adicionados à playlist.`;
+      }
+    });
+  }
+
+  renderPlayerPlaylist();
 
 });
