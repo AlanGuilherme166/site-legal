@@ -1,72 +1,61 @@
 /* =====================================================
-   FRUTIGER AERO — INTERAÇÕES
-   Sidebar retrátil no hover, menu iniciar, relógio
-   da taskbar e alternância de botões ativos (placeholder).
+   AERO VISTA/7 — INTERACOES
+   Menu iniciar, troca de tema (Aero <-> Branco),
+   controles de janela estilo Vista, taskbar estilo Win7.
 ===================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  /* ---------- SIDEBAR: abre ao passar o mouse na borda ---------- */
-  const sidebar = document.getElementById('sidebar');
-  const sidebarTrigger = document.getElementById('sidebarTrigger');
-
-  function openSidebar(){
-    sidebar.classList.add('open');
-  }
-
-  function closeSidebar(){
-    sidebar.classList.remove('open');
-  }
-
-  sidebarTrigger.addEventListener('mouseenter', openSidebar);
-  sidebar.addEventListener('mouseenter', openSidebar);
-  sidebar.addEventListener('mouseleave', closeSidebar);
-
-  // Suporte básico para toque em telas sem hover (mobile)
-  sidebarTrigger.addEventListener('click', () => {
-    sidebar.classList.toggle('open');
-  });
-
-  /* ---------- NAVEGAÇÃO LATERAL: destaca botão ativo (placeholder) ---------- */
-  const navButtons = document.querySelectorAll('.sidebar-nav .nav-btn');
-
-  navButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      navButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      // Placeholder: aqui futuramente entra a troca real de página
-      console.log('Navegar para:', btn.dataset.page);
-    });
-  });
-
-  /* ---------- MENU INICIAR (taskbar) ---------- */
+  /* ---------- MENU INICIAR ---------- */
   const startButton = document.getElementById('startButton');
   const startMenu = document.getElementById('startMenu');
 
-  startButton.addEventListener('click', (e) => {
-    e.stopPropagation();
-    startMenu.classList.toggle('open');
-  });
+  if (startButton && startMenu){
+    startButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      startMenu.classList.toggle('open');
+    });
 
-  // Fecha o menu iniciar ao clicar fora dele
-  document.addEventListener('click', (e) => {
-    if (!startMenu.contains(e.target) && e.target !== startButton){
-      startMenu.classList.remove('open');
-    }
-  });
+    document.addEventListener('click', (e) => {
+      if (!startMenu.contains(e.target) && e.target !== startButton){
+        startMenu.classList.remove('open');
+      }
+    });
+  }
 
-  /* ---------- BOTÕES DA TASKBAR (placeholder de "janelas abertas") ---------- */
+  /* ---------- BOTOES DA TASKBAR <-> JANELAS REAIS ---------- */
+  // Cada botao da taskbar (data-app) aponta para o id da janela correspondente
+  // no HTML (ex: data-app="janela1" -> <div id="janela1">). Clicar minimiza
+  // ou restaura a janela de verdade, igual clicar no "_" da propria janela.
   const taskbarButtons = document.querySelectorAll('.taskbar-btn');
+  const windowsByApp = {};
+
+  taskbarButtons.forEach(btn => {
+    const win = document.getElementById(btn.dataset.app);
+    if (win) windowsByApp[btn.dataset.app] = win;
+  });
+
+  function setWindowMinimized(win, minimized){
+    const body = win.querySelector('.window-body');
+    if (body) body.style.display = minimized ? 'none' : '';
+
+    // acha o botao da taskbar que representa essa janela e sincroniza o estado
+    const btn = document.querySelector(`.taskbar-btn[data-app="${win.id}"]`);
+    if (btn) btn.classList.toggle('active', !minimized);
+  }
 
   taskbarButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      taskbarButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      console.log('Janela focada:', btn.dataset.app);
+      const win = windowsByApp[btn.dataset.app];
+      if (!win || win.classList.contains('is-closed')) return; // janela fechada, taskbar nao reage
+
+      const body = win.querySelector('.window-body');
+      const isMinimized = body && body.style.display === 'none';
+      setWindowMinimized(win, !isMinimized);
     });
   });
 
-  /* ---------- RELÓGIO DA TASKBAR ---------- */
+  /* ---------- RELOGIO DA TASKBAR ---------- */
   const clockTime = document.getElementById('clockTime');
   const clockDate = document.getElementById('clockDate');
 
@@ -83,30 +72,96 @@ document.addEventListener('DOMContentLoaded', () => {
     clockDate.textContent = `${dd}/${mo}/${yyyy}`;
   }
 
-  updateClock();
-  setInterval(updateClock, 1000 * 30); // atualiza a cada 30s (suficiente p/ minutos)
+  if (clockTime && clockDate){
+    updateClock();
+    setInterval(updateClock, 1000 * 30);
+  }
 
-  /* ---------- CONTROLES DE JANELA (minimizar / maximizar / fechar) ---------- */
-  // Placeholder visual: "fechar" recolhe a janela, "minimizar" oculta o corpo.
+  /* ---------- CONTROLES DE JANELA ESTILO VISTA (minimizar / maximizar / fechar) ---------- */
   document.querySelectorAll('.window').forEach(win => {
-    const closeBtn = win.querySelector('.win-ctrl-close');
-    const minimizeBtn = win.querySelector('.win-ctrl:not(.win-ctrl-close)');
+    const closeBtn = win.querySelector('.vista-close');
+    const minBtn = win.querySelector('.vista-min');
+    const maxBtn = win.querySelector('.vista-max');
     const body = win.querySelector('.window-body');
 
     if (closeBtn){
       closeBtn.addEventListener('click', () => {
-        win.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-        win.style.opacity = '0';
-        win.style.transform = 'scale(0.97)';
-        setTimeout(() => { win.style.display = 'none'; }, 200);
+        win.classList.add('is-closed');
+        // sem janela, o botao da taskbar fica inativo e deixa de responder a clique
+        const taskbarBtn = document.querySelector(`.taskbar-btn[data-app="${win.id}"]`);
+        if (taskbarBtn){
+          taskbarBtn.classList.remove('active');
+          taskbarBtn.style.opacity = '0.4';
+          taskbarBtn.style.pointerEvents = 'none';
+        }
       });
     }
 
-    if (minimizeBtn && body){
-      minimizeBtn.addEventListener('click', () => {
-        body.style.display = body.style.display === 'none' ? '' : 'none';
+    if (minBtn && body){
+      minBtn.addEventListener('click', () => {
+        const hidden = body.style.display === 'none';
+        setWindowMinimized(win, !hidden);
+      });
+    }
+
+    if (maxBtn){
+      maxBtn.addEventListener('click', () => {
+        win.classList.toggle('is-maxed');
       });
     }
   });
+
+  /* ---------- TROCA DE TEMA: AERO (colorido) <-> BRANCO ---------- */
+  const themeToggle = document.getElementById('themeToggle');
+  const themeToggleIcon = document.getElementById('themeToggleIcon');
+  const body = document.body;
+
+  function applyTheme(isWhite){
+    body.classList.toggle('theme-white', isWhite);
+    if (themeToggleIcon){
+      themeToggleIcon.textContent = isWhite ? '⚪' : '🎨';
+    }
+    if (themeToggle){
+      themeToggle.setAttribute(
+        'aria-label',
+        isWhite ? 'Alternar para tema Aero' : 'Alternar para tema branco'
+      );
+    }
+    try{
+      localStorage.setItem('aero-theme', isWhite ? 'white' : 'aero');
+    }catch(err){
+      /* localStorage indisponível: segue sem persistir a preferência */
+    }
+  }
+
+  let savedTheme = null;
+  try{
+    savedTheme = localStorage.getItem('aero-theme');
+  }catch(err){
+    savedTheme = null;
+  }
+  applyTheme(savedTheme === 'white');
+
+  if (themeToggle){
+    themeToggle.addEventListener('click', () => {
+      applyTheme(!body.classList.contains('theme-white'));
+    });
+  }
+
+  /* ---------- MOSTRAR AREA DE TRABALHO (estilo Windows 7) ---------- */
+  const showDesktopBtn = document.getElementById('showDesktopBtn');
+  const allWindows = document.querySelectorAll('.window');
+  let desktopPeek = false;
+
+  if (showDesktopBtn){
+    showDesktopBtn.addEventListener('click', () => {
+      desktopPeek = !desktopPeek;
+      allWindows.forEach(win => {
+        if (win.classList.contains('is-closed')) return; // já fechada, ignora
+        win.style.opacity = desktopPeek ? '0' : '';
+        win.style.transition = 'opacity 0.15s ease';
+      });
+    });
+  }
 
 });
