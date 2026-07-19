@@ -73,6 +73,10 @@
       <span class="desktop-icon-glyph">📝</span>
       <span class="desktop-icon-label">Bloco de Notas</span>
     </button>
+    <button class="desktop-icon" data-app="paint" data-icon="🖌️" data-name="Paint" type="button">
+      <span class="desktop-icon-glyph">🖌️</span>
+      <span class="desktop-icon-label">Paint</span>
+    </button>
     <button class="desktop-icon" data-app="cmd" data-icon="⬛" data-name="Prompt de Comando" type="button">
       <span class="desktop-icon-glyph">⬛</span>
       <span class="desktop-icon-label">Prompt de Comando</span>
@@ -672,6 +676,49 @@
       </div>
     </section>
 
+    <!-- ===== JANELA: PAINT ===== -->
+    <section class="window paint-window" id="paint">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">🖌️</span> paint.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body paint-body">
+        <div class="paint-app">
+          <div class="paint-toolbar">
+            <div class="paint-tool-group">
+              <button class="paint-tool-btn active" id="paintToolBrush" type="button" title="Pincel">🖌️</button>
+              <button class="paint-tool-btn" id="paintToolEraser" type="button" title="Borracha">🧹</button>
+              <button class="paint-tool-btn" id="paintToolFill" type="button" title="Balde de tinta">🪣</button>
+            </div>
+
+            <div class="paint-swatches" id="paintSwatches"></div>
+
+            <label class="paint-custom-color" title="Cor personalizada">
+              <input type="color" id="paintColorInput" value="#1b2530">
+            </label>
+
+            <div class="paint-size-row">
+              <span class="paint-size-label">✏️</span>
+              <input type="range" id="paintSizeInput" min="1" max="40" value="5">
+            </div>
+
+            <div class="paint-actions">
+              <button class="paint-action-btn" id="paintClearBtn" type="button" title="Limpar tudo">🗑️ Limpar</button>
+              <button class="paint-action-btn" id="paintSaveBtn" type="button" title="Salvar como imagem">💾 Salvar</button>
+            </div>
+          </div>
+
+          <div class="paint-canvas-wrap" id="paintCanvasWrap">
+            <canvas class="paint-canvas" id="paintCanvas" width="640" height="420"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ===== JANELA: PROMPT DE COMANDO (CMD) ===== -->
     <section class="window cmd-window" id="cmd">
       <div class="window-titlebar">
@@ -885,6 +932,10 @@
       <button class="start-app-tile" data-app="notepad" type="button">
         <span class="start-app-icon">📝</span>
         <span class="start-app-name">Bloco de Notas</span>
+      </button>
+      <button class="start-app-tile" data-app="paint" type="button">
+        <span class="start-app-icon">🖌️</span>
+        <span class="start-app-name">Paint</span>
       </button>
       <button class="start-app-tile" data-app="cmd" type="button">
         <span class="start-app-icon">⬛</span>

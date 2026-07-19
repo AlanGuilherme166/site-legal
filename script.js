@@ -611,6 +611,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // reduz a imagem escolhida (resolucao + compressao jpeg) antes de virar wallpaper,
+  // senão fotos de câmera/celular estouram a cota do localStorage (uns 5MB no total)
+  function resizeImageForWallpaper(file, callback){
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 1920;
+        let width = img.naturalWidth;
+        let height = img.naturalHeight;
+
+        if (width > maxDim || height > maxDim){
+          if (width >= height){
+            height = Math.round(height * (maxDim / width));
+            width = maxDim;
+          } else {
+            width = Math.round(width * (maxDim / height));
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        try{
+          callback(canvas.toDataURL('image/jpeg', 0.72));
+        }catch(err){
+          console.error('Erro ao comprimir wallpaper:', err);
+          callback(null);
+        }
+      };
+      img.onerror = () => callback(null);
+      img.src = reader.result;
+    };
+    reader.onerror = () => callback(null);
+    reader.readAsDataURL(file);
+  }
+
   if (wallpaperGrid){
     wallpaperGrid.addEventListener('click', (e) => {
       const sw = e.target.closest('.wallpaper-swatch');
@@ -632,10 +673,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = () => applyCustomWallpaper(reader.result, true);
-      reader.onerror = () => alert('Não foi possível ler essa imagem.');
-      reader.readAsDataURL(file);
+      resizeImageForWallpaper(file, (dataUrl) => {
+        if (!dataUrl){
+          alert('Não foi possível processar essa imagem. Tenta outra.');
+          return;
+        }
+        applyCustomWallpaper(dataUrl, true);
+      });
       wallpaperUploadInput.value = '';
     });
   }
@@ -772,6 +816,238 @@ document.addEventListener('DOMContentLoaded', () => {
       try{ localStorage.setItem('aero-notepad', notepadTextarea.value); }catch(err){}
     });
   }
+
+  /* =====================================================
+     PAINT (desenho em canvas, cores, tamanho, balde e autosave)
+  ===================================================== */
+  (function initPaint(){
+    const canvas = document.getElementById('paintCanvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const swatchesEl = document.getElementById('paintSwatches');
+    const colorInput = document.getElementById('paintColorInput');
+    const sizeInput = document.getElementById('paintSizeInput');
+    const clearBtn = document.getElementById('paintClearBtn');
+    const saveBtn = document.getElementById('paintSaveBtn');
+    const toolBrushBtn = document.getElementById('paintToolBrush');
+    const toolEraserBtn = document.getElementById('paintToolEraser');
+    const toolFillBtn = document.getElementById('paintToolFill');
+
+    const PAINT_STORAGE_KEY = 'aero-paint';
+    const cores = [
+      '#000000', '#ffffff', '#8a8a8a', '#c62828',
+      '#ef6c00', '#fdd835', '#2e7d32', '#00897b',
+      '#1565c0', '#5e35b1', '#ec407a', '#8d5a2b'
+    ];
+
+    let currentColor = '#1b2530';
+    let currentSize = 5;
+    let currentTool = 'brush'; // 'brush' | 'eraser' | 'fill'
+    let drawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    function fundoBranco(){
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // fundo branco inicial + tenta restaurar desenho salvo
+    fundoBranco();
+    try{
+      const saved = localStorage.getItem(PAINT_STORAGE_KEY);
+      if (saved){
+        const img = new Image();
+        img.onload = () => {
+          fundoBranco();
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+        img.src = saved;
+      }
+    }catch(err){}
+
+    function salvarAutosave(){
+      try{ localStorage.setItem(PAINT_STORAGE_KEY, canvas.toDataURL('image/png')); }catch(err){}
+    }
+
+    function montarSwatches(){
+      if (!swatchesEl) return;
+      swatchesEl.innerHTML = '';
+      cores.forEach((cor, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'paint-swatch' + (idx === 0 ? ' active' : '');
+        btn.style.background = cor;
+        btn.setAttribute('aria-label', 'Cor ' + cor);
+        btn.addEventListener('click', () => {
+          currentColor = cor;
+          if (colorInput) colorInput.value = cor;
+          swatchesEl.querySelectorAll('.paint-swatch').forEach(el => el.classList.remove('active'));
+          btn.classList.add('active');
+          setTool('brush');
+        });
+        swatchesEl.appendChild(btn);
+      });
+    }
+    montarSwatches();
+
+    if (colorInput){
+      colorInput.addEventListener('input', () => {
+        currentColor = colorInput.value;
+        if (swatchesEl) swatchesEl.querySelectorAll('.paint-swatch').forEach(el => el.classList.remove('active'));
+        setTool('brush');
+      });
+    }
+
+    if (sizeInput){
+      sizeInput.addEventListener('input', () => {
+        currentSize = Number(sizeInput.value) || 5;
+      });
+    }
+
+    function setTool(tool){
+      currentTool = tool;
+      if (toolBrushBtn) toolBrushBtn.classList.toggle('active', tool === 'brush');
+      if (toolEraserBtn) toolEraserBtn.classList.toggle('active', tool === 'eraser');
+      if (toolFillBtn) toolFillBtn.classList.toggle('active', tool === 'fill');
+    }
+
+    if (toolBrushBtn) toolBrushBtn.addEventListener('click', () => setTool('brush'));
+    if (toolEraserBtn) toolEraserBtn.addEventListener('click', () => setTool('eraser'));
+    if (toolFillBtn) toolFillBtn.addEventListener('click', () => setTool('fill'));
+
+    function getPos(e){
+      const rect = canvas.getBoundingClientRect();
+      const point = e.touches ? e.touches[0] : e;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (point.clientX - rect.left) * scaleX,
+        y: (point.clientY - rect.top) * scaleY
+      };
+    }
+
+    function hexParaRgba(hex){
+      const h = hex.replace('#', '');
+      const bigint = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
+      return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255, 255];
+    }
+
+    // balde de tinta: flood fill simples (algoritmo de pilha)
+    function baldeDeTinta(startX, startY, corHex){
+      startX = Math.floor(startX);
+      startY = Math.floor(startY);
+      if (startX < 0 || startY < 0 || startX >= canvas.width || startY >= canvas.height) return;
+
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imgData.data;
+      const w = canvas.width;
+      const h = canvas.height;
+
+      const idxInicial = (startY * w + startX) * 4;
+      const corAlvo = [data[idxInicial], data[idxInicial + 1], data[idxInicial + 2], data[idxInicial + 3]];
+      const corNova = hexParaRgba(corHex);
+
+      if (corAlvo[0] === corNova[0] && corAlvo[1] === corNova[1] && corAlvo[2] === corNova[2] && corAlvo[3] === corNova[3]) return;
+
+      const pilha = [[startX, startY]];
+      const tolerancia = 24;
+
+      function bate(i){
+        return Math.abs(data[i] - corAlvo[0]) <= tolerancia &&
+               Math.abs(data[i + 1] - corAlvo[1]) <= tolerancia &&
+               Math.abs(data[i + 2] - corAlvo[2]) <= tolerancia &&
+               Math.abs(data[i + 3] - corAlvo[3]) <= tolerancia;
+      }
+
+      let seguranca = w * h * 4; // evita loop infinito
+      while (pilha.length && seguranca-- > 0){
+        const [x, y] = pilha.pop();
+        if (x < 0 || y < 0 || x >= w || y >= h) continue;
+        const i = (y * w + x) * 4;
+        if (!bate(i)) continue;
+
+        data[i] = corNova[0];
+        data[i + 1] = corNova[1];
+        data[i + 2] = corNova[2];
+        data[i + 3] = corNova[3];
+
+        pilha.push([x + 1, y]);
+        pilha.push([x - 1, y]);
+        pilha.push([x, y + 1]);
+        pilha.push([x, y - 1]);
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+    }
+
+    function desenharLinha(x1, y1, x2, y2){
+      ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : currentColor;
+      ctx.lineWidth = currentSize;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+
+    function onPointerDown(e){
+      const pos = getPos(e);
+
+      if (currentTool === 'fill'){
+        baldeDeTinta(pos.x, pos.y, currentColor);
+        salvarAutosave();
+        return;
+      }
+
+      drawing = true;
+      lastX = pos.x;
+      lastY = pos.y;
+      // ponto isolado (clique sem arrastar) ainda aparece como uma bolinha
+      desenharLinha(pos.x, pos.y, pos.x, pos.y);
+      if (e.cancelable) e.preventDefault();
+    }
+
+    function onPointerMove(e){
+      if (!drawing) return;
+      if (e.cancelable) e.preventDefault();
+      const pos = getPos(e);
+      desenharLinha(lastX, lastY, pos.x, pos.y);
+      lastX = pos.x;
+      lastY = pos.y;
+    }
+
+    function onPointerUp(){
+      if (drawing) salvarAutosave();
+      drawing = false;
+    }
+
+    canvas.addEventListener('mousedown', onPointerDown);
+    canvas.addEventListener('mousemove', onPointerMove);
+    document.addEventListener('mouseup', onPointerUp);
+
+    canvas.addEventListener('touchstart', onPointerDown, { passive: false });
+    canvas.addEventListener('touchmove', onPointerMove, { passive: false });
+    canvas.addEventListener('touchend', onPointerUp);
+
+    if (clearBtn){
+      clearBtn.addEventListener('click', () => {
+        fundoBranco();
+        salvarAutosave();
+      });
+    }
+
+    if (saveBtn){
+      saveBtn.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = 'meu-desenho-aero.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+  })();
 
   /* =====================================================
      LIXEIRA (decorativa)
@@ -2118,7 +2394,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const assistenteJogosReply = 'A Vitrine (ícone 🎮) é a lojinha de jogos: lá você compra jogos com o seu saldo do Nubonk e depois joga direto na aba Biblioteca. Cada jogo comprado fica guardado no seu Inventário, então você não perde o que já pagou.';
   const assistenteTrabalhoReply = 'Na Escavação (ícone da pá 🪏) você cava buracos pra ganhar dinheiro, que cai direto no seu saldo do Nubonk. Cada cavada gasta energia — às vezes você acha só pedra, às vezes ouro, e raramente um diamante gigante! A energia recupera sozinha bem devagar, ou você come algo ou usa um stim no Inventário pra acelerar.';
   const assistenteDividasReply = 'Se o seu saldo no Nubonk ficar negativo por muito tempo, um agiota aparece aqui no MSN cobrando a dívida. Se você ignorar as cobranças dele por tempo demais, as coisas ficam feias. O melhor é quitar a dívida assim que o seu saldo cobrir o valor, lá na aba Nubonk.';
-  const assistenteSitesReply = 'Alguns sites que rolam por aí: xxx.aero.com, aerogram.com, aerocripto.com e aeropedia.com. Pra acessar, digita o endereço certinho na barra de pesquisa do Gugle (ícone 🌐 do Navegador) e aperta Enter. Só um aviso: alguns desses sites são meio suspeitos... 👀 (a aeropedia.com essa é de boa, é só uma enciclopédia)';
+  const assistenteSitesReply = 'Alguns sites que rolam por aí: xxx.aero.com, aerogram.com, aerocripto.com, aeropedia.com e aeroball.com. Pra acessar, digita o endereço certinho na barra de pesquisa do Gugle (ícone 🌐 do Navegador) e aperta Enter. Só um aviso: alguns desses sites são meio suspeitos... 👀 (a aeropedia.com e a aeroball.com essas são de boa: uma é enciclopédia, a outra é a tabela do Brasileirão)';
 
   const assistenteGenericReplies = [
     'Não entendi muito bem, mas posso te explicar sobre "jogos", "trabalho", "dívidas" ou "sites". É só perguntar!',
@@ -4070,7 +4346,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ---------- NAVEGADOR (GUGLE) ---------- */
   // O player de vídeo do YouTube foi removido: o navegador agora só mostra
   // a página inicial do Gugle (sem funcionalidade real de busca/navegação),
-  // exceto pelos 3 sites especiais abaixo, que só abrem se o endereço for
+  // exceto pelos 5 sites especiais abaixo, que só abrem se o endereço for
   // digitado certinho na barra de pesquisa do Gugle.
   const browserBackBtn = document.getElementById('browserBackBtn');
   const browserForwardBtn = document.getElementById('browserForwardBtn');
@@ -4355,7 +4631,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resumo: 'O motor de busca do sistema',
         corpo: `
           <p>O <strong>Navegador</strong> abre direto na página do <strong>Gugle</strong>, motor de busca oficial do AeroOS. Ele não faz busca de verdade — mas se você digitar o endereço certinho de alguns sites na barra de pesquisa, uma janela nova se abre por cima da área de trabalho.</p>
-          <p>Endereços conhecidos: <code>xxx.aero.com</code>, <code>aerogram.com</code>, <code>aerocripto.com</code> e, claro, esta própria enciclopédia, <code>aeropedia.com</code>.</p>
+          <p>Endereços conhecidos: <code>xxx.aero.com</code>, <code>aerogram.com</code>, <code>aerocripto.com</code>, <code>aeroball.com</code> e, claro, esta própria enciclopédia, <code>aeropedia.com</code>.</p>
         `
       },
       {
@@ -4451,12 +4727,95 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSidebar('');
   }
 
+  /* ===== SITE 5: aeroball.com — tabela do Brasileirão Série A ===== */
+  function renderSiteAeroball(bodyEl){
+    // Classificação atualizada até a 19ª rodada do Brasileirão Série A 2026
+    const tabela = [
+      { time: 'Palmeiras',           sigla: 'PAL', pj: 18, v: 12, e: 5, d: 1,  gp: 30, gc: 13, sg: 17,  pts: 41 },
+      { time: 'Flamengo',            sigla: 'FLA', pj: 17, v: 10, e: 4, d: 3,  gp: 31, gc: 16, sg: 15,  pts: 34 },
+      { time: 'Fluminense',          sigla: 'FLU', pj: 19, v: 9,  e: 5, d: 5,  gp: 29, gc: 24, sg: 5,   pts: 32 },
+      { time: 'Red Bull Bragantino', sigla: 'RBB', pj: 19, v: 9,  e: 3, d: 7,  gp: 26, gc: 20, sg: 6,   pts: 30 },
+      { time: 'Athletico-PR',        sigla: 'CAP', pj: 18, v: 9,  e: 3, d: 6,  gp: 24, gc: 18, sg: 6,   pts: 30 },
+      { time: 'Bahia',               sigla: 'BAH', pj: 18, v: 8,  e: 5, d: 5,  gp: 27, gc: 23, sg: 4,   pts: 29 },
+      { time: 'Coritiba',            sigla: 'CBA', pj: 18, v: 7,  e: 5, d: 6,  gp: 24, gc: 24, sg: 0,   pts: 26 },
+      { time: 'São Paulo',           sigla: 'SAO', pj: 18, v: 7,  e: 4, d: 7,  gp: 23, gc: 20, sg: 3,   pts: 25 },
+      { time: 'Botafogo',            sigla: 'BOT', pj: 18, v: 7,  e: 4, d: 7,  gp: 33, gc: 32, sg: 1,   pts: 25 },
+      { time: 'Vitória',             sigla: 'VIT', pj: 18, v: 7,  e: 4, d: 7,  gp: 22, gc: 25, sg: -3,  pts: 25 },
+      { time: 'Atlético-MG',         sigla: 'ATL', pj: 18, v: 7,  e: 3, d: 8,  gp: 22, gc: 23, sg: -1,  pts: 24 },
+      { time: 'Corinthians',         sigla: 'COR', pj: 18, v: 6,  e: 6, d: 6,  gp: 18, gc: 19, sg: -1,  pts: 24 },
+      { time: 'Cruzeiro',            sigla: 'CRU', pj: 18, v: 6,  e: 6, d: 6,  gp: 24, gc: 28, sg: -4,  pts: 24 },
+      { time: 'Internacional',       sigla: 'INT', pj: 18, v: 5,  e: 6, d: 7,  gp: 21, gc: 22, sg: -1,  pts: 21 },
+      { time: 'Santos',              sigla: 'SAN', pj: 19, v: 5,  e: 6, d: 8,  gp: 27, gc: 31, sg: -4,  pts: 21 },
+      { time: 'Grêmio',              sigla: 'GRE', pj: 19, v: 5,  e: 6, d: 8,  gp: 21, gc: 25, sg: -4,  pts: 21 },
+      { time: 'Vasco da Gama',       sigla: 'VAS', pj: 19, v: 5,  e: 5, d: 9,  gp: 22, gc: 30, sg: -8,  pts: 20 },
+      { time: 'Mirassol',            sigla: 'MIR', pj: 18, v: 5,  e: 4, d: 9,  gp: 20, gc: 25, sg: -5,  pts: 19 },
+      { time: 'Remo',                sigla: 'REM', pj: 18, v: 4,  e: 6, d: 8,  gp: 21, gc: 29, sg: -8,  pts: 18 },
+      { time: 'Chapecoense',         sigla: 'CHA', pj: 18, v: 1,  e: 6, d: 11, gp: 17, gc: 35, sg: -18, pts: 9  }
+    ];
+
+    const linhas = tabela.map((t, idx) => {
+      const pos = idx + 1;
+      let zonaClass = '';
+      if (pos <= 6) zonaClass = 'aeroball-row-libertadores';
+      else if (pos >= 17) zonaClass = 'aeroball-row-relegation';
+      const sgTexto = t.sg > 0 ? ('+' + t.sg) : String(t.sg);
+      return `
+        <tr class="${zonaClass}">
+          <td class="aeroball-pos">${pos}</td>
+          <td class="aeroball-col-team">${t.sigla} · ${t.time}</td>
+          <td>${t.pj}</td>
+          <td>${t.v}</td>
+          <td>${t.e}</td>
+          <td>${t.d}</td>
+          <td>${t.gp}</td>
+          <td>${t.gc}</td>
+          <td>${sgTexto}</td>
+          <td><strong>${t.pts}</strong></td>
+        </tr>
+      `;
+    }).join('');
+
+    bodyEl.innerHTML = `
+      <div class="aeroball-app">
+        <header class="aeroball-header">
+          <span class="aeroball-logo"><span class="aeroball-ball">⚽</span>aeroball</span>
+          <span class="aeroball-tagline">Brasileirão<br>Série A</span>
+        </header>
+        <p class="aeroball-updated">Classificação atualizada até a 19ª rodada</p>
+        <div class="aeroball-table-wrap">
+          <table class="aeroball-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th class="aeroball-col-team">Time</th>
+                <th>PJ</th>
+                <th>V</th>
+                <th>E</th>
+                <th>D</th>
+                <th>GP</th>
+                <th>GC</th>
+                <th>SG</th>
+                <th>Pts</th>
+              </tr>
+            </thead>
+            <tbody>${linhas}</tbody>
+          </table>
+        </div>
+        <div class="aeroball-legend">
+          <span class="aeroball-legend-item"><span class="aeroball-legend-dot aeroball-dot-liber"></span>Libertadores</span>
+          <span class="aeroball-legend-item"><span class="aeroball-legend-dot aeroball-dot-releg"></span>Rebaixamento</span>
+        </div>
+      </div>
+    `;
+  }
+
   /* ===== JANELAS DE SITE + ROTEAMENTO PELA BARRA DE PESQUISA DO GUGLE ===== */
   const SITE_DEFS = {
     'xxx.aero.com': { title: 'xxx.aero.com', render: renderSiteXxxAero },
     'aerogram.com': { title: 'Aerogram', render: renderSiteAerogram },
     'aerocripto.com': { title: 'AeroCripto', render: renderSiteAeroCripto },
-    'aeropedia.com': { title: 'aeropedia', render: renderSiteAeropedia }
+    'aeropedia.com': { title: 'aeropedia', render: renderSiteAeropedia },
+    'aeroball.com': { title: 'AeroBall', render: renderSiteAeroball }
   };
 
   let siteWindowOffset = 0;
@@ -4529,7 +4888,7 @@ document.addEventListener('DOMContentLoaded', () => {
     makeSiteWindowDraggable(win);
   }
 
-  // só existe uma forma de abrir esses 3 sites: digitando o endereço
+  // só existe uma forma de abrir esses 5 sites: digitando o endereço
   // certinho na barra de pesquisa do Gugle (seja a de cima ou a da home)
   function handleGugleQuery(raw){
     const query = normalizeSiteQuery(raw);
