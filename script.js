@@ -553,6 +553,8 @@ document.addEventListener('DOMContentLoaded', () => {
   ===================================================== */
   const wallpaperLayer = document.getElementById('wallpaperLayer');
   const wallpaperGrid = document.getElementById('wallpaperGrid');
+  const wallpaperUploadBtn = document.getElementById('wallpaperUploadBtn');
+  const wallpaperUploadInput = document.getElementById('wallpaperUploadInput');
   const accentGrid = document.getElementById('accentGrid');
   const accentCustomInput = document.getElementById('accentCustomInput');
   const personalizarResetBtn = document.getElementById('personalizarResetBtn');
@@ -568,7 +570,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function applyWallpaper(key, persist){
     const css = WALLPAPERS[key] || WALLPAPERS.aero;
-    if (wallpaperLayer) wallpaperLayer.style.background = css;
+    if (wallpaperLayer){
+      wallpaperLayer.style.backgroundImage = '';
+      wallpaperLayer.style.background = css;
+    }
     document.querySelectorAll('.wallpaper-swatch').forEach(sw => {
       sw.classList.toggle('selected', sw.dataset.wallpaper === key);
     });
@@ -577,7 +582,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // escolhe qualquer wallpaper diferente do padrao "aero"
     document.body.classList.toggle('custom-wallpaper', key !== 'aero');
     if (persist){
-      try{ localStorage.setItem('aero-wallpaper', key); }catch(err){}
+      try{
+        localStorage.setItem('aero-wallpaper', key);
+        localStorage.removeItem('aero-wallpaper-custom');
+      }catch(err){}
+    }
+  }
+
+  // wallpaper a partir de uma imagem que o usuario escolheu no pc (upada como base64)
+  function applyCustomWallpaper(dataUrl, persist){
+    if (wallpaperLayer){
+      wallpaperLayer.style.background = 'none';
+      wallpaperLayer.style.backgroundImage = `url("${dataUrl}")`;
+      wallpaperLayer.style.backgroundSize = 'cover';
+      wallpaperLayer.style.backgroundPosition = 'center';
+      wallpaperLayer.style.backgroundRepeat = 'no-repeat';
+    }
+    document.querySelectorAll('.wallpaper-swatch').forEach(sw => sw.classList.remove('selected'));
+    document.body.classList.add('custom-wallpaper');
+    if (persist){
+      try{
+        localStorage.setItem('aero-wallpaper', 'custom');
+        localStorage.setItem('aero-wallpaper-custom', dataUrl);
+      }catch(err){
+        console.error('Erro ao salvar wallpaper customizado:', err);
+        alert('A imagem foi aplicada, mas é grande demais pra ser salva — ao recarregar a página ela volta ao papel de parede anterior.');
+      }
     }
   }
 
@@ -586,6 +616,27 @@ document.addEventListener('DOMContentLoaded', () => {
       const sw = e.target.closest('.wallpaper-swatch');
       if (!sw) return;
       applyWallpaper(sw.dataset.wallpaper, true);
+    });
+  }
+
+  if (wallpaperUploadBtn && wallpaperUploadInput){
+    wallpaperUploadBtn.addEventListener('click', () => wallpaperUploadInput.click());
+
+    wallpaperUploadInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')){
+        alert('Escolhe um arquivo de imagem (jpg, png, etc).');
+        wallpaperUploadInput.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => applyCustomWallpaper(reader.result, true);
+      reader.onerror = () => alert('Não foi possível ler essa imagem.');
+      reader.readAsDataURL(file);
+      wallpaperUploadInput.value = '';
     });
   }
 
@@ -693,12 +744,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // aplica wallpaper/cor salvos ao carregar
   let savedWallpaper = 'aero';
+  let savedWallpaperCustom = null;
   let savedAccent = null;
   try{
     savedWallpaper = localStorage.getItem('aero-wallpaper') || 'aero';
+    savedWallpaperCustom = localStorage.getItem('aero-wallpaper-custom');
     savedAccent = localStorage.getItem('aero-accent');
   }catch(err){}
-  applyWallpaper(savedWallpaper, false);
+  if (savedWallpaper === 'custom' && savedWallpaperCustom){
+    applyCustomWallpaper(savedWallpaperCustom, false);
+  } else {
+    applyWallpaper(savedWallpaper, false);
+  }
   if (savedAccent) applyAccent(savedAccent, false);
 
   /* =====================================================
