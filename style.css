@@ -4128,3 +4128,281 @@ body.custom-wallpaper .bg-decor{
 .msn-msg-action-btn:active{
   transform: scale(0.97);
 }
+/* ---------- SISTEMA DE CONTA / LOGIN ---------- */
+.start-account-btn{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--mica-fill-strong);
+  border: 1px solid var(--mica-border);
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: left;
+}
+
+.start-account-avatar{
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.5);
+}
+
+.start-account-avatar img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.start-account-name{
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.login-body{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.login-tabs{
+  width: 100%;
+  justify-content: center;
+}
+
+.login-panel{
+  width: 100%;
+  max-width: 280px;
+  align-items: stretch;
+}
+
+.login-input{
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  background: var(--mica-fill-strong);
+  border: 1px solid var(--mica-border);
+}
+
+.login-error{
+  color: #d5311f;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.login-avatar-label{
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  margin: 4px 0 0;
+}
+
+.avatar-grid{
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.avatar-swatch{
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.avatar-swatch img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-swatch.selected{
+  border-color: var(--text-dark);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.8);
+}
+
+.login-profile{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-profile-avatar{
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--mica-border);
+}
+
+.login-profile-name{
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.login-profile-code{
+  font-size: 0.78rem;
+  color: var(--text-soft);
+}
+
+/* ---------- ABAS DO MSN (Contatos / Adicionar amigo) ---------- */
+.msn-side-tabs{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.msn-side-tab{
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-soft);
+  cursor: pointer;
+  text-align: left;
+}
+
+.msn-side-tab.active{
+  background: var(--mica-fill-strong);
+  color: var(--text-dark);
+  border-color: var(--mica-border);
+}
+
+.msn-addfriend-form{
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.msn-addfriend-msg{
+  font-size: 0.72rem;
+  color: var(--text-soft);
+  margin-bottom: 8px;
+}
+
+.msn-friend-item{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+}
+
+.msn-friend-avatar{
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.msn-friend-name{
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.msn-friend-item{
+  cursor: pointer;
+}
+
+.msn-friend-item:hover{
+  background: rgba(120,190,255,0.25);
+}
+
+.msn-friend-item.active{
+  background: rgba(120,190,255,0.4);
+}
+
+.msn-friend-info{
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.msn-friend-status{
+  font-size: 0.65rem;
+  color: #2e9c4a;
+}
+
+.msn-friend-status.offline{
+  color: var(--text-soft);
+}
+
+.msn-chat-loading{
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  text-align: center;
+  margin-top: 12px;
+}
+
+.msn-msg-with-avatar{
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: 90%;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  color: inherit !important;
+}
+
+.msn-msg-me.msn-msg-with-avatar{
+  flex-direction: row-reverse;
+}
+
+.msn-msg-avatar{
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.msn-msg-content{
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: var(--mica-fill-strong);
+  border: 1px solid var(--mica-border);
+  color: var(--text-dark);
+}
+
+.msn-msg-me .msn-msg-content{
+  background: linear-gradient(135deg, var(--blue-deep), #4a95e0);
+  color: #fff;
+  border: none;
+}
+
+.msn-msg-sender{
+  font-size: 0.65rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.msn-msg-text{
+  font-size: 0.78rem;
+  line-height: 1.4;
+  word-wrap: break-word;
+}

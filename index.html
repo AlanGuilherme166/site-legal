@@ -255,37 +255,53 @@
       </div>
       <div class="window-body msn-body">
         <div class="msn-contacts" id="msnContacts">
-          <div class="msn-contact" data-contact="assistente">
-            <span class="msn-contact-avatar">🤖</span>
-            <span class="msn-contact-info">
-              <span class="msn-contact-name">Assistente Virtual</span>
-              <span class="msn-contact-status">● Online</span>
-            </span>
-            <span class="msn-contact-badge" id="badgeAssistente" hidden>0</span>
+          <div class="msn-side-tabs" id="msnSideTabs">
+            <button class="msn-side-tab active" data-msn-tab="contatos" type="button">Contatos</button>
+            <button class="msn-side-tab" data-msn-tab="amigos" type="button">Adicionar amigo</button>
           </div>
-          <div class="msn-contact active" data-contact="carachato">
-            <span class="msn-contact-avatar">🙂</span>
-            <span class="msn-contact-info">
-              <span class="msn-contact-name">Cara Chato</span>
-              <span class="msn-contact-status">● Online</span>
-            </span>
-            <span class="msn-contact-badge" id="badgeCarachato" hidden>0</span>
+
+          <div class="msn-contacts-list" data-msn-panel="contatos">
+            <div class="msn-contact" data-contact="assistente">
+              <span class="msn-contact-avatar">🤖</span>
+              <span class="msn-contact-info">
+                <span class="msn-contact-name">Assistente Virtual</span>
+                <span class="msn-contact-status">● Online</span>
+              </span>
+              <span class="msn-contact-badge" id="badgeAssistente" hidden>0</span>
+            </div>
+            <div class="msn-contact active" data-contact="carachato">
+              <span class="msn-contact-avatar">🙂</span>
+              <span class="msn-contact-info">
+                <span class="msn-contact-name">Cara Chato</span>
+                <span class="msn-contact-status">● Online</span>
+              </span>
+              <span class="msn-contact-badge" id="badgeCarachato" hidden>0</span>
+            </div>
+            <div class="msn-contact" data-contact="agiota" id="msnAgiotaContact">
+              <span class="msn-contact-avatar">🕴️</span>
+              <span class="msn-contact-info">
+                <span class="msn-contact-name">Agiota</span>
+                <span class="msn-contact-status">● Online</span>
+              </span>
+              <span class="msn-contact-badge" id="badgeAgiota" hidden>0</span>
+            </div>
+            <div class="msn-contact" data-contact="nerdsabido">
+              <span class="msn-contact-avatar">🤓</span>
+              <span class="msn-contact-info">
+                <span class="msn-contact-name">Nerd Sabido</span>
+                <span class="msn-contact-status">● Online</span>
+              </span>
+              <span class="msn-contact-badge" id="badgeNerdsabido" hidden>0</span>
+            </div>
           </div>
-          <div class="msn-contact" data-contact="agiota" id="msnAgiotaContact">
-            <span class="msn-contact-avatar">🕴️</span>
-            <span class="msn-contact-info">
-              <span class="msn-contact-name">Agiota</span>
-              <span class="msn-contact-status">● Online</span>
-            </span>
-            <span class="msn-contact-badge" id="badgeAgiota" hidden>0</span>
-          </div>
-          <div class="msn-contact" data-contact="nerdsabido">
-            <span class="msn-contact-avatar">🤓</span>
-            <span class="msn-contact-info">
-              <span class="msn-contact-name">Nerd Sabido</span>
-              <span class="msn-contact-status">● Online</span>
-            </span>
-            <span class="msn-contact-badge" id="badgeNerdsabido" hidden>0</span>
+
+          <div class="msn-friends-panel" data-msn-panel="amigos" hidden>
+            <form class="msn-addfriend-form" id="msnAddFriendForm">
+              <input type="text" id="msnFriendCodeInput" class="start-search-input login-input" placeholder="Código do amigo" autocomplete="off">
+              <button class="glass-btn" type="submit">Adicionar</button>
+            </form>
+            <p class="msn-addfriend-msg" id="msnAddFriendMsg" hidden></p>
+            <div class="msn-friends-list" id="msnFriendsList"></div>
           </div>
         </div>
         <div class="msn-chat">
@@ -296,6 +312,50 @@
             <button type="button" class="glass-btn msn-send-btn">Enviar</button>
           </form>
         </div>
+      </div>
+    </section>
+    <!-- ===== JANELA: LOGIN / CONTA ===== -->
+    <section class="window login-window" id="login">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">👤</span> conta.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body login-body">
+
+        <div class="login-profile" id="loginProfile" hidden>
+          <img class="login-profile-avatar" id="profileAvatarImg" src="" alt="Avatar">
+          <p class="login-profile-name" id="profileUsername">Usuário</p>
+          <p class="login-profile-code" id="profileCode">Código: ---</p>
+          <button class="glass-btn" id="logoutBtn" type="button">Sair</button>
+        </div>
+
+        <div class="login-forms" id="loginForms">
+          <div class="casino-tabs login-tabs">
+            <button class="casino-tab active" data-login-tab="entrar" type="button">Entrar</button>
+            <button class="casino-tab" data-login-tab="criar" type="button">Criar Conta</button>
+          </div>
+
+          <p class="login-error" id="loginError" hidden></p>
+
+          <form class="login-panel casino-panel" id="loginFormEntrar" data-login-panel="entrar">
+            <input type="text" id="loginUsernameInput" class="start-search-input login-input" placeholder="Usuário" autocomplete="off" required>
+            <input type="password" id="loginPasswordInput" class="start-search-input login-input" placeholder="Senha" autocomplete="off" required>
+            <button class="glass-btn" type="submit">Entrar</button>
+          </form>
+
+          <form class="login-panel casino-panel" id="loginFormCriar" data-login-panel="criar" hidden>
+            <input type="text" id="registerUsernameInput" class="start-search-input login-input" placeholder="Usuário" autocomplete="off" required>
+            <input type="password" id="registerPasswordInput" class="start-search-input login-input" placeholder="Senha" autocomplete="off" required>
+            <p class="login-avatar-label">Escolha um avatar:</p>
+            <div class="avatar-grid" id="registerAvatarGrid"></div>
+            <button class="glass-btn" type="submit">Criar conta</button>
+          </form>
+        </div>
+
       </div>
     </section>
 
@@ -739,6 +799,11 @@
   <div class="start-menu" id="startMenu">
     <div class="start-menu-highlight"></div>
 
+    <button class="start-account-btn" id="startAccountBtn" type="button">
+      <span class="start-account-avatar" id="startAccountAvatar">👤</span>
+      <span class="start-account-name" id="startAccountName">Login</span>
+    </button>
+
     <div class="start-search">
       <span class="start-search-icon">🔍</span>
       <input
@@ -870,6 +935,8 @@
 
   <audio id="msnNotificationSound" src="audios/chamada-a-cobrar-para-aceitar.mp3" preload="auto"></audio>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

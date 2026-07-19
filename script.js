@@ -1708,6 +1708,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function switchContact(contact){
+    activeFriend = null;
+    document.querySelectorAll('.msn-friend-item').forEach(el => el.classList.remove('active'));
+
     activeContact = contact;
     unread[contact] = 0;
     updateBadge(contact);
@@ -2166,6 +2169,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!msnComposeInput) return;
     const text = msnComposeInput.value.trim();
     if (!text) return;
+
+    if (activeFriend){
+      msnComposeInput.value = '';
+      enviarMensagemAmigo(text);
+      return;
+    }
 
     addMessage(activeContact, 'me', text);
     msnComposeInput.value = '';
@@ -4230,6 +4239,440 @@ document.addEventListener('DOMContentLoaded', () => {
       handleGugleQuery(gugleSearchInput.value);
       gugleSearchInput.value = '';
     });
+  }
+/* ---------- SISTEMA DE USUARIOS (SUPABASE) ---------- */
+  const AVATAR_COUNT = 13;
+  const SESSION_KEY = 'aero_session';
+  let currentUser = null;
+  try{ currentUser = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }catch(err){ currentUser = null; }
+
+  const loginProfile = document.getElementById('loginProfile');
+  const loginForms = document.getElementById('loginForms');
+  const profileAvatarImg = document.getElementById('profileAvatarImg');
+  const profileUsername = document.getElementById('profileUsername');
+  const profileCode = document.getElementById('profileCode');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const loginError = document.getElementById('loginError');
+
+  const startAccountBtn = document.getElementById('startAccountBtn');
+  const startAccountAvatar = document.getElementById('startAccountAvatar');
+  const startAccountName = document.getElementById('startAccountName');
+
+  const loginFormEntrar = document.getElementById('loginFormEntrar');
+  const loginFormCriar = document.getElementById('loginFormCriar');
+  const registerAvatarGrid = document.getElementById('registerAvatarGrid');
+
+  let selectedAvatar = 'icon-1';
+
+  if (registerAvatarGrid){
+    for (let i = 1; i <= AVATAR_COUNT; i++){
+      const id = `icon-${i}`;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'avatar-swatch' + (id === selectedAvatar ? ' selected' : '');
+      btn.dataset.avatar = id;
+      btn.innerHTML = `<img src="icons/${id}.jpg" alt="${id}">`;
+      registerAvatarGrid.appendChild(btn);
+    }
+    registerAvatarGrid.addEventListener('click', (e) => {
+      const btn = e.target.closest('.avatar-swatch');
+      if (!btn) return;
+      selectedAvatar = btn.dataset.avatar;
+      registerAvatarGrid.querySelectorAll('.avatar-swatch').forEach(s => s.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  }
+
+  function showLoginError(msg){
+    if (!loginError) return;
+    loginError.textContent = msg;
+    loginError.hidden = false;
+  }
+  function clearLoginError(){
+    if (loginError){ loginError.hidden = true; loginError.textContent = ''; }
+  }
+
+  function gerarCodigoAmigo(){
+    return Math.random().toString(36).slice(2, 8).toUpperCase();
+  }
+
+  function renderAccountUI(){
+    if (currentUser){
+      if (loginProfile) loginProfile.hidden = false;
+      if (loginForms) loginForms.hidden = true;
+      if (profileAvatarImg) profileAvatarImg.src = `icons/${currentUser.avatar}.jpg`;
+      if (profileUsername) profileUsername.textContent = currentUser.username;
+      if (profileCode) profileCode.textContent = `Código: ${currentUser.codigo}`;
+      if (startAccountAvatar) startAccountAvatar.innerHTML = `<img src="icons/${currentUser.avatar}.jpg" alt="avatar">`;
+      if (startAccountName) startAccountName.textContent = currentUser.username;
+    } else {
+      if (loginProfile) loginProfile.hidden = true;
+      if (loginForms) loginForms.hidden = false;
+      if (startAccountAvatar) startAccountAvatar.innerHTML = '👤';
+      if (startAccountName) startAccountName.textContent = 'Login';
+    }
+  }
+
+  function saveSession(user){
+    currentUser = user;
+    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    renderAccountUI();
+    carregarAmigos();
+    setupPresence();
+    setupMessagesRealtime();
+  }
+
+  function clearSession(){
+    currentUser = null;
+    activeFriend = null;
+    if (presenceChannel){ supabase.removeChannel(presenceChannel); presenceChannel = null; }
+    if (friendMessagesChannel){ supabase.removeChannel(friendMessagesChannel); friendMessagesChannel = null; }
+    localStorage.removeItem(SESSION_KEY);
+    renderAccountUI();
+  }
+
+  if (startAccountBtn){
+    startAccountBtn.addEventListener('click', () => {
+      toggleWindowFromTrigger(windowsByApp['login']);
+      if (startMenu) startMenu.classList.remove('open');
+    });
+  }
+
+  document.querySelectorAll('[data-login-tab]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('[data-login-tab]').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const target = tab.dataset.loginTab;
+      document.querySelectorAll('[data-login-panel]').forEach(p => {
+        p.hidden = p.dataset.loginPanel !== target;
+      });
+      clearLoginError();
+    });
+  });
+
+  if (loginFormEntrar){
+    loginFormEntrar.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearLoginError();
+      const username = document.getElementById('loginUsernameInput').value.trim();
+      const password = document.getElementById('loginPasswordInput').value;
+      if (!username || !password) return;
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, username, avatar, codigo, password')
+        .eq('username', username)
+        .maybeSingle();
+
+      if (error || !data || data.password !== password){
+        showLoginError('Usuário ou senha inválidos.');
+        return;
+      }
+
+      saveSession({ id: data.id, username: data.username, avatar: data.avatar, codigo: data.codigo });
+      loginFormEntrar.reset();
+    });
+  }
+
+  if (loginFormCriar){
+    loginFormCriar.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearLoginError();
+      const username = document.getElementById('registerUsernameInput').value.trim();
+      const password = document.getElementById('registerPasswordInput').value;
+      if (!username || !password){
+        showLoginError('Preencha usuário e senha.');
+        return;
+      }
+
+      const { data: existente } = await supabase
+        .from('users')
+        .select('id')
+        .eq('username', username)
+        .maybeSingle();
+
+      if (existente){
+        showLoginError('Esse usuário já existe.');
+        return;
+      }
+
+      const codigo = gerarCodigoAmigo();
+
+      const { data, error } = await supabase
+        .from('users')
+        .insert([{ username, password, avatar: selectedAvatar, codigo }])
+        .select('id, username, avatar, codigo')
+        .single();
+
+      if (error){
+        showLoginError('Não foi possível criar a conta.');
+        return;
+      }
+
+      saveSession(data);
+      loginFormCriar.reset();
+    });
+  }
+
+  if (logoutBtn){
+    logoutBtn.addEventListener('click', () => {
+      clearSession();
+    });
+  }
+
+  /* ---------- AMIGOS ---------- */
+  const msnFriendCodeInput = document.getElementById('msnFriendCodeInput');
+  const msnAddFriendForm = document.getElementById('msnAddFriendForm');
+  const msnAddFriendMsg = document.getElementById('msnAddFriendMsg');
+  const msnFriendsList = document.getElementById('msnFriendsList');
+
+  function showFriendMsg(msg){
+    if (!msnAddFriendMsg) return;
+    msnAddFriendMsg.textContent = msg;
+    msnAddFriendMsg.hidden = false;
+    setTimeout(() => { msnAddFriendMsg.hidden = true; }, 3500);
+  }
+
+  async function carregarAmigos(){
+    if (!currentUser || !msnFriendsList) return;
+    msnFriendsList.innerHTML = '';
+
+    const { data, error } = await supabase
+      .from('friends')
+      .select('friend_id, users:friend_id (username, avatar)')
+      .eq('user_id', currentUser.id);
+
+    if (error || !data) return;
+
+    data.forEach(row => {
+      const u = row.users;
+      if (!u) return;
+      const item = document.createElement('div');
+      item.className = 'msn-friend-item';
+      item.dataset.friendId = row.friend_id;
+      item.dataset.friendName = u.username;
+      item.dataset.friendAvatar = u.avatar;
+      item.innerHTML = `
+        <img class="msn-friend-avatar" src="icons/${u.avatar}.jpg" alt="${u.username}">
+        <span class="msn-friend-info">
+          <span class="msn-friend-name">${u.username}</span>
+          <span class="msn-friend-status offline">○ Offline</span>
+        </span>
+      `;
+      msnFriendsList.appendChild(item);
+    });
+
+    atualizarStatusAmigos();
+  }
+
+  if (msnAddFriendForm){
+    msnAddFriendForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentUser){
+        showFriendMsg('Faça login para adicionar amigos.');
+        return;
+      }
+      const codigo = msnFriendCodeInput.value.trim().toUpperCase();
+      if (!codigo) return;
+
+      const { data: amigo, error: erroAmigo } = await supabase
+        .from('users')
+        .select('id, username')
+        .eq('codigo', codigo)
+        .maybeSingle();
+
+      if (erroAmigo || !amigo){
+        showFriendMsg('Código não encontrado.');
+        return;
+      }
+
+      if (amigo.id === currentUser.id){
+        showFriendMsg('Você não pode adicionar a si mesmo.');
+        return;
+      }
+
+      const { error: erroInsert } = await supabase
+        .from('friends')
+        .insert([{ user_id: currentUser.id, friend_id: amigo.id }]);
+
+      if (erroInsert){
+        showFriendMsg('Esse amigo já foi adicionado.');
+        return;
+      }
+
+      showFriendMsg(`${amigo.username} adicionado!`);
+      msnFriendCodeInput.value = '';
+      carregarAmigos();
+    });
+  }
+
+  document.querySelectorAll('[data-msn-tab]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('[data-msn-tab]').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const target = tab.dataset.msnTab;
+      document.querySelectorAll('[data-msn-panel]').forEach(p => {
+        p.hidden = p.dataset.msnPanel !== target;
+      });
+    });
+  });
+
+  /* ---------- CHAT REAL COM AMIGOS (SUPABASE REALTIME) ---------- */
+  let activeFriend = null;              // { id, username, avatar } do amigo com quem se está falando
+  let presenceChannel = null;           // canal de presença (quem está online)
+  let friendMessagesChannel = null;     // canal de mensagens recebidas em tempo real
+  let onlineUserIds = new Set();
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function formatMsgTime(iso){
+    const d = new Date(iso);
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+
+  function bubbleFriendMsg(msg){
+    const isMe = msg.sender_id === currentUser.id;
+    const avatar = isMe ? currentUser.avatar : activeFriend.avatar;
+    const nome = isMe ? currentUser.username : activeFriend.username;
+
+    const bubble = document.createElement('div');
+    bubble.className = `msn-msg msn-msg-with-avatar ${isMe ? 'msn-msg-me' : 'msn-msg-them'}`;
+    bubble.innerHTML = `
+      <img class="msn-msg-avatar" src="icons/${avatar}.jpg" alt="${escapeHtml(nome)}">
+      <span class="msn-msg-content">
+        <span class="msn-msg-sender">${escapeHtml(nome)}</span>
+        <span class="msn-msg-text">${escapeHtml(msg.message)}</span>
+        <span class="msn-msg-time">${formatMsgTime(msg.created_at)}</span>
+      </span>
+    `;
+    return bubble;
+  }
+
+  // abre a conversa com um amigo: mostra o header, carrega o historico do Supabase e renderiza
+  async function abrirConversaAmigo(friend){
+    if (!currentUser) return;
+
+    activeFriend = friend;
+    activeContact = null;
+
+    document.querySelectorAll('.msn-contact').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.msn-friend-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.friendId === friend.id);
+    });
+
+    if (msnChatHeader) msnChatHeader.textContent = friend.username;
+    if (msnMessages) msnMessages.innerHTML = '<p class="msn-chat-loading">Carregando conversa...</p>';
+
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${friend.id}),and(sender_id.eq.${friend.id},receiver_id.eq.${currentUser.id})`)
+      .order('created_at', { ascending: true });
+
+    if (!msnMessages) return;
+    msnMessages.innerHTML = '';
+
+    if (error || !data){
+      msnMessages.innerHTML = '<p class="msn-chat-loading">Não foi possível carregar as mensagens.</p>';
+      return;
+    }
+
+    data.forEach(msg => msnMessages.appendChild(bubbleFriendMsg(msg)));
+    msnMessages.scrollTop = msnMessages.scrollHeight;
+  }
+
+  // envia uma mensagem real pro Supabase e mostra na hora (sem esperar o realtime, ja que o
+  // filtro do canal so escuta mensagens recebidas, nao as que a gente mesmo envia)
+  async function enviarMensagemAmigo(text){
+    if (!currentUser || !activeFriend) return;
+
+    const { data, error } = await supabase
+      .from('messages')
+      .insert([{ sender_id: currentUser.id, receiver_id: activeFriend.id, message: text }])
+      .select()
+      .single();
+
+    if (!error && data && msnMessages){
+      msnMessages.appendChild(bubbleFriendMsg(data));
+      msnMessages.scrollTop = msnMessages.scrollHeight;
+    }
+  }
+
+  // clique num amigo da lista abre a conversa real
+  if (msnFriendsList){
+    msnFriendsList.addEventListener('click', (e) => {
+      const item = e.target.closest('.msn-friend-item');
+      if (!item) return;
+      abrirConversaAmigo({
+        id: item.dataset.friendId,
+        username: item.dataset.friendName,
+        avatar: item.dataset.friendAvatar
+      });
+    });
+  }
+
+  // recebe mensagens novas em tempo real (via Supabase Realtime) mesmo com outra conversa aberta
+  function setupMessagesRealtime(){
+    if (!currentUser) return;
+    if (friendMessagesChannel){ supabase.removeChannel(friendMessagesChannel); }
+
+    friendMessagesChannel = supabase
+      .channel('messages-' + currentUser.id)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `receiver_id=eq.${currentUser.id}`
+      }, (payload) => {
+        const msg = payload.new;
+        if (activeFriend && msg.sender_id === activeFriend.id && msnMessages){
+          msnMessages.appendChild(bubbleFriendMsg(msg));
+          msnMessages.scrollTop = msnMessages.scrollHeight;
+        }
+      })
+      .subscribe();
+  }
+
+  // presença: marca quem esta online agora (lista de amigos mostra ● Online / ○ Offline)
+  function atualizarStatusAmigos(){
+    document.querySelectorAll('.msn-friend-item').forEach(item => {
+      const online = onlineUserIds.has(item.dataset.friendId);
+      const statusEl = item.querySelector('.msn-friend-status');
+      if (!statusEl) return;
+      statusEl.textContent = online ? '● Online' : '○ Offline';
+      statusEl.classList.toggle('offline', !online);
+    });
+  }
+
+  function setupPresence(){
+    if (!currentUser) return;
+    if (presenceChannel){ supabase.removeChannel(presenceChannel); }
+
+    presenceChannel = supabase.channel('online-users', {
+      config: { presence: { key: currentUser.id } }
+    });
+
+    presenceChannel.on('presence', { event: 'sync' }, () => {
+      onlineUserIds = new Set(Object.keys(presenceChannel.presenceState()));
+      atualizarStatusAmigos();
+    });
+
+    presenceChannel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED'){
+        await presenceChannel.track({ online_at: new Date().toISOString() });
+      }
+    });
+  }
+
+  renderAccountUI();
+  if (currentUser){
+    carregarAmigos();
+    setupPresence();
+    setupMessagesRealtime();
   }
 
 });
