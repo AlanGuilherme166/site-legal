@@ -535,12 +535,28 @@
       <div class="window-body">
         <div class="chess-app">
           <h2 class="chess-heading">♟️ Xadrez</h2>
-          <p class="chess-sub">Dois jogadores revezando no mesmo computador. Clique numa peça pra ver os movimentos possíveis e clique no destino pra mover. Sem cheque/xeque-mate oficial: vence quem capturar o rei adversário primeiro.</p>
+          <p class="chess-sub" id="chessSub">Dois jogadores revezando no mesmo computador. Clique numa peça pra ver os movimentos possíveis e clique no destino pra mover. Sem cheque/xeque-mate oficial: vence quem capturar o rei adversário primeiro.</p>
+          <p class="chess-online-info" id="chessOnlineInfo" hidden></p>
           <p class="chess-status" id="chessStatus">Vez das brancas ♙</p>
 
           <div class="chess-board" id="chessBoard"></div>
 
-          <button class="glass-btn chess-reset-btn" id="chessResetBtn" type="button">🔄 Recomeçar</button>
+          <div class="chess-actions">
+            <button class="glass-btn chess-reset-btn" id="chessResetBtn" type="button">🔄 Recomeçar</button>
+            <button class="glass-btn chess-invite-btn" id="chessInviteBtn" type="button">🤝 Convidar amigo</button>
+            <button class="glass-btn chess-leave-btn" id="chessLeaveBtn" type="button" hidden>🚪 Sair da partida</button>
+          </div>
+
+          <div class="chess-invite-modal" id="chessInviteModal" hidden>
+            <div class="chess-invite-box">
+              <div class="chess-invite-header">
+                <span>Convidar amigo pra jogar</span>
+                <button class="chess-invite-close" id="chessInviteCloseBtn" type="button" aria-label="Fechar">×</button>
+              </div>
+              <div class="chess-invite-list" id="chessInviteFriendList"></div>
+              <p class="chess-invite-empty" id="chessInviteEmpty" hidden>Você ainda não tem amigos adicionados. Adicione um pelo MSN primeiro.</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>

@@ -2564,6 +2564,7 @@ body.custom-wallpaper .bg-decor{
 
 /* ---------- APP: XADREZ ---------- */
 .chess-app{
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2637,6 +2638,113 @@ body.custom-wallpaper .bg-decor{
 
 .chess-reset-btn{
   margin-top: 4px;
+}
+
+.chess-online-info{
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.chess-actions{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.chess-invite-modal{
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10,20,35,0.35);
+  border-radius: var(--radius-md);
+}
+
+.chess-invite-modal[hidden]{
+  display: none;
+}
+
+.chess-invite-box{
+  width: min(300px, 90%);
+  max-height: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--mica-border);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+}
+
+.chess-invite-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.chess-invite-close{
+  border: none;
+  background: transparent;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-soft);
+}
+
+.chess-invite-list{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+}
+
+.chess-invite-item{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm, 8px);
+  background: rgba(30,60,90,0.06);
+}
+
+.chess-invite-avatar{
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.chess-invite-name{
+  flex: 1;
+  font-size: 0.8rem;
+  color: var(--text-dark);
+  text-align: left;
+}
+
+.chess-invite-send-btn{
+  padding: 4px 10px;
+  font-size: 0.75rem;
+}
+
+.chess-invite-empty{
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  text-align: center;
 }
 
 /* ---------- APP: TRABALHO (ESCAVAÇÃO COM A PÁ) ---------- */
@@ -4332,63 +4440,4 @@ body.custom-wallpaper .bg-decor{
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--text-dark);
-}
-/* ===== SCROLLBARS FRUTIGER AERO (ROXAS) ===== */
-
-/* Webkit browsers (Chrome, Safari, Edge) */
-.msn-friends-list::-webkit-scrollbar {
-  width: 16px;
-}
-
-.msn-friends-list::-webkit-scrollbar-track {
-  background: linear-gradient(to bottom, rgba(168, 114, 182, 0.15), rgba(140, 90, 160, 0.1));
-  border-radius: 8px;
-}
-
-.msn-friends-list::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #a872b6, #8c5aa0);
-  border-radius: 8px;
-  border: 2px solid rgba(200, 170, 220, 0.3);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-.msn-friends-list::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #b8a0c8, #9a6ab5);
-  border-color: rgba(220, 190, 240, 0.5);
-}
-
-/* Firefox */
-.msn-friends-list {
-  scrollbar-color: #a872b6 rgba(168, 114, 182, 0.15);
-  scrollbar-width: thin;
-}
-
-/* ===== SCROLLBARS ADICIONAIS EM OUTROS CONTAINERS ===== */
-
-/* Outros containers com scroll que podem usar o mesmo estilo */
-.browser-viewport::-webkit-scrollbar,
-.player-playlist::-webkit-scrollbar,
-.cmdOutput::-webkit-scrollbar {
-  width: 12px;
-}
-
-.browser-viewport::-webkit-scrollbar-track,
-.player-playlist::-webkit-scrollbar-track,
-.cmdOutput::-webkit-scrollbar-track {
-  background: linear-gradient(to bottom, rgba(168, 114, 182, 0.1), rgba(140, 90, 160, 0.08));
-  border-radius: 6px;
-}
-
-.browser-viewport::-webkit-scrollbar-thumb,
-.player-playlist::-webkit-scrollbar-thumb,
-.cmdOutput::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #a872b6, #8c5aa0);
-  border-radius: 6px;
-  border: 1px solid rgba(200, 170, 220, 0.3);
-}
-
-.browser-viewport::-webkit-scrollbar-thumb:hover,
-.player-playlist::-webkit-scrollbar-thumb:hover,
-.cmdOutput::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #b8a0c8, #9a6ab5);
 }

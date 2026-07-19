@@ -2793,7 +2793,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!win) return;
 
     if (gameId === 'fuga_policia') escapeResetGame();
-    if (gameId === 'xadrez') chessResetGame();
+    if (gameId === 'xadrez' && chessMode !== 'online') chessResetGame();
 
     openWindow(win);
   }
@@ -3205,6 +3205,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const chessBoardEl = document.getElementById('chessBoard');
   const chessStatusEl = document.getElementById('chessStatus');
   const chessResetBtn = document.getElementById('chessResetBtn');
+  const chessSubEl = document.getElementById('chessSub');
 
   const CHESS_SYMBOLS = {
     w: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
@@ -3226,6 +3227,22 @@ document.addEventListener('DOMContentLoaded', () => {
   let chessLegal = [];
   let chessGameOver = false;
   let chessWinner = null;
+
+  // ---- estado da partida online (multiplayer via Supabase) ----
+  const chessOnlineInfoEl = document.getElementById('chessOnlineInfo');
+  const chessInviteBtn = document.getElementById('chessInviteBtn');
+  const chessLeaveBtn = document.getElementById('chessLeaveBtn');
+  const chessInviteModal = document.getElementById('chessInviteModal');
+  const chessInviteCloseBtn = document.getElementById('chessInviteCloseBtn');
+  const chessInviteFriendList = document.getElementById('chessInviteFriendList');
+  const chessInviteEmptyEl = document.getElementById('chessInviteEmpty');
+
+  let chessMode = 'local';           // 'local' (hotseat) ou 'online' (multiplayer via amigos)
+  let onlineChessGameId = null;      // id da linha em chess_games
+  let onlineChessColor = null;       // 'w' ou 'b' — cor do currentUser nessa partida
+  let onlineChessOpponent = null;    // { id, username, avatar }
+  let chessGameChannel = null;       // canal realtime da partida atual
+  let chessFriendsCache = [];        // preenchido em carregarAmigos(), usado no modal de convite
 
   function chessInBounds(r, c){
     return r >= 0 && r < 8 && c >= 0 && c < 8;
@@ -3348,6 +3365,11 @@ document.addEventListener('DOMContentLoaded', () => {
           ? 'As brancas venceram! Rei preto capturado. ♔'
           : 'As pretas venceram! Rei branco capturado. ♚';
         chessStatusEl.classList.add('win');
+      } else if (chessMode === 'online'){
+        chessStatusEl.textContent = chessTurn === onlineChessColor
+          ? 'Sua vez!'
+          : `Vez de ${onlineChessOpponent ? onlineChessOpponent.username : 'seu adversário'}...`;
+        chessStatusEl.classList.remove('win');
       } else {
         chessStatusEl.textContent = chessTurn === 'w' ? 'Vez das brancas ♙' : 'Vez das pretas ♟';
         chessStatusEl.classList.remove('win');
@@ -3379,6 +3401,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function chessHandleCellClick(row, col){
     if (chessGameOver || !chessBoard) return;
+    // no modo online só pode selecionar/mover peça na sua vez e da sua cor
+    if (chessMode === 'online' && chessTurn !== onlineChessColor) return;
+
     const piece = chessBoard[row][col];
 
     if (chessSelected){
@@ -3388,11 +3413,12 @@ document.addEventListener('DOMContentLoaded', () => {
         chessSelected = null;
         chessLegal = [];
         chessRender();
+        if (chessMode === 'online') syncChessMove();
         return;
       }
     }
 
-    if (piece && piece.color === chessTurn){
+    if (piece && piece.color === chessTurn && (chessMode !== 'online' || piece.color === onlineChessColor)){
       chessSelected = { row, col };
       chessLegal = chessLegalMoves(chessBoard, row, col);
     } else {
@@ -3424,6 +3450,234 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (chessResetBtn) chessResetBtn.addEventListener('click', chessResetGame);
+
+  /* ---------- XADREZ MULTIPLAYER (convite de amigos + Supabase Realtime) ---------- */
+
+  // mostra/esconde os botões certos e a linha "jogando contra fulano" conforme o modo atual
+  function atualizarChessOnlineUI(){
+    if (chessOnlineInfoEl){
+      if (chessMode === 'online' && onlineChessOpponent){
+        const corLabel = onlineChessColor === 'w' ? 'brancas' : 'pretas';
+        chessOnlineInfoEl.textContent = `🌐 Partida online vs ${onlineChessOpponent.username} — você joga com as ${corLabel}`;
+        chessOnlineInfoEl.hidden = false;
+      } else {
+        chessOnlineInfoEl.hidden = true;
+      }
+    }
+    if (chessSubEl) chessSubEl.hidden = chessMode === 'online';
+    if (chessResetBtn) chessResetBtn.hidden = chessMode === 'online';
+    if (chessInviteBtn) chessInviteBtn.hidden = chessMode === 'online';
+    if (chessLeaveBtn) chessLeaveBtn.hidden = chessMode !== 'online';
+  }
+
+  // envia o estado atual do tabuleiro pro Supabase depois de uma jogada local
+  async function syncChessMove(){
+    if (chessMode !== 'online' || !onlineChessGameId) return;
+    try{
+      await supabase
+        .from('chess_games')
+        .update({
+          board: chessBoard,
+          turn: chessTurn,
+          status: chessGameOver ? 'finished' : 'active',
+          winner: chessGameOver ? chessWinner : null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', onlineChessGameId);
+    }catch(err){
+      console.error('Erro ao sincronizar jogada de xadrez:', err);
+    }
+  }
+
+  // escuta as jogadas do adversário em tempo real e atualiza o tabuleiro na hora
+  function setupChessGameRealtime(gameId){
+    if (chessGameChannel){ supabase.removeChannel(chessGameChannel); chessGameChannel = null; }
+
+    chessGameChannel = supabase
+      .channel('chess-game-' + gameId)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'chess_games',
+        filter: `id=eq.${gameId}`
+      }, (payload) => {
+        const row = payload.new;
+        if (!row || row.id !== onlineChessGameId) return;
+        chessBoard = row.board;
+        chessTurn = row.turn;
+        chessGameOver = row.status === 'finished';
+        chessWinner = row.winner || null;
+        chessSelected = null;
+        chessLegal = [];
+        chessRender();
+      })
+      .subscribe();
+  }
+
+  // entra numa partida online existente (seja como quem convidou, seja como quem aceitou)
+  async function entrarPartidaXadrez(gameId){
+    if (!currentUser) return;
+
+    const { data: game, error } = await supabase
+      .from('chess_games')
+      .select('*')
+      .eq('id', gameId)
+      .maybeSingle();
+
+    if (error || !game){
+      alert('Não foi possível carregar essa partida.');
+      return;
+    }
+
+    const isWhite = game.white_id === currentUser.id;
+    const isBlack = game.black_id === currentUser.id;
+    if (!isWhite && !isBlack) return;
+
+    onlineChessGameId = game.id;
+    onlineChessColor = isWhite ? 'w' : 'b';
+
+    const opponentId = isWhite ? game.black_id : game.white_id;
+    const { data: opponentUser } = await supabase
+      .from('users')
+      .select('username, avatar')
+      .eq('id', opponentId)
+      .maybeSingle();
+    onlineChessOpponent = opponentUser
+      ? { id: opponentId, username: opponentUser.username, avatar: opponentUser.avatar }
+      : { id: opponentId, username: 'seu amigo' };
+
+    chessMode = 'online';
+    chessBoard = game.board;
+    chessTurn = game.turn || 'w';
+    chessGameOver = game.status === 'finished';
+    chessWinner = game.winner || null;
+    chessSelected = null;
+    chessLegal = [];
+
+    if (game.status === 'pending'){
+      await supabase.from('chess_games').update({ status: 'active' }).eq('id', game.id);
+    }
+
+    setupChessGameRealtime(game.id);
+    atualizarChessOnlineUI();
+    chessRender();
+    openWindow(windowsByApp['jogo-xadrez']);
+  }
+
+  // botão "Jogar" do convite dentro do chat: só entra se o amigo tiver o Xadrez comprado
+  function aceitarConviteXadrez(gameId){
+    const possuiXadrez = !!(inventory.jogos && inventory.jogos['xadrez'] > 0);
+    if (!possuiXadrez){
+      alert('Você precisa comprar o Xadrez na Vitrine antes de aceitar essa partida.');
+      return;
+    }
+    entrarPartidaXadrez(gameId);
+  }
+
+  // sai da partida online e volta pro modo local (2 jogadores no mesmo pc)
+  function sairPartidaXadrez(){
+    chessMode = 'local';
+    onlineChessGameId = null;
+    onlineChessColor = null;
+    onlineChessOpponent = null;
+    if (chessGameChannel){ supabase.removeChannel(chessGameChannel); chessGameChannel = null; }
+    atualizarChessOnlineUI();
+    chessResetGame();
+  }
+
+  if (chessLeaveBtn) chessLeaveBtn.addEventListener('click', sairPartidaXadrez);
+
+  // cria o convite: gera a partida no Supabase e manda uma mensagem especial pro amigo no MSN
+  async function convidarAmigoXadrez(friend){
+    if (!currentUser) return;
+
+    const { data: game, error: erroJogo } = await supabase
+      .from('chess_games')
+      .insert([{
+        white_id: currentUser.id,
+        black_id: friend.id,
+        board: chessInitialBoard(),
+        turn: 'w',
+        status: 'pending'
+      }])
+      .select()
+      .single();
+
+    if (erroJogo || !game){
+      alert('Não foi possível criar o convite. Tente novamente.');
+      return;
+    }
+
+    const { error: erroMsg } = await supabase
+      .from('messages')
+      .insert([{
+        sender_id: currentUser.id,
+        receiver_id: friend.id,
+        message: `${currentUser.username} te convidou para uma partida de xadrez`,
+        type: 'chess_invite',
+        chess_game_id: game.id
+      }]);
+
+    if (erroMsg){
+      console.error('Erro ao enviar mensagem de convite:', erroMsg);
+    }
+
+    // quem convida já entra direto na partida, esperando o amigo aceitar
+    await entrarPartidaXadrez(game.id);
+  }
+
+  // modal de escolha de amigo pra convidar
+  function abrirModalConviteXadrez(){
+    if (!chessInviteModal) return;
+    if (chessInviteFriendList) chessInviteFriendList.innerHTML = '';
+
+    if (chessFriendsCache.length === 0){
+      if (chessInviteEmptyEl) chessInviteEmptyEl.hidden = false;
+    } else {
+      if (chessInviteEmptyEl) chessInviteEmptyEl.hidden = true;
+      chessFriendsCache.forEach(f => {
+        const item = document.createElement('div');
+        item.className = 'chess-invite-item';
+        const avatarImg = document.createElement('img');
+        avatarImg.className = 'chess-invite-avatar';
+        avatarImg.src = `icons/${f.avatar}.jpg`;
+        avatarImg.alt = f.username;
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'chess-invite-name';
+        nameSpan.textContent = f.username;
+        const sendBtn = document.createElement('button');
+        sendBtn.className = 'glass-btn chess-invite-send-btn';
+        sendBtn.type = 'button';
+        sendBtn.textContent = 'Convidar';
+        sendBtn.addEventListener('click', async () => {
+          sendBtn.disabled = true;
+          sendBtn.textContent = 'Enviando...';
+          await convidarAmigoXadrez(f);
+          chessInviteModal.hidden = true;
+        });
+        item.appendChild(avatarImg);
+        item.appendChild(nameSpan);
+        item.appendChild(sendBtn);
+        chessInviteFriendList.appendChild(item);
+      });
+    }
+
+    chessInviteModal.hidden = false;
+  }
+
+  if (chessInviteBtn){
+    chessInviteBtn.addEventListener('click', () => {
+      if (!currentUser){
+        alert('Faça login (no app conta.exe) pra convidar um amigo.');
+        return;
+      }
+      abrirModalConviteXadrez();
+    });
+  }
+
+  if (chessInviteCloseBtn){
+    chessInviteCloseBtn.addEventListener('click', () => { chessInviteModal.hidden = true; });
+  }
 
   /* =====================================================
      APP: PROMPT DE COMANDO (CMD) — comando secreto pra
@@ -4329,6 +4583,11 @@ document.addEventListener('DOMContentLoaded', () => {
     activeFriend = null;
     if (presenceChannel){ supabase.removeChannel(presenceChannel); presenceChannel = null; }
     if (friendMessagesChannel){ supabase.removeChannel(friendMessagesChannel); friendMessagesChannel = null; }
+    if (chessGameChannel){ supabase.removeChannel(chessGameChannel); chessGameChannel = null; }
+    chessMode = 'local';
+    onlineChessGameId = null;
+    onlineChessColor = null;
+    onlineChessOpponent = null;
     localStorage.removeItem(SESSION_KEY);
     renderAccountUI();
   }
@@ -4455,6 +4714,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function carregarAmigos(){
     if (!currentUser || !msnFriendsList) return;
     msnFriendsList.innerHTML = '';
+    chessFriendsCache = [];
 
     const { data, error } = await supabase
       .from('friends')
@@ -4466,6 +4726,7 @@ document.addEventListener('DOMContentLoaded', () => {
     data.forEach(row => {
       const u = row.users;
       if (!u) return;
+      chessFriendsCache.push({ id: row.friend_id, username: u.username, avatar: u.avatar });
       const item = document.createElement('div');
       item.className = 'msn-friend-item';
       item.dataset.friendId = row.friend_id;
@@ -4567,6 +4828,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     bubble.appendChild(textSpan);
     bubble.appendChild(timeSpan);
+
+    // convite de partida de xadrez: mostra um botão "Jogar" na bolha
+    if (msg.type === 'chess_invite' && msg.chess_game_id){
+      const btnContainer = document.createElement('div');
+      btnContainer.className = 'msn-msg-button-container';
+      const btn = document.createElement('button');
+      btn.className = 'msn-msg-action-btn';
+      btn.type = 'button';
+      btn.textContent = '♟️ Jogar';
+      btn.addEventListener('click', () => aceitarConviteXadrez(msg.chess_game_id));
+      btnContainer.appendChild(btn);
+      bubble.appendChild(btnContainer);
+    }
+
     return bubble;
   }
 
