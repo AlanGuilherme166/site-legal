@@ -1561,10 +1561,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const badgeNerdsabido = document.getElementById('badgeNerdsabido');
   const badgeAssistente = document.getElementById('badgeAssistente');
 
-  const contactNames = { carachato: 'Cara Chato', agiota: 'Agiota', nerdsabido: 'Nerd Sabido', assistente: 'Assistente Virtual', alan22: 'alan22' };
-  const contactBadges = { carachato: badgeCarachato, agiota: badgeAgiota, nerdsabido: badgeNerdsabido, assistente: badgeAssistente, alan22: {} };
-  const chatHistory = { carachato: [], agiota: [], nerdsabido: [], assistente: [], alan22: [] };
-  const unread = { carachato: 0, agiota: 0, nerdsabido: 0, assistente: 0, alan22: 0 };
+  const contactNames = { carachato: 'Cara Chato', agiota: 'Agiota', nerdsabido: 'Nerd Sabido', assistente: 'Assistente Virtual' };
+  const contactBadges = { carachato: badgeCarachato, agiota: badgeAgiota, nerdsabido: badgeNerdsabido, assistente: badgeAssistente };
+  const chatHistory = { carachato: [], agiota: [], nerdsabido: [], assistente: [] };
+  const unread = { carachato: 0, agiota: 0, nerdsabido: 0, assistente: 0 };
   let activeContact = 'carachato';
 
   /* ---------- NOTIFICAÇÃO DO MSN (balãozinho estilo Windows + som) ---------- */
@@ -4555,19 +4555,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function bubbleFriendMsg(msg){
     const isMe = msg.sender_id === currentUser.id;
-    const avatar = isMe ? currentUser.avatar : activeFriend.avatar;
-    const nome = isMe ? currentUser.username : activeFriend.username;
 
     const bubble = document.createElement('div');
-    bubble.className = `msn-msg msn-msg-with-avatar ${isMe ? 'msn-msg-me' : 'msn-msg-them'}`;
-    bubble.innerHTML = `
-      <img class="msn-msg-avatar" src="icons/${avatar}.jpg" alt="${escapeHtml(nome)}">
-      <span class="msn-msg-content">
-        <span class="msn-msg-sender">${escapeHtml(nome)}</span>
-        <span class="msn-msg-text">${escapeHtml(msg.message)}</span>
-        <span class="msn-msg-time">${formatMsgTime(msg.created_at)}</span>
-      </span>
-    `;
+    bubble.className = `msn-msg ${isMe ? 'msn-msg-me' : 'msn-msg-them'}`;
+
+    const textSpan = document.createElement('span');
+    textSpan.textContent = msg.message;
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'msn-msg-time';
+    timeSpan.textContent = formatMsgTime(msg.created_at);
+
+    bubble.appendChild(textSpan);
+    bubble.appendChild(timeSpan);
     return bubble;
   }
 
