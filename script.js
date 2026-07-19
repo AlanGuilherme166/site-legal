@@ -1561,10 +1561,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const badgeNerdsabido = document.getElementById('badgeNerdsabido');
   const badgeAssistente = document.getElementById('badgeAssistente');
 
-  const contactNames = { carachato: 'Cara Chato', agiota: 'Agiota', nerdsabido: 'Nerd Sabido', assistente: 'Assistente Virtual' };
-  const contactBadges = { carachato: badgeCarachato, agiota: badgeAgiota, nerdsabido: badgeNerdsabido, assistente: badgeAssistente };
-  const chatHistory = { carachato: [], agiota: [], nerdsabido: [], assistente: [] };
-  const unread = { carachato: 0, agiota: 0, nerdsabido: 0, assistente: 0 };
+  const contactNames = { carachato: 'Cara Chato', agiota: 'Agiota', nerdsabido: 'Nerd Sabido', assistente: 'Assistente Virtual', alan22: 'alan22' };
+  const contactBadges = { carachato: badgeCarachato, agiota: badgeAgiota, nerdsabido: badgeNerdsabido, assistente: badgeAssistente, alan22: {} };
+  const chatHistory = { carachato: [], agiota: [], nerdsabido: [], assistente: [], alan22: [] };
+  const unread = { carachato: 0, agiota: 0, nerdsabido: 0, assistente: 0, alan22: 0 };
   let activeContact = 'carachato';
 
   /* ---------- NOTIFICAÇÃO DO MSN (balãozinho estilo Windows + som) ---------- */

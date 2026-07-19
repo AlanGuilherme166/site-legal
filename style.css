@@ -4333,3 +4333,62 @@ body.custom-wallpaper .bg-decor{
   font-weight: 600;
   color: var(--text-dark);
 }
+/* ===== SCROLLBARS FRUTIGER AERO (ROXAS) ===== */
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+.msn-friends-list::-webkit-scrollbar {
+  width: 16px;
+}
+
+.msn-friends-list::-webkit-scrollbar-track {
+  background: linear-gradient(to bottom, rgba(168, 114, 182, 0.15), rgba(140, 90, 160, 0.1));
+  border-radius: 8px;
+}
+
+.msn-friends-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #a872b6, #8c5aa0);
+  border-radius: 8px;
+  border: 2px solid rgba(200, 170, 220, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.msn-friends-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #b8a0c8, #9a6ab5);
+  border-color: rgba(220, 190, 240, 0.5);
+}
+
+/* Firefox */
+.msn-friends-list {
+  scrollbar-color: #a872b6 rgba(168, 114, 182, 0.15);
+  scrollbar-width: thin;
+}
+
+/* ===== SCROLLBARS ADICIONAIS EM OUTROS CONTAINERS ===== */
+
+/* Outros containers com scroll que podem usar o mesmo estilo */
+.browser-viewport::-webkit-scrollbar,
+.player-playlist::-webkit-scrollbar,
+.cmdOutput::-webkit-scrollbar {
+  width: 12px;
+}
+
+.browser-viewport::-webkit-scrollbar-track,
+.player-playlist::-webkit-scrollbar-track,
+.cmdOutput::-webkit-scrollbar-track {
+  background: linear-gradient(to bottom, rgba(168, 114, 182, 0.1), rgba(140, 90, 160, 0.08));
+  border-radius: 6px;
+}
+
+.browser-viewport::-webkit-scrollbar-thumb,
+.player-playlist::-webkit-scrollbar-thumb,
+.cmdOutput::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #a872b6, #8c5aa0);
+  border-radius: 6px;
+  border: 1px solid rgba(200, 170, 220, 0.3);
+}
+
+.browser-viewport::-webkit-scrollbar-thumb:hover,
+.player-playlist::-webkit-scrollbar-thumb:hover,
+.cmdOutput::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #b8a0c8, #9a6ab5);
+}
