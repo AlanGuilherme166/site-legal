@@ -1577,6 +1577,20 @@ document.addEventListener('DOMContentLoaded', () => {
       timeSpan.textContent = msg.time;
       bubble.appendChild(textSpan);
       bubble.appendChild(timeSpan);
+      
+      // Se a mensagem tem um botão, adiciona
+      if (msg.buttonText && msg.buttonAction){
+        const btnContainer = document.createElement('div');
+        btnContainer.className = 'msn-msg-button-container';
+        const btn = document.createElement('button');
+        btn.className = 'msn-msg-action-btn';
+        btn.textContent = msg.buttonText;
+        btn.type = 'button';
+        btn.addEventListener('click', msg.buttonAction);
+        btnContainer.appendChild(btn);
+        bubble.appendChild(btnContainer);
+      }
+      
       msnMessages.appendChild(bubble);
     });
     msnMessages.scrollTop = msnMessages.scrollHeight;
@@ -1886,9 +1900,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const nerdHelpReply = 'ajudar com o que?';
   const nerdVirusReply = 'abre o cmd e escreve /system -apt virus uninstall';
   const nerdThanksReply = 'tmj 👍';
+  const nerdChessReply = 'bora.';
 
   const nerdHelpKeywords = ['ajuda', 'ajude', 'ajudar', 'socorro', 'sos', 'me ajuda', 'preciso de ajuda', 'help'];
   const nerdThanksKeywords = ['obrigado', 'obrigada', 'obg', 'valeu', 'vlw', 'brigado', 'brigada', 'thanks', 'thank you'];
+  const nerdChessKeywords = ['xadrez', 'chess', 'bora xadrez', 'quer jogar xadrez', 'jogar xadrez', 'partida de xadrez', 'jogo de xadrez'];
 
   function normalizeNerdText(text){
     return text
@@ -1903,6 +1919,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (normalized.includes('virus')){
       return nerdVirusReply;
+    }
+    if (nerdChessKeywords.some(k => normalized.includes(k))){
+      return nerdChessReply;
     }
     if (nerdHelpKeywords.some(k => normalized.includes(k))){
       return nerdHelpReply;
@@ -2005,7 +2024,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 600 + Math.random() * 900);
     } else if (activeContact === 'nerdsabido'){
       setTimeout(() => {
-        addMessage('nerdsabido', 'them', nerdSabidoReply(text));
+        const reply = nerdSabidoReply(text);
+        const normalized = normalizeNerdText(text);
+        
+        // Se mencionou xadrez, adiciona botão pra jogar
+        if (nerdChessKeywords.some(k => normalized.includes(k))){
+          const msgObj = { sender: 'them', text: reply, time: formatTime(), buttonText: '▶ Jogar Xadrez', buttonAction: openChessGame };
+          chatHistory[activeContact].push(msgObj);
+          if (activeContact === 'nerdsabido') renderChat();
+          updateBadge('nerdsabido');
+        } else {
+          addMessage('nerdsabido', 'them', reply);
+        }
       }, 500 + Math.random() * 700);
     } else if (activeContact === 'assistente'){
       setTimeout(() => {
@@ -2049,6 +2079,233 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       sendMsnMessage();
     });
+  }
+
+  /* =====================================================
+     XADREZ COM NERD SABIDO — mini-game integrado no MSN
+  ===================================================== */
+  
+  function openChessGame(){
+    // Cria a janela flutuante do xadrez
+    const chessWindow = document.createElement('div');
+    chessWindow.className = 'chess-game-window';
+    chessWindow.innerHTML = `
+      <div class="chess-window-header">
+        <span>♔ Xadrez vs Nerd Sabido</span>
+        <button class="chess-close-btn" type="button">×</button>
+      </div>
+      <div class="chess-window-body">
+        <div class="chess-board-container">
+          <div class="chess-board" id="chessBoard"></div>
+        </div>
+        <div class="chess-sidebar">
+          <div class="chess-status">
+            <p id="chessStatus">Você joga com as peças brancas. Seu turno!</p>
+            <p id="chessMove" style="margin-top: 8px; font-size: 0.85em; color: #666;">Clique em uma peça e depois no destino</p>
+          </div>
+          <button class="chess-reset-btn" type="button">Nova Partida</button>
+          <button class="chess-hint-btn" type="button">Dica 💡</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(chessWindow);
+    
+    const closeBtn = chessWindow.querySelector('.chess-close-btn');
+    const resetBtn = chessWindow.querySelector('.chess-reset-btn');
+    const hintBtn = chessWindow.querySelector('.chess-hint-btn');
+    const statusEl = chessWindow.querySelector('#chessStatus');
+    const moveEl = chessWindow.querySelector('#chessMove');
+    const boardEl = chessWindow.querySelector('#chessBoard');
+    
+    closeBtn.addEventListener('click', () => chessWindow.remove());
+    
+    // Sistema de xadrez simplificado
+    let board = initChessBoard();
+    let selectedPiece = null;
+    let selectedPiecePos = null;
+    let whiteTurn = true;
+    let gameOver = false;
+    
+    function initChessBoard(){
+      return [
+        ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+        ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+        ['.', '.', '.', '.', '.', '.', '.', '.'],
+        ['.', '.', '.', '.', '.', '.', '.', '.'],
+        ['.', '.', '.', '.', '.', '.', '.', '.'],
+        ['.', '.', '.', '.', '.', '.', '.', '.'],
+        ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+        ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+      ];
+    }
+    
+    function getPieceSymbol(piece){
+      const symbols = {
+        'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
+        'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
+      };
+      return symbols[piece] || '';
+    }
+    
+    function renderBoard(){
+      boardEl.innerHTML = '';
+      for (let row = 0; row < 8; row++){
+        for (let col = 0; col < 8; col++){
+          const square = document.createElement('div');
+          square.className = `chess-square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+          if (selectedPiecePos && selectedPiecePos[0] === row && selectedPiecePos[1] === col){
+            square.classList.add('selected');
+          }
+          square.dataset.row = row;
+          square.dataset.col = col;
+          
+          const piece = board[row][col];
+          if (piece !== '.'){
+            square.innerHTML = `<span class="chess-piece">${getPieceSymbol(piece)}</span>`;
+          }
+          
+          square.addEventListener('click', () => handleSquareClick(row, col));
+          boardEl.appendChild(square);
+        }
+      }
+    }
+    
+    function handleSquareClick(row, col){
+      if (gameOver || !whiteTurn) return;
+      
+      if (selectedPiecePos && selectedPiecePos[0] === row && selectedPiecePos[1] === col){
+        selectedPiecePos = null;
+        renderBoard();
+        return;
+      }
+      
+      if (selectedPiecePos){
+        const [fromRow, fromCol] = selectedPiecePos;
+        const piece = board[fromRow][fromCol];
+        
+        if (isValidMove(piece, fromRow, fromCol, row, col, true)){
+          board[row][col] = piece;
+          board[fromRow][fromCol] = '.';
+          selectedPiecePos = null;
+          whiteTurn = false;
+          moveEl.textContent = 'Pensando...';
+          statusEl.textContent = 'Vez do Nerd Sabido';
+          renderBoard();
+          
+          setTimeout(() => makeAIMove(), 800 + Math.random() * 1200);
+        } else {
+          selectedPiecePos = null;
+          renderBoard();
+        }
+      } else {
+        const piece = board[row][col];
+        if (piece !== '.' && piece === piece.toUpperCase()){
+          selectedPiecePos = [row, col];
+          renderBoard();
+        }
+      }
+    }
+    
+    function isValidMove(piece, fromRow, fromCol, toRow, toCol, isWhite){
+      if (toRow < 0 || toRow > 7 || toCol < 0 || toCol > 7) return false;
+      
+      const targetPiece = board[toRow][toCol];
+      if (targetPiece !== '.' && targetPiece === targetPiece.toUpperCase() === isWhite) return false;
+      
+      const pieceLower = piece.toLowerCase();
+      
+      if (pieceLower === 'p'){
+        const direction = isWhite ? -1 : 1;
+        const startRow = isWhite ? 6 : 1;
+        if (fromCol === toCol){
+          if (toRow === fromRow + direction && board[toRow][toCol] === '.') return true;
+          if (fromRow === startRow && toRow === fromRow + 2 * direction && 
+              board[fromRow + direction][fromCol] === '.' && board[toRow][toCol] === '.') return true;
+        }
+        if (Math.abs(toCol - fromCol) === 1 && toRow === fromRow + direction && targetPiece !== '.') return true;
+        return false;
+      }
+      
+      if (pieceLower === 'n'){
+        const rowDiff = Math.abs(toRow - fromRow);
+        const colDiff = Math.abs(toCol - fromCol);
+        return (rowDiff === 2 && colDiff === 1) || (rowDiff === 1 && colDiff === 2);
+      }
+      
+      if (pieceLower === 'b' || pieceLower === 'r' || pieceLower === 'q'){
+        if (pieceLower === 'b' && Math.abs(toRow - fromRow) !== Math.abs(toCol - fromCol)) return false;
+        if (pieceLower === 'r' && fromRow !== toRow && fromCol !== toCol) return false;
+        
+        const rowStep = toRow > fromRow ? 1 : toRow < fromRow ? -1 : 0;
+        const colStep = toCol > fromCol ? 1 : toCol < fromCol ? -1 : 0;
+        
+        let r = fromRow + rowStep, c = fromCol + colStep;
+        while (r !== toRow || c !== toCol){
+          if (board[r][c] !== '.') return false;
+          r += rowStep;
+          c += colStep;
+        }
+        return true;
+      }
+      
+      if (pieceLower === 'k'){
+        return Math.abs(toRow - fromRow) <= 1 && Math.abs(toCol - fromCol) <= 1;
+      }
+      
+      return false;
+    }
+    
+    function makeAIMove(){
+      let moved = false;
+      
+      // IA simples: tenta fazer um movimento aleatório válido
+      for (let i = 0; i < 100 && !moved; i++){
+        const fromRow = Math.floor(Math.random() * 8);
+        const fromCol = Math.floor(Math.random() * 8);
+        const piece = board[fromRow][fromCol];
+        
+        if (piece === '.' || piece !== piece.toLowerCase()) continue;
+        
+        const toRow = Math.floor(Math.random() * 8);
+        const toCol = Math.floor(Math.random() * 8);
+        
+        if (isValidMove(piece, fromRow, fromCol, toRow, toCol, false)){
+          board[toRow][toCol] = piece;
+          board[fromRow][fromCol] = '.';
+          moved = true;
+          whiteTurn = true;
+          moveEl.textContent = 'Seu turno!';
+          statusEl.textContent = 'Você joga com as peças brancas. Seu turno!';
+        }
+      }
+      
+      if (!moved){
+        gameOver = true;
+        statusEl.textContent = 'Xeque-mate! O Nerd Sabido venceu! 🤓';
+      }
+      
+      renderBoard();
+    }
+    
+    resetBtn.addEventListener('click', () => {
+      board = initChessBoard();
+      selectedPiecePos = null;
+      whiteTurn = true;
+      gameOver = false;
+      statusEl.textContent = 'Você joga com as peças brancas. Seu turno!';
+      moveEl.textContent = 'Clique em uma peça e depois no destino';
+      renderBoard();
+    });
+    
+    hintBtn.addEventListener('click', () => {
+      moveEl.textContent = '💡 Tenta mover um peão pra frente ou um cavalo!';
+      setTimeout(() => {
+        moveEl.textContent = 'Clique em uma peça e depois no destino';
+      }, 3000);
+    });
+    
+    renderBoard();
   }
 
   /* =====================================================
