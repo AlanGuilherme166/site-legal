@@ -855,6 +855,21 @@
     <button class="show-desktop-btn" id="showDesktopBtn" aria-label="Mostrar área de trabalho" title="Mostrar área de trabalho"></button>
   </footer>
 
+  <!-- Balão de notificação estilo Windows (canto inferior direito) -->
+  <div class="msn-toast" id="msnToast" role="status" aria-live="polite" hidden>
+    <div class="msn-toast-header">
+      <span class="msn-toast-icon">💬</span>
+      <span class="msn-toast-title">Windows Live Messenger</span>
+      <button class="msn-toast-close" id="msnToastClose" aria-label="Fechar notificação">✕</button>
+    </div>
+    <div class="msn-toast-body">
+      <p class="msn-toast-headline">Você pode ter novas mensagens no MSN</p>
+      <p class="msn-toast-preview" id="msnToastPreview"></p>
+    </div>
+  </div>
+
+  <audio id="msnNotificationSound" src="audios/chamada-a-cobrar-para-aceitar.mp3" preload="auto"></audio>
+
   <script src="script.js"></script>
 </body>
 </html>

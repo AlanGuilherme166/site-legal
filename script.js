@@ -1149,6 +1149,10 @@ document.addEventListener('DOMContentLoaded', () => {
      que roda toda vez que o saldo do cassino muda) ---------- */
   const digBalanceEl = document.getElementById('digBalance');
   const digBoostStatusEl = document.getElementById('digBoostStatus');
+  // declarado aqui em cima (com let, sem valor ainda) pra evitar erro de
+  // "Cannot access before initialization": renderCasinoBalance() já chama
+  // renderCodigoBalance() lá embaixo, bem antes do app Código ser inicializado.
+  let codigoBalanceEl = null;
   const digEnergyFillEl = document.getElementById('digEnergyFill');
   const digEnergyValueEl = document.getElementById('digEnergyValue');
   const digHoleEl = document.getElementById('digHole');
@@ -1482,6 +1486,79 @@ document.addEventListener('DOMContentLoaded', () => {
   const unread = { carachato: 0, agiota: 0, nerdsabido: 0, assistente: 0 };
   let activeContact = 'carachato';
 
+  /* ---------- NOTIFICAÇÃO DO MSN (balãozinho estilo Windows + som) ---------- */
+  const msnToast = document.getElementById('msnToast');
+  const msnToastPreview = document.getElementById('msnToastPreview');
+  const msnToastClose = document.getElementById('msnToastClose');
+  const msnNotificationSound = document.getElementById('msnNotificationSound');
+
+  let msnToastTimer = null;
+  let msnToastContact = null;
+
+  function hideMsnToast(){
+    if (!msnToast || msnToast.hidden) return;
+    msnToast.classList.add('is-leaving');
+    setTimeout(() => {
+      msnToast.hidden = true;
+      msnToast.classList.remove('is-leaving');
+    }, 220);
+    if (msnToastTimer){
+      clearTimeout(msnToastTimer);
+      msnToastTimer = null;
+    }
+  }
+
+  function playMsnNotificationSound(){
+    if (!msnNotificationSound) return;
+    try {
+      msnNotificationSound.currentTime = 0;
+      msnNotificationSound.volume = 0.5;
+      msnNotificationSound.play().catch(() => {
+        // autoplay pode ser bloqueado pelo navegador ate haver interacao do usuario; ignora o erro
+      });
+    } catch (err) { /* ignora */ }
+  }
+
+  function showMsnToast(contact, text){
+    playMsnNotificationSound();
+
+    if (!msnToast) return;
+    msnToastContact = contact;
+    if (msnToastPreview) msnToastPreview.textContent = `${contactNames[contact] || 'Contato'}: ${text}`;
+
+    msnToast.hidden = false;
+    msnToast.classList.remove('is-leaving');
+
+    if (msnToastTimer) clearTimeout(msnToastTimer);
+    msnToastTimer = setTimeout(hideMsnToast, 6000);
+  }
+
+  // clicar no balao abre o MSN direto na conversa do contato que mandou a mensagem
+  if (msnToast){
+    msnToast.addEventListener('click', (e) => {
+      if (e.target === msnToastClose) return;
+      if (msnWindow) openWindow(msnWindow);
+      if (msnToastContact) switchContact(msnToastContact);
+      hideMsnToast();
+    });
+  }
+
+  if (msnToastClose){
+    msnToastClose.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideMsnToast();
+    });
+  }
+
+  // enquanto o usuario ja esta com o MSN aberto (nao minimizado) vendo aquele contato,
+  // nao precisa mostrar o balao — mas o som ainda toca pra avisar que chegou mensagem
+  function isViewingContactNow(contact){
+    if (!msnWindow) return false;
+    const closed = msnWindow.classList.contains('is-closed');
+    const minimized = isMinimized(msnWindow);
+    return !closed && !minimized && activeContact === contact;
+  }
+
   function formatTime(){
     const now = new Date();
     return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -1525,6 +1602,14 @@ document.addEventListener('DOMContentLoaded', () => {
       renderChat();
     }
     updateBadge(contact);
+
+    if (sender !== 'me'){
+      if (isViewingContactNow(contact)){
+        playMsnNotificationSound();
+      } else {
+        showMsnToast(contact, text);
+      }
+    }
   }
 
   function switchContact(contact){
@@ -1655,6 +1740,61 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.virus-popup').forEach(el => el.remove());
   }
 
+  /* ---------- FÁBRICA GENÉRICA DE "VÍRUS" DE JANELAS-POPUP ----------
+     Usada pelos vírus dos sites (xxx.aero.com e aerocripto.com), que
+     seguem o mesmo esquema visual e o mesmo comando de remoção do
+     vírus original do Agiota (/system -apt virus uninstall no CMD). */
+  function createPopupVirus(popupClass, emoji, text){
+    let active = false;
+    let interval = null;
+    const MAX_POPUPS = 6;
+
+    function spawn(){
+      if (document.querySelectorAll('.' + popupClass).length >= MAX_POPUPS) return;
+
+      const popup = document.createElement('div');
+      popup.className = `virus-popup ${popupClass}`;
+
+      const maxLeft = Math.max(0, window.innerWidth - 220);
+      const maxTop = Math.max(0, window.innerHeight - 160);
+      popup.style.left = Math.floor(Math.random() * maxLeft) + 'px';
+      popup.style.top = Math.floor(Math.random() * maxTop) + 'px';
+
+      popup.innerHTML = `
+        <button class="virus-close" type="button" aria-label="Fechar">×</button>
+        <span class="virus-skull">${emoji}</span>
+        <span class="virus-text">${text}</span>
+      `;
+
+      popup.querySelector('.virus-close').addEventListener('click', () => popup.remove());
+      document.body.appendChild(popup);
+    }
+
+    function start(){
+      if (active) return;
+      active = true;
+      spawn();
+      interval = setInterval(spawn, 1600 + Math.random() * 1400);
+    }
+
+    function stop(){
+      active = false;
+      if (interval){
+        clearInterval(interval);
+        interval = null;
+      }
+      document.querySelectorAll('.' + popupClass).forEach(el => el.remove());
+    }
+
+    return { start, stop, isActive: () => active };
+  }
+
+  // vírus do xxx.aero.com: ativa ao clicar em "chamar" no botão do site troll
+  const siteTrollVirus = createPopupVirus('site-troll-virus-popup', '😂', 'sem mães solteiras por aqui haha!');
+
+  // vírus do aerocripto.com: ativa ao pegar uma bomba no minigame
+  const cryptoVirus = createPopupVirus('crypto-virus-popup', '⛏️', 'MINERANDO CRIPTOMOEDAS NO SEU PC SEM PERMISSÃO!');
+
   /* ---------- COBRANCA DO AGIOTA ---------- */
   function agiotaSendNag(prefix){
     agiotaNagCount++;
@@ -1778,6 +1918,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const assistenteJogosKeywords = ['jogos', 'jogo', 'vitrine', 'biblioteca'];
   const assistenteTrabalhoKeywords = ['trabalho', 'trampo', 'cavar', 'escavacao', 'pa', 'emprego', 'servico'];
   const assistenteDividasKeywords = ['divida', 'dividas', 'negativo', 'agiota', 'devendo', 'debito'];
+  const assistenteSitesKeywords = ['sites', 'site', 'paginas', 'pagina', 'enderecos', 'endereco'];
 
   const assistenteXingamentos = [
     'idiota', 'burro', 'burra', 'imbecil', 'estupido', 'estupida', 'merda', 'porra', 'caralho',
@@ -1807,11 +1948,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const assistenteJogosReply = 'A Vitrine (ícone 🎮) é a lojinha de jogos: lá você compra jogos com o seu saldo do Nubonk e depois joga direto na aba Biblioteca. Cada jogo comprado fica guardado no seu Inventário, então você não perde o que já pagou.';
   const assistenteTrabalhoReply = 'Na Escavação (ícone da pá 🪏) você cava buracos pra ganhar dinheiro, que cai direto no seu saldo do Nubonk. Cada cavada gasta energia — às vezes você acha só pedra, às vezes ouro, e raramente um diamante gigante! A energia recupera sozinha bem devagar, ou você come algo ou usa um stim no Inventário pra acelerar.';
   const assistenteDividasReply = 'Se o seu saldo no Nubonk ficar negativo por muito tempo, um agiota aparece aqui no MSN cobrando a dívida. Se você ignorar as cobranças dele por tempo demais, as coisas ficam feias. O melhor é quitar a dívida assim que o seu saldo cobrir o valor, lá na aba Nubonk.';
+  const assistenteSitesReply = 'Alguns sites que rolam por aí: xxx.aero.com, aerogram.com e aerocripto.com. Pra acessar, digita o endereço certinho na barra de pesquisa do Gugle (ícone 🌐 do Navegador) e aperta Enter. Só um aviso: alguns desses sites são meio suspeitos... 👀';
 
   const assistenteGenericReplies = [
-    'Não entendi muito bem, mas posso te explicar sobre "jogos", "trabalho" ou "dívidas". É só perguntar!',
-    'Pode me perguntar sobre "jogos", "trabalho" ou "dívidas" que eu te explico certinho 🙂',
-    'Hmm, tenta perguntar sobre "jogos", "trabalho" ou "dívidas" pra eu te ajudar melhor!'
+    'Não entendi muito bem, mas posso te explicar sobre "jogos", "trabalho", "dívidas" ou "sites". É só perguntar!',
+    'Pode me perguntar sobre "jogos", "trabalho", "dívidas" ou "sites" que eu te explico certinho 🙂',
+    'Hmm, tenta perguntar sobre "jogos", "trabalho", "dívidas" ou "sites" pra eu te ajudar melhor!'
   ];
 
   function assistenteReply(text){
@@ -1832,8 +1974,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (assistenteDividasKeywords.some(k => normalized.includes(k))){
       return assistenteDividasReply;
     }
+    if (assistenteSitesKeywords.some(k => normalized.includes(k))){
+      return assistenteSitesReply;
+    }
     if (assistenteGreetingKeywords.some(k => normalized.includes(k))){
-      return 'Oi! 😄 Pode me perguntar sobre "jogos", "trabalho" ou "dívidas" que eu te explico como usar o sistema.';
+      return 'Oi! 😄 Pode me perguntar sobre "jogos", "trabalho", "dívidas" ou "sites" que eu te explico como usar o sistema.';
     }
     return pickRandom(assistenteGenericReplies);
   }
@@ -2714,8 +2859,11 @@ document.addEventListener('DOMContentLoaded', () => {
     spawnHackPopup(() => {
       cmdAddLine('VÍRUS REMOVIDO', 'cmd-line-success');
 
+      let removedAny = false;
+
       if (virusActive || agiotaDebt > 0){
         stopVirus();
+        removedAny = true;
         cmdAddLine('Janelas de "ME PAGUE" encerradas com sucesso.', 'cmd-line-success');
 
         if (agiotaDebt > 0){
@@ -2723,7 +2871,21 @@ document.addEventListener('DOMContentLoaded', () => {
           addMessage('agiota', 'them', pickRandom(agiotaHackedLines));
           cmdAddLine('O Agiota parece ter percebido... confira o MSN.', 'cmd-line-error');
         }
-      } else {
+      }
+
+      if (siteTrollVirus.isActive()){
+        siteTrollVirus.stop();
+        removedAny = true;
+        cmdAddLine('Janelas maliciosas do xxx.aero.com encerradas com sucesso.', 'cmd-line-success');
+      }
+
+      if (cryptoVirus.isActive()){
+        cryptoVirus.stop();
+        removedAny = true;
+        cmdAddLine('Minerador oculto do aerocripto.com encerrado com sucesso.', 'cmd-line-success');
+      }
+
+      if (!removedAny){
         cmdAddLine('Nenhum vírus ativo foi encontrado no momento.', 'cmd-line-info');
       }
     });
@@ -2769,7 +2931,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const codigoOutputEl = document.getElementById('codigoOutput');
   const codigoInputForm = document.getElementById('codigoInputForm');
   const codigoInputEl = document.getElementById('codigoInput');
-  const codigoBalanceEl = document.getElementById('codigoBalance');
+  codigoBalanceEl = document.getElementById('codigoBalance');
   const codigoBoostStatusEl = document.getElementById('codigoBoostStatus');
 
   const CODE_JOB_COMMAND = '/code program - 10s';
@@ -2927,7 +3089,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ---------- NAVEGADOR (GUGLE) ---------- */
   // O player de vídeo do YouTube foi removido: o navegador agora só mostra
-  // a página inicial do Gugle (sem funcionalidade real de busca/navegação).
+  // a página inicial do Gugle (sem funcionalidade real de busca/navegação),
+  // exceto pelos 3 sites especiais abaixo, que só abrem se o endereço for
+  // digitado certinho na barra de pesquisa do Gugle.
   const browserBackBtn = document.getElementById('browserBackBtn');
   const browserForwardBtn = document.getElementById('browserForwardBtn');
   const browserReloadBtn = document.getElementById('browserReloadBtn');
@@ -2940,9 +3104,332 @@ document.addEventListener('DOMContentLoaded', () => {
   if (browserBackBtn) browserBackBtn.disabled = true;
   if (browserForwardBtn) browserForwardBtn.disabled = true;
 
+  /* ===== SITE 1: xxx.aero.com — site troll de anúncio falso ===== */
+  function renderSiteXxxAero(bodyEl){
+    bodyEl.innerHTML = `
+      <div class="troll-site">
+        <div class="troll-header">🔥 EncontroFácil 🔥</div>
+        <div class="troll-ad-banner">
+          <p class="troll-ad-title">⚠️ Mães solteiras a 4 km de você!</p>
+          <p class="troll-ad-sub">3 perfis da sua região estão online agora</p>
+          <button class="troll-call-btn" id="trollCallBtn" type="button">📞 Chamar agora</button>
+        </div>
+        <div class="troll-fake-list">
+          <div class="troll-fake-item">💃 "Perfil 01" está online</div>
+          <div class="troll-fake-item">💃 "Perfil 02" está online</div>
+          <div class="troll-fake-item">💃 "Perfil 03" está online</div>
+        </div>
+        <p class="troll-fine-print">Ao continuar, você concorda com absolutamente nada. Isso é claramente falso.</p>
+      </div>
+    `;
+
+    const callBtn = bodyEl.querySelector('#trollCallBtn');
+    callBtn.addEventListener('click', () => {
+      callBtn.disabled = true;
+      callBtn.textContent = 'Conectando...';
+      setTimeout(() => {
+        bodyEl.innerHTML = `
+          <div class="troll-infected">
+            <p class="troll-infected-title">💀 VOCÊ FOI INFECTADO!</p>
+            <p class="troll-infected-sub">Era meio óbvio que isso ia dar merda...</p>
+          </div>
+        `;
+        siteTrollVirus.start();
+      }, 900);
+    });
+  }
+
+  /* ===== SITE 2: aerogram.com — rede social estilo Instagram ===== */
+  function renderSiteAerogram(bodyEl){
+    const posts = [
+      { user: 'zeburacoficial', avatar: '🕳️', emoji: '🚗', caption: 'Cavando mais um buraco pra pagar o Agiota 😅', likes: 214, time: '2h' },
+      { user: 'cassino.aero', avatar: '🎰', emoji: '🎲', caption: 'Hoje é dia de sorte! Ou não. 🤷', likes: 1032, time: '4h' },
+      { user: 'nerd.sabido', avatar: '🤓', emoji: '💻', caption: 'Ninguém lê os termos de uso mesmo né', likes: 87, time: '6h' },
+      { user: 'assistente.virtual', avatar: '🤖', emoji: '📊', caption: 'Dica do dia: quite suas dívidas antes que fiquem "feias".', likes: 512, time: '9h' },
+      { user: 'agiota.oficial', avatar: '🕴️', emoji: '💸', caption: 'Alguém aí me deve alguma coisa? 👀', likes: 3, time: '1d' }
+    ];
+    const stories = ['🕳️', '🎰', '🤓', '🤖', '🕴️', '💃'];
+
+    bodyEl.innerHTML = `
+      <div class="aerogram-app">
+        <div class="aerogram-header">
+          <span class="aerogram-logo">Aerogram</span>
+          <div class="aerogram-nav">
+            <span class="aerogram-nav-icon active" title="Início">🏠</span>
+            <span class="aerogram-nav-icon" title="Buscar">🔍</span>
+            <span class="aerogram-nav-icon" title="Notificações">❤️</span>
+            <span class="aerogram-nav-icon" title="Perfil">👤</span>
+          </div>
+        </div>
+        <div class="aerogram-stories" id="aerogramStories"></div>
+        <div class="aerogram-feed" id="aerogramFeed"></div>
+      </div>
+    `;
+
+    const storiesEl = bodyEl.querySelector('#aerogramStories');
+    stories.forEach(emoji => {
+      const s = document.createElement('div');
+      s.className = 'aerogram-story';
+      s.innerHTML = `<span class="aerogram-story-ring">${emoji}</span>`;
+      storiesEl.appendChild(s);
+    });
+
+    const feedEl = bodyEl.querySelector('#aerogramFeed');
+    posts.forEach(post => {
+      const postEl = document.createElement('article');
+      postEl.className = 'aerogram-post';
+      postEl.innerHTML = `
+        <div class="aerogram-post-header">
+          <span class="aerogram-post-avatar">${post.avatar}</span>
+          <span class="aerogram-post-user">${post.user}</span>
+        </div>
+        <div class="aerogram-post-image">${post.emoji}</div>
+        <div class="aerogram-post-actions">
+          <button class="aerogram-like-btn" type="button" aria-label="Curtir">🤍</button>
+          <span class="aerogram-comment-icon">💬</span>
+        </div>
+        <p class="aerogram-post-likes">${post.likes} curtidas</p>
+        <p class="aerogram-post-caption"><strong>${post.user}</strong> ${post.caption}</p>
+        <p class="aerogram-post-time">há ${post.time}</p>
+      `;
+
+      const likeBtn = postEl.querySelector('.aerogram-like-btn');
+      const likesEl = postEl.querySelector('.aerogram-post-likes');
+      let liked = false;
+      let likeCount = post.likes;
+      likeBtn.addEventListener('click', () => {
+        liked = !liked;
+        likeCount += liked ? 1 : -1;
+        likeBtn.textContent = liked ? '❤️' : '🤍';
+        likeBtn.classList.toggle('is-liked', liked);
+        likesEl.textContent = `${likeCount} curtidas`;
+      });
+
+      feedEl.appendChild(postEl);
+    });
+  }
+
+  /* ===== SITE 3: aerocripto.com — minigame estilo Snake ===== */
+  function renderSiteAeroCripto(bodyEl){
+    const GRID = 14;
+    const CELL = 20;
+
+    bodyEl.innerHTML = `
+      <div class="aerocripto-app">
+        <div class="aerocripto-header">
+          <span class="aerocripto-title">⛏️ AeroCripto</span>
+          <span class="aerocripto-score">💎 <span id="aerocriptoScore">0</span></span>
+        </div>
+        <div class="aerocripto-canvas-wrap">
+          <canvas class="aerocripto-canvas" id="aerocriptoCanvas" width="${GRID * CELL}" height="${GRID * CELL}" tabindex="0"></canvas>
+          <div class="aerocripto-gameover" id="aerocriptoGameOver" hidden>
+            <p class="aerocripto-gameover-title">💥 GAME OVER</p>
+            <button class="aerocripto-restart" id="aerocriptoRestart" type="button">Jogar de novo</button>
+          </div>
+        </div>
+        <p class="aerocripto-hint">Clique no jogo e use as setas (ou WASD). 💎 ganha dinheiro, 💣 é PERIGOSA.</p>
+      </div>
+    `;
+
+    const canvas = bodyEl.querySelector('#aerocriptoCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = bodyEl.querySelector('#aerocriptoScore');
+    const gameOverEl = bodyEl.querySelector('#aerocriptoGameOver');
+    const restartBtn = bodyEl.querySelector('#aerocriptoRestart');
+
+    let snake, dir, nextDir, food, score, loopId;
+
+    function randomCell(){
+      return { x: Math.floor(Math.random() * GRID), y: Math.floor(Math.random() * GRID) };
+    }
+
+    function spawnFood(){
+      let cell;
+      do {
+        cell = randomCell();
+      } while (snake.some(s => s.x === cell.x && s.y === cell.y));
+      food = { x: cell.x, y: cell.y, bomb: Math.random() < 0.22 };
+    }
+
+    function draw(){
+      ctx.fillStyle = '#0b1220';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (food){
+        ctx.font = `${CELL - 2}px sans-serif`;
+        ctx.textBaseline = 'top';
+        ctx.fillText(food.bomb ? '💣' : '💎', food.x * CELL + 1, food.y * CELL);
+      }
+
+      snake.forEach((seg, i) => {
+        ctx.fillStyle = i === 0 ? '#6fe3d6' : '#2f9e91';
+        ctx.fillRect(seg.x * CELL + 1, seg.y * CELL + 1, CELL - 2, CELL - 2);
+      });
+    }
+
+    function endGame(bombHit){
+      if (loopId){ clearInterval(loopId); loopId = null; }
+      gameOverEl.hidden = false;
+      if (bombHit) cryptoVirus.start();
+    }
+
+    function tick(){
+      dir = nextDir;
+      const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+      if (head.x < 0 || head.x >= GRID || head.y < 0 || head.y >= GRID ||
+          snake.some(s => s.x === head.x && s.y === head.y)){
+        endGame(false);
+        draw();
+        return;
+      }
+
+      snake.unshift(head);
+
+      if (food && head.x === food.x && head.y === food.y){
+        if (food.bomb){
+          endGame(true);
+          draw();
+          return;
+        }
+        const ganho = applyEarnBoost(5 + Math.floor(Math.random() * 8));
+        score += ganho;
+        scoreEl.textContent = String(score);
+        casinoBalance += ganho;
+        renderCasinoBalance();
+        saveCasinoBalance();
+        spawnFood();
+      } else {
+        snake.pop();
+      }
+
+      draw();
+    }
+
+    function resetGame(){
+      snake = [{ x: 7, y: 7 }, { x: 6, y: 7 }, { x: 5, y: 7 }];
+      dir = { x: 1, y: 0 };
+      nextDir = { x: 1, y: 0 };
+      score = 0;
+      scoreEl.textContent = '0';
+      gameOverEl.hidden = true;
+      spawnFood();
+      if (loopId) clearInterval(loopId);
+      loopId = setInterval(tick, 140);
+      draw();
+    }
+
+    function handleKey(e){
+      const key = e.key;
+      if ((key === 'ArrowUp' || key === 'w' || key === 'W') && dir.y === 0){ nextDir = { x: 0, y: -1 }; e.preventDefault(); }
+      else if ((key === 'ArrowDown' || key === 's' || key === 'S') && dir.y === 0){ nextDir = { x: 0, y: 1 }; e.preventDefault(); }
+      else if ((key === 'ArrowLeft' || key === 'a' || key === 'A') && dir.x === 0){ nextDir = { x: -1, y: 0 }; e.preventDefault(); }
+      else if ((key === 'ArrowRight' || key === 'd' || key === 'D') && dir.x === 0){ nextDir = { x: 1, y: 0 }; e.preventDefault(); }
+    }
+
+    canvas.addEventListener('keydown', handleKey);
+    canvas.addEventListener('click', () => canvas.focus());
+    restartBtn.addEventListener('click', resetGame);
+
+    resetGame();
+    setTimeout(() => canvas.focus(), 60);
+
+    // cleanup: para o loop do jogo quando a janela do site é fechada
+    return function cleanup(){
+      if (loopId) clearInterval(loopId);
+    };
+  }
+
+  /* ===== JANELAS DE SITE + ROTEAMENTO PELA BARRA DE PESQUISA DO GUGLE ===== */
+  const SITE_DEFS = {
+    'xxx.aero.com': { title: 'xxx.aero.com', render: renderSiteXxxAero },
+    'aerogram.com': { title: 'Aerogram', render: renderSiteAerogram },
+    'aerocripto.com': { title: 'AeroCripto', render: renderSiteAeroCripto }
+  };
+
+  let siteWindowOffset = 0;
+
+  function normalizeSiteQuery(raw){
+    return String(raw || '')
+      .trim()
+      .toLowerCase()
+      .replace(/^https?:\/\//, '')
+      .replace(/^www\./, '')
+      .replace(/\/+$/, '');
+  }
+
+  function makeSiteWindowDraggable(win){
+    const titlebar = win.querySelector('.site-window-titlebar');
+    if (!titlebar) return;
+
+    function onMove(e){
+      const x = Math.min(Math.max(0, e.clientX - win._dragOffsetX), window.innerWidth - 80);
+      const y = Math.min(Math.max(0, e.clientY - win._dragOffsetY), window.innerHeight - 40);
+      win.style.left = x + 'px';
+      win.style.top = y + 'px';
+    }
+    function onUp(){
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    titlebar.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.site-window-close')) return;
+      const rect = win.getBoundingClientRect();
+      win._dragOffsetX = e.clientX - rect.left;
+      win._dragOffsetY = e.clientY - rect.top;
+      bringToFront(win);
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+
+  function openSiteWindow(siteKey){
+    const def = SITE_DEFS[siteKey];
+    if (!def) return;
+
+    const win = document.createElement('div');
+    win.className = 'site-window';
+    const offset = siteWindowOffset % 6;
+    win.style.left = (90 + offset * 26) + 'px';
+    win.style.top = (80 + offset * 22) + 'px';
+    siteWindowOffset++;
+
+    win.innerHTML = `
+      <div class="site-window-titlebar">
+        <span class="site-window-title">🌐 ${def.title}</span>
+        <button class="site-window-close" type="button" aria-label="Fechar">×</button>
+      </div>
+      <div class="site-window-body"></div>
+    `;
+
+    document.body.appendChild(win);
+    bringToFront(win);
+    win.addEventListener('mousedown', () => bringToFront(win));
+
+    const bodyEl = win.querySelector('.site-window-body');
+    const cleanup = def.render(bodyEl, win);
+
+    win.querySelector('.site-window-close').addEventListener('click', () => {
+      if (typeof cleanup === 'function') cleanup();
+      win.remove();
+    });
+
+    makeSiteWindowDraggable(win);
+  }
+
+  // só existe uma forma de abrir esses 3 sites: digitando o endereço
+  // certinho na barra de pesquisa do Gugle (seja a de cima ou a da home)
+  function handleGugleQuery(raw){
+    const query = normalizeSiteQuery(raw);
+    if (query && SITE_DEFS[query]){
+      openSiteWindow(query);
+    }
+  }
+
   if (browserAddressForm){
     browserAddressForm.addEventListener('submit', (e) => {
       e.preventDefault();
+      handleGugleQuery(browserAddressInput.value);
       browserAddressInput.value = '';
     });
   }
@@ -2950,6 +3437,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (gugleSearchForm && gugleSearchInput){
     gugleSearchForm.addEventListener('submit', (e) => {
       e.preventDefault();
+      handleGugleQuery(gugleSearchInput.value);
       gugleSearchInput.value = '';
     });
   }
