@@ -2376,6 +2376,11 @@ body.custom-wallpaper .bg-decor{
   color: var(--text-dark);
 }
 
+.vitrine-card-price.free{
+  color: #1e9d5c;
+  font-weight: 800;
+}
+
 .vitrine-card-btn{
   flex-shrink: 0;
   padding: 8px 14px;
@@ -3632,6 +3637,282 @@ body.custom-wallpaper .bg-decor{
   font-weight: 700;
   font-size: 0.8rem;
   cursor: pointer;
+}
+
+/* =====================================================
+   SITE 4: aeropedia.com — enciclopédia livre do AeroOS,
+   identidade visual própria em estilo Frutiger Aero
+   (bolhas, vidro e brilho aqua, à parte do tema do sistema)
+===================================================== */
+.aeropedia-app{
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 420px;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(255,255,255,0.9), transparent 55%),
+    radial-gradient(circle at 90% 100%, rgba(160,240,200,0.45), transparent 55%),
+    linear-gradient(180deg, #eafcff 0%, #cdeef8 100%);
+  color: #0b4f6c;
+  font-family: var(--font-body);
+}
+
+.aeropedia-header{
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(20,120,163,0.18);
+}
+
+.aeropedia-logo{
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0b4f6c;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+}
+
+.aeropedia-tagline{
+  font-size: 0.72rem;
+  font-style: italic;
+  color: #2f7c9c;
+  opacity: 0.85;
+}
+
+.aeropedia-search-row{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 16px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.65);
+  border: 1px solid rgba(255,255,255,0.9);
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(20,120,163,0.15), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.aeropedia-search-icon{
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.aeropedia-search-input{
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.82rem;
+  color: #0b4f6c;
+  font-family: var(--font-body);
+}
+
+.aeropedia-search-input::placeholder{
+  color: #5fa0bc;
+}
+
+.aeropedia-body{
+  display: flex;
+  flex: 1;
+  gap: 12px;
+  padding: 0 16px 16px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.aeropedia-sidebar{
+  width: 38%;
+  min-width: 140px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 4px;
+}
+
+.aeropedia-nav-item{
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  padding: 9px 12px;
+  border: 1px solid rgba(255,255,255,0.8);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.5);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+.aeropedia-nav-item:hover{
+  background: rgba(255,255,255,0.75);
+}
+
+.aeropedia-nav-item.active{
+  background: linear-gradient(180deg, #bdeaf7, #8fd2ec);
+  box-shadow: 0 3px 10px rgba(20,120,163,0.3), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.aeropedia-nav-title{
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0b4f6c;
+}
+
+.aeropedia-nav-desc{
+  font-size: 0.65rem;
+  color: #2f7c9c;
+  opacity: 0.85;
+}
+
+.aeropedia-no-results{
+  font-size: 0.78rem;
+  color: #2f7c9c;
+  padding: 8px 4px;
+}
+
+.aeropedia-article{
+  flex: 1;
+  overflow-y: auto;
+  background: rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.85);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 6px 20px rgba(20,120,163,0.15), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.aeropedia-article-title{
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0b4f6c;
+}
+
+.aeropedia-article-meta{
+  margin: 0 0 10px;
+  font-size: 0.65rem;
+  color: #5fa0bc;
+  font-style: italic;
+}
+
+.aeropedia-article-body p{
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: #17475f;
+}
+
+.aeropedia-article-body code{
+  background: rgba(20,120,163,0.12);
+  padding: 1px 5px;
+  border-radius: 5px;
+  font-size: 0.78rem;
+  color: #0b4f6c;
+}
+
+/* =====================================================
+   JOGO "CAMPO MINADO" — renderizado dentro de uma
+   janelinha flutuante do sistema (.site-window)
+===================================================== */
+.campo-minado-window{
+  width: min(300px, calc(100vw - 32px));
+}
+
+.minado-app{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px;
+}
+
+.minado-hud{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.minado-hud-item{ font-variant-numeric: tabular-nums; }
+
+.minado-reset-btn{
+  cursor: pointer;
+  border: 1px solid var(--mica-border);
+  border-radius: var(--radius-md);
+  padding: 5px 12px;
+  font-weight: 700;
+  font-size: 0.74rem;
+  color: var(--text-dark);
+  background: var(--mica-fill);
+}
+
+.minado-reset-btn:hover{
+  background: var(--mica-fill-strong);
+}
+
+.minado-reset-btn:active{
+  transform: translateY(1px);
+}
+
+.minado-grid{
+  display: grid;
+  gap: 3px;
+  background: rgba(20,120,163,0.2);
+  padding: 6px;
+  border-radius: 10px;
+}
+
+.minado-cell{
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 5px;
+  cursor: pointer;
+  user-select: none;
+  background: linear-gradient(180deg, #ffffff, #cdeef8);
+  box-shadow: 0 2px 4px rgba(20,120,163,0.35), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.minado-cell.revealed{
+  cursor: default;
+  background: rgba(255,255,255,0.65);
+  box-shadow: inset 0 1px 4px rgba(20,120,163,0.3);
+}
+
+.minado-cell.mine{ background: linear-gradient(180deg, #ffb3b3, #ff7373); }
+.minado-cell.flag{ background: linear-gradient(180deg, #ffe9a8, #ffcf5c); }
+
+.minado-cell.n1{ color:#1478a3; }
+.minado-cell.n2{ color:#1e9d5c; }
+.minado-cell.n3{ color:#d9426f; }
+.minado-cell.n4{ color:#7a2fc4; }
+.minado-cell.n5{ color:#d98c1e; }
+.minado-cell.n6{ color:#2199a8; }
+.minado-cell.n7{ color:#333333; }
+.minado-cell.n8{ color:#777777; }
+
+.minado-msg{
+  min-height: 18px;
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.minado-hint{
+  margin: 0;
+  font-size: 0.66rem;
+  color: var(--text-soft);
+  text-align: center;
+  max-width: 240px;
 }
 
 /* ===== XADREZ COM NERD SABIDO ===== */

@@ -742,6 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let negativeSince = null;
   let agiotaDebt = 0;
   let agiotaNagCount = 0;
+  let agiotaAwaitingLoanAmount = false;
   let virusActive = false;
   let virusInterval = null;
 
@@ -828,6 +829,14 @@ document.addEventListener('DOMContentLoaded', () => {
       name: 'Xadrez',
       price: 20000,
       desc: 'Duelo de tabuleiro pra dois jogadores no mesmo PC. Capture o rei do adversário pra vencer.'
+    },
+    {
+      id: 'campo_minado',
+      emoji: '💣',
+      name: 'Campo Minado',
+      price: 0,
+      free: true,
+      desc: 'Clássico Campo Minado 9x9, de graça. Abre numa janela separada do navegador — marque as minas e limpe o campo todo.'
     }
   ];
 
@@ -1841,6 +1850,17 @@ document.addEventListener('DOMContentLoaded', () => {
     scheduleAgiotaNag();
   }
 
+  // versão "silenciosa" de showAgiota(): ativa a cobrança periódica (e a
+  // contagem que dispara o vírus depois de 5 mensagens ignoradas) sem
+  // mandar a mensagem de boas-vindas — usada quando a dívida nasce de
+  // um empréstimo, já que o próprio empréstimo manda sua confirmação
+  function ativarAgiotaCobranca(){
+    if (agiotaActive) return;
+    agiotaActive = true;
+    agiotaNagCount = 0;
+    scheduleAgiotaNag();
+  }
+
   // se o usuario ja tinha uma divida de uma sessao anterior (salva no
   // localStorage), o agiota ja aparece cobrando assim que o MSN carrega,
   // sem precisar esperar 30s negativo de novo
@@ -1866,7 +1886,6 @@ document.addEventListener('DOMContentLoaded', () => {
     negativeSince = null;
     stopVirus();
 
-    if (msnAgiotaContact) msnAgiotaContact.hidden = true;
     if (badgeAgiota) badgeAgiota.hidden = true;
     addMessage('agiota', 'them', 'Valeu, quitado. Mas fica esperto da próxima vez, hein.');
 
@@ -1967,7 +1986,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const assistenteJogosReply = 'A Vitrine (ícone 🎮) é a lojinha de jogos: lá você compra jogos com o seu saldo do Nubonk e depois joga direto na aba Biblioteca. Cada jogo comprado fica guardado no seu Inventário, então você não perde o que já pagou.';
   const assistenteTrabalhoReply = 'Na Escavação (ícone da pá 🪏) você cava buracos pra ganhar dinheiro, que cai direto no seu saldo do Nubonk. Cada cavada gasta energia — às vezes você acha só pedra, às vezes ouro, e raramente um diamante gigante! A energia recupera sozinha bem devagar, ou você come algo ou usa um stim no Inventário pra acelerar.';
   const assistenteDividasReply = 'Se o seu saldo no Nubonk ficar negativo por muito tempo, um agiota aparece aqui no MSN cobrando a dívida. Se você ignorar as cobranças dele por tempo demais, as coisas ficam feias. O melhor é quitar a dívida assim que o seu saldo cobrir o valor, lá na aba Nubonk.';
-  const assistenteSitesReply = 'Alguns sites que rolam por aí: xxx.aero.com, aerogram.com e aerocripto.com. Pra acessar, digita o endereço certinho na barra de pesquisa do Gugle (ícone 🌐 do Navegador) e aperta Enter. Só um aviso: alguns desses sites são meio suspeitos... 👀';
+  const assistenteSitesReply = 'Alguns sites que rolam por aí: xxx.aero.com, aerogram.com, aerocripto.com e aeropedia.com. Pra acessar, digita o endereço certinho na barra de pesquisa do Gugle (ícone 🌐 do Navegador) e aperta Enter. Só um aviso: alguns desses sites são meio suspeitos... 👀 (a aeropedia.com essa é de boa, é só uma enciclopédia)';
 
   const assistenteGenericReplies = [
     'Não entendi muito bem, mas posso te explicar sobre "jogos", "trabalho", "dívidas" ou "sites". É só perguntar!',
@@ -2002,6 +2021,75 @@ document.addEventListener('DOMContentLoaded', () => {
     return pickRandom(assistenteGenericReplies);
   }
 
+  /* ---------- AGIOTA: EMPRÉSTIMOS SOB PEDIDO ----------
+     Diferente da cobrança automática (que só nasce se o saldo do Cassino
+     ficar negativo), aqui o próprio jogador pede dinheiro emprestado pelo
+     chat. O valor pedido cai na hora no saldo do Nubonk e vira dívida com
+     o agiota — o saldo do Cassino/Nubonk em si nunca fica negativo por
+     causa disso, o jogador só passa a dever. */
+  const agiotaEmprestimoKeywords = [
+    'me empresta dinheiro', 'me emprestar dinheiro', 'emprestimo', 'empréstimo',
+    'emprestar dinheiro', 'me empresta', 'empresta dinheiro', 'empresta',
+    'preciso de dinheiro', 'preciso de grana', 'preciso de uma grana',
+    'me da dinheiro', 'me dá dinheiro', 'me ajuda com dinheiro', 'quero dinheiro',
+    'quero grana', 'to sem dinheiro', 'tô sem dinheiro', 'to duro', 'tô duro',
+    'dinheiro', 'grana', 'din-din', 'trocado'
+  ];
+
+  function parseAgiotaValor(text){
+    // remove pontos/virgulas usados como separador de milhar (ex: "5.000" -> "5000")
+    const semSeparadores = text.replace(/[.,](?=\d{3}(\D|$))/g, '');
+    const match = semSeparadores.match(/\d+/);
+    if (!match) return null;
+    const valor = parseInt(match[0], 10);
+    return Number.isNaN(valor) ? null : valor;
+  }
+
+  function concederEmprestimoAgiota(valor){
+    casinoBalance += valor;
+    saveCasinoBalance();
+    renderCasinoBalance();
+
+    agiotaDebt += valor;
+    saveAgiotaDebt();
+
+    agiotaAwaitingLoanAmount = false;
+    ativarAgiotaCobranca();
+    renderNubonk();
+
+    addMessage('agiota', 'them', `Fechado! Caiu R$ ${valor} na sua conta agora. No total você já me deve R$ ${agiotaDebt}. Não me deixa esperando, hein.`);
+  }
+
+  function handleAgiotaUserMessage(text){
+    const normalized = normalizeNerdText(text);
+
+    if (agiotaAwaitingLoanAmount){
+      const valor = parseAgiotaValor(text);
+      if (valor === null){
+        addMessage('agiota', 'them', 'Fala um número, sô. Quanto você quer?');
+        return;
+      }
+      if (valor < 1 || valor > 10000){
+        addMessage('agiota', 'them', 'Só empresto valores entre R$ 1 e R$ 10.000. Quanto você quer, dentro desse limite?');
+        return;
+      }
+      concederEmprestimoAgiota(valor);
+      return;
+    }
+
+    if (agiotaEmprestimoKeywords.some(k => normalized.includes(k))){
+      agiotaAwaitingLoanAmount = true;
+      addMessage('agiota', 'them', 'Quanto?');
+      return;
+    }
+
+    if (agiotaDebt > 0){
+      agiotaSendNag();
+    } else {
+      addMessage('agiota', 'them', 'Tá tudo quitado entre nós, pode ficar tranquilo.');
+    }
+  }
+
   function sendMsnMessage(){
     if (!msnComposeInput) return;
     const text = msnComposeInput.value.trim();
@@ -2012,11 +2100,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (activeContact === 'agiota'){
       setTimeout(() => {
-        if (agiotaDebt > 0){
-          agiotaSendNag();
-        } else {
-          addMessage('agiota', 'them', 'Tá tudo quitado entre nós, pode ficar tranquilo.');
-        }
+        handleAgiotaUserMessage(text);
       }, 500 + Math.random() * 700);
     } else if (activeContact === 'carachato' && Math.random() < 0.4){
       setTimeout(() => {
@@ -2540,6 +2624,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     GAME_CATALOG.forEach(game => {
       const owned = !!(inventory.jogos && inventory.jogos[game.id] > 0);
+      const isFree = !!game.free || game.price === 0;
+      const priceLabel = isFree ? 'Grátis' : `R$ ${game.price.toLocaleString('pt-BR')}`;
+      const actionLabel = isFree ? 'Resgatar' : 'Comprar';
       const card = document.createElement('div');
       card.className = 'vitrine-card';
       card.innerHTML = `
@@ -2547,9 +2634,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <span class="vitrine-card-info">
           <span class="vitrine-card-name">${game.name}</span>
           <span class="vitrine-card-desc">${game.desc}</span>
-          <span class="vitrine-card-price">R$ ${game.price.toLocaleString('pt-BR')}</span>
+          <span class="vitrine-card-price${isFree ? ' free' : ''}">${priceLabel}</span>
         </span>
-        <button class="vitrine-card-btn${owned ? ' owned' : ''}" type="button" data-game="${game.id}"${owned ? ' disabled' : ''}>${owned ? '✅ Adquirido' : 'Comprar'}</button>
+        <button class="vitrine-card-btn${owned ? ' owned' : ''}" type="button" data-game="${game.id}"${owned ? ' disabled' : ''}>${owned ? '✅ Adquirido' : actionLabel}</button>
       `;
       vitrineLojaGridEl.appendChild(card);
     });
@@ -2592,22 +2679,33 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!game) return;
     if (inventory.jogos && inventory.jogos[gameId] > 0) return;
 
-    if (casinoBalance < game.price){
-      showVitrineFeedback('Saldo insuficiente pra comprar esse jogo.', true);
-      return;
+    const isFree = !!game.free || game.price === 0;
+
+    if (!isFree){
+      if (casinoBalance < game.price){
+        showVitrineFeedback('Saldo insuficiente pra comprar esse jogo.', true);
+        return;
+      }
+      casinoBalance -= game.price;
+      saveCasinoBalance();
+      renderCasinoBalance();
     }
 
-    casinoBalance -= game.price;
-    saveCasinoBalance();
-    renderCasinoBalance();
-
     addToInventory('jogos', gameId, 1);
-    showVitrineFeedback(`${game.emoji} ${game.name} comprado! Já tá na sua Biblioteca.`, false);
+    showVitrineFeedback(
+      isFree ? `${game.emoji} ${game.name} resgatado! Já tá na sua Biblioteca.` : `${game.emoji} ${game.name} comprado! Já tá na sua Biblioteca.`,
+      false
+    );
     renderVitrineLoja();
     renderVitrineBiblioteca();
   }
 
   function launchGame(gameId){
+    if (gameId === 'campo_minado'){
+      openCampoMinadoWindow();
+      return;
+    }
+
     const windowId = gameId === 'fuga_policia' ? 'jogo-fuga-policia' : (gameId === 'xadrez' ? 'jogo-xadrez' : null);
     if (!windowId) return;
     const win = windowsByApp[windowId];
@@ -2617,6 +2715,237 @@ document.addEventListener('DOMContentLoaded', () => {
     if (gameId === 'xadrez') chessResetGame();
 
     openWindow(win);
+  }
+
+  /* ---------- JOGO "CAMPO MINADO" — abre numa janelinha flutuante
+     do sistema (mesmo estilo das janelas de site, tipo aeropedia.com),
+     e não dentro da janela da Vitrine ---------- */
+  function renderCampoMinado(bodyEl){
+    const COLS = 9, ROWS = 9, MINES = 10;
+
+    bodyEl.innerHTML = `
+      <div class="minado-app">
+        <div class="minado-hud">
+          <span class="minado-hud-item">🚩 <span id="minadoFlags">10</span></span>
+          <button class="minado-reset-btn" id="minadoResetBtn" type="button">🙂 Recomeçar</button>
+          <span class="minado-hud-item">⏱️ <span id="minadoTimer">0</span>s</span>
+        </div>
+        <div class="minado-grid" id="minadoGrid"></div>
+        <p class="minado-msg" id="minadoMsg"></p>
+        <p class="minado-hint">Clique esquerdo pra abrir uma célula, clique direito pra marcar uma bandeira 🚩.</p>
+      </div>
+    `;
+
+    const gridEl = bodyEl.querySelector('#minadoGrid');
+    const flagsLeftEl = bodyEl.querySelector('#minadoFlags');
+    const timerEl = bodyEl.querySelector('#minadoTimer');
+    const msgEl = bodyEl.querySelector('#minadoMsg');
+    const resetBtn = bodyEl.querySelector('#minadoResetBtn');
+
+    gridEl.style.gridTemplateColumns = `repeat(${COLS}, 28px)`;
+
+    let board, revealedCount, flagsPlaced, gameOver, firstClick, timerId, seconds;
+
+    function inBounds(x, y){ return x >= 0 && x < COLS && y >= 0 && y < ROWS; }
+
+    function neighbors(x, y){
+      const list = [];
+      for (let dx = -1; dx <= 1; dx++){
+        for (let dy = -1; dy <= 1; dy++){
+          if (dx === 0 && dy === 0) continue;
+          if (inBounds(x + dx, y + dy)) list.push({ x: x + dx, y: y + dy });
+        }
+      }
+      return list;
+    }
+
+    function buildBoard(safeX, safeY){
+      board = [];
+      for (let y = 0; y < ROWS; y++){
+        const row = [];
+        for (let x = 0; x < COLS; x++) row.push({ mine: false, revealed: false, flagged: false, count: 0 });
+        board.push(row);
+      }
+      let placed = 0;
+      while (placed < MINES){
+        const x = Math.floor(Math.random() * COLS);
+        const y = Math.floor(Math.random() * ROWS);
+        if (board[y][x].mine) continue;
+        if (Math.abs(x - safeX) <= 1 && Math.abs(y - safeY) <= 1) continue;
+        board[y][x].mine = true;
+        placed++;
+      }
+      for (let y = 0; y < ROWS; y++){
+        for (let x = 0; x < COLS; x++){
+          if (board[y][x].mine) continue;
+          board[y][x].count = neighbors(x, y).filter(n => board[n.y][n.x].mine).length;
+        }
+      }
+    }
+
+    function startTimer(){
+      stopTimer();
+      seconds = 0;
+      timerEl.textContent = '0';
+      timerId = setInterval(() => {
+        seconds++;
+        timerEl.textContent = String(seconds);
+      }, 1000);
+    }
+    function stopTimer(){
+      if (timerId) clearInterval(timerId);
+      timerId = null;
+    }
+
+    function render(){
+      gridEl.innerHTML = '';
+      for (let y = 0; y < ROWS; y++){
+        for (let x = 0; x < COLS; x++){
+          const cellData = board[y][x];
+          const cellEl = document.createElement('div');
+          cellEl.className = 'minado-cell';
+          if (cellData.revealed){
+            cellEl.classList.add('revealed');
+            if (cellData.mine){
+              cellEl.classList.add('mine');
+              cellEl.textContent = '💣';
+            } else if (cellData.count > 0){
+              cellEl.textContent = String(cellData.count);
+              cellEl.classList.add('n' + cellData.count);
+            }
+          } else if (cellData.flagged){
+            cellEl.classList.add('flag');
+            cellEl.textContent = '🚩';
+          }
+          cellEl.addEventListener('click', () => handleReveal(x, y));
+          cellEl.addEventListener('contextmenu', (e) => { e.preventDefault(); handleFlag(x, y); });
+          gridEl.appendChild(cellEl);
+        }
+      }
+    }
+
+    function revealFlood(startX, startY){
+      const stack = [{ x: startX, y: startY }];
+      const seen = new Set();
+      while (stack.length){
+        const cur = stack.pop();
+        const key = cur.x + ',' + cur.y;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const cell = board[cur.y][cur.x];
+        if (cell.revealed || cell.flagged) continue;
+        cell.revealed = true;
+        revealedCount++;
+        if (cell.count === 0 && !cell.mine){
+          neighbors(cur.x, cur.y).forEach(n => stack.push(n));
+        }
+      }
+    }
+
+    function handleReveal(x, y){
+      if (gameOver) return;
+      const cell = board[y][x];
+      if (cell.flagged || cell.revealed) return;
+
+      if (firstClick){
+        buildBoard(x, y);
+        firstClick = false;
+        startTimer();
+      }
+
+      const target = board[y][x];
+      if (target.mine){
+        target.revealed = true;
+        endGame(false);
+        render();
+        return;
+      }
+
+      revealFlood(x, y);
+      render();
+      checkWin();
+    }
+
+    function handleFlag(x, y){
+      if (gameOver) return;
+      const cell = board[y][x];
+      if (cell.revealed) return;
+      if (!cell.flagged && flagsPlaced >= MINES) return;
+      cell.flagged = !cell.flagged;
+      flagsPlaced += cell.flagged ? 1 : -1;
+      flagsLeftEl.textContent = String(MINES - flagsPlaced);
+      render();
+    }
+
+    function checkWin(){
+      const totalSafe = COLS * ROWS - MINES;
+      if (revealedCount >= totalSafe) endGame(true);
+    }
+
+    function endGame(won){
+      gameOver = true;
+      stopTimer();
+      if (won){
+        msgEl.textContent = '🎉 Você limpou o campo! Parabéns!';
+        board.forEach(row => row.forEach(cell => { if (cell.mine) cell.flagged = true; }));
+      } else {
+        msgEl.textContent = '💥 Bum! Você pisou numa mina.';
+        board.forEach(row => row.forEach(cell => { if (cell.mine) cell.revealed = true; }));
+      }
+      render();
+    }
+
+    function resetGame(){
+      revealedCount = 0;
+      flagsPlaced = 0;
+      gameOver = false;
+      firstClick = true;
+      msgEl.textContent = '';
+      flagsLeftEl.textContent = String(MINES);
+      stopTimer();
+      timerEl.textContent = '0';
+      buildBoard(-5, -5);
+      render();
+    }
+
+    resetBtn.addEventListener('click', resetGame);
+    resetGame();
+
+    // cleanup: para o timer quando a janelinha é fechada
+    return function cleanup(){
+      stopTimer();
+    };
+  }
+
+  function openCampoMinadoWindow(){
+    const win = document.createElement('div');
+    win.className = 'site-window campo-minado-window';
+    const offset = siteWindowOffset % 6;
+    win.style.left = (90 + offset * 26) + 'px';
+    win.style.top = (80 + offset * 22) + 'px';
+    siteWindowOffset++;
+
+    win.innerHTML = `
+      <div class="site-window-titlebar">
+        <span class="site-window-title">💣 Campo Minado</span>
+        <button class="site-window-close" type="button" aria-label="Fechar">×</button>
+      </div>
+      <div class="site-window-body"></div>
+    `;
+
+    document.body.appendChild(win);
+    bringToFront(win);
+    win.addEventListener('mousedown', () => bringToFront(win));
+
+    const bodyEl = win.querySelector('.site-window-body');
+    const cleanup = renderCampoMinado(bodyEl);
+
+    win.querySelector('.site-window-close').addEventListener('click', () => {
+      if (typeof cleanup === 'function') cleanup();
+      win.remove();
+    });
+
+    makeSiteWindowDraggable(win);
   }
 
   if (vitrineLojaGridEl || vitrineBibliotecaGridEl){
@@ -3616,11 +3945,124 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  /* ===== SITE 4: aeropedia.com — enciclopédia livre do AeroOS, estilo Frutiger Aero ===== */
+  function renderSiteAeropedia(bodyEl){
+    const artigos = [
+      {
+        titulo: 'AeroOS',
+        resumo: 'Visão geral do sistema operacional',
+        corpo: `
+          <p><strong>AeroOS</strong> é o sistema que você está usando agora. Combina o visual de vidro do <em>Windows Vista</em> com a barra de tarefas do <em>Windows 7</em> — daí o apelido de "Frutiger Aero" pra essa estética de bolhas, brilho e transparência.</p>
+          <p>A área de trabalho reúne vários aplicativos: um cassino, um banco digital (Nubonk), um mensageiro (MSN), uma loja de jogos (Vitrine), um serviço de comida (aicomida) e um navegador com sites... nem todos confiáveis.</p>
+        `
+      },
+      {
+        titulo: 'Navegador & Gugle',
+        resumo: 'O motor de busca do sistema',
+        corpo: `
+          <p>O <strong>Navegador</strong> abre direto na página do <strong>Gugle</strong>, motor de busca oficial do AeroOS. Ele não faz busca de verdade — mas se você digitar o endereço certinho de alguns sites na barra de pesquisa, uma janela nova se abre por cima da área de trabalho.</p>
+          <p>Endereços conhecidos: <code>xxx.aero.com</code>, <code>aerogram.com</code>, <code>aerocripto.com</code> e, claro, esta própria enciclopédia, <code>aeropedia.com</code>.</p>
+        `
+      },
+      {
+        titulo: 'Nubonk',
+        resumo: 'Banco digital do usuário',
+        corpo: `<p><strong>Nubonk</strong> é a conta digital sincronizada com o saldo do Cassino. Se o saldo fica negativo por tempo demais, um certo <em>Agiota</em> aparece cobrando lá no MSN.</p>`
+      },
+      {
+        titulo: 'Agiota',
+        resumo: 'Contato indesejado do MSN',
+        corpo: `<p>O <strong>Agiota</strong> só aparece na lista de contatos do MSN quando o saldo do Nubonk fica negativo. O recomendado é quitar a dívida assim que possível pela aba Nubonk — ignorá-lo por tempo demais não costuma terminar bem.</p>`
+      },
+      {
+        titulo: 'Vitrine',
+        resumo: 'Loja e biblioteca de jogos',
+        corpo: `<p>A <strong>Vitrine</strong> (ícone 🎮) é onde você adquire jogos pra sua Biblioteca. A maioria custa uma parte do saldo do Nubonk, mas de vez em quando aparece algum título gratuito com o botão <em>Resgatar</em> — é só clicar pra levar sem gastar nada.</p>`
+      },
+      {
+        titulo: 'aicomida',
+        resumo: 'Delivery de comida e estimulantes',
+        corpo: `<p><strong>aicomida</strong> vende comida e estimulantes que recuperam a energia gasta na Escavação. Itens comprados ficam guardados no Inventário até serem consumidos.</p>`
+      },
+      {
+        titulo: 'Escavação',
+        resumo: 'Trabalho de cavar por dinheiro',
+        corpo: `<p>Na <strong>Escavação</strong> (ícone da pá 🪏) você cava buracos pra ganhar dinheiro pro Nubonk. Cada cavada gasta energia, que se recupera sozinha bem devagar — ou mais rápido com comida e estimulantes do Inventário.</p>`
+      },
+      {
+        titulo: 'Sites suspeitos',
+        resumo: 'Cuidado ao navegar',
+        corpo: `<p>Nem todo endereço que aparece no Gugle é confiável. Alguns sites escondem vírus, outros são só entretenimento disfarçado. Navegue com cuidado e desconfie de anúncios chamativos demais.</p>`
+      }
+    ];
+
+    bodyEl.innerHTML = `
+      <div class="aeropedia-app">
+        <header class="aeropedia-header">
+          <span class="aeropedia-logo">🌐 aeropedia</span>
+          <span class="aeropedia-tagline">a enciclopédia livre do AeroOS</span>
+        </header>
+        <div class="aeropedia-search-row">
+          <span class="aeropedia-search-icon">🔍</span>
+          <input type="text" id="aeropediaSearch" class="aeropedia-search-input" placeholder="Buscar artigo..." autocomplete="off">
+        </div>
+        <div class="aeropedia-body">
+          <nav class="aeropedia-sidebar" id="aeropediaSidebar"></nav>
+          <article class="aeropedia-article" id="aeropediaArticle"></article>
+        </div>
+      </div>
+    `;
+
+    const sidebarEl = bodyEl.querySelector('#aeropediaSidebar');
+    const articleEl = bodyEl.querySelector('#aeropediaArticle');
+    const searchEl = bodyEl.querySelector('#aeropediaSearch');
+
+    function renderArticle(artigo){
+      articleEl.innerHTML = `
+        <h1 class="aeropedia-article-title">${artigo.titulo}</h1>
+        <p class="aeropedia-article-meta">📖 verbete da aeropedia · editado incontáveis vezes</p>
+        <div class="aeropedia-article-body">${artigo.corpo}</div>
+      `;
+    }
+
+    function renderSidebar(filtro){
+      const termo = (filtro || '').trim().toLowerCase();
+      sidebarEl.innerHTML = '';
+      const filtrados = artigos.filter(a => !termo || a.titulo.toLowerCase().includes(termo) || a.resumo.toLowerCase().includes(termo));
+
+      if (!filtrados.length){
+        sidebarEl.innerHTML = '<p class="aeropedia-no-results">Nenhum artigo encontrado.</p>';
+        articleEl.innerHTML = '';
+        return;
+      }
+
+      filtrados.forEach((artigo, idx) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'aeropedia-nav-item' + (idx === 0 ? ' active' : '');
+        item.innerHTML = `<span class="aeropedia-nav-title">${artigo.titulo}</span><span class="aeropedia-nav-desc">${artigo.resumo}</span>`;
+        item.addEventListener('click', () => {
+          sidebarEl.querySelectorAll('.aeropedia-nav-item').forEach(el => el.classList.remove('active'));
+          item.classList.add('active');
+          renderArticle(artigo);
+        });
+        sidebarEl.appendChild(item);
+      });
+
+      renderArticle(filtrados[0]);
+    }
+
+    searchEl.addEventListener('input', () => renderSidebar(searchEl.value));
+
+    renderSidebar('');
+  }
+
   /* ===== JANELAS DE SITE + ROTEAMENTO PELA BARRA DE PESQUISA DO GUGLE ===== */
   const SITE_DEFS = {
     'xxx.aero.com': { title: 'xxx.aero.com', render: renderSiteXxxAero },
     'aerogram.com': { title: 'Aerogram', render: renderSiteAerogram },
-    'aerocripto.com': { title: 'AeroCripto', render: renderSiteAeroCripto }
+    'aerocripto.com': { title: 'AeroCripto', render: renderSiteAeroCripto },
+    'aeropedia.com': { title: 'aeropedia', render: renderSiteAeropedia }
   };
 
   let siteWindowOffset = 0;
