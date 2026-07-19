@@ -936,8 +936,24 @@
 
   <audio id="msnNotificationSound" src="audios/chamada-a-cobrar-para-aceitar.mp3" preload="auto"></audio>
 
+  <!-- ⚠️ ORDEM CORRIGIDA DOS SCRIPTS ⚠️ -->
+  <!-- 1. Carregar a biblioteca do Supabase PRIMEIRO -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- 2. Aguardar que a biblioteca esteja pronta -->
+  <script>
+    window.supabaseReady = false;
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+        window.supabaseReady = true;
+      }
+    });
+  </script>
+  
+  <!-- 3. Inicializar o cliente Supabase -->
   <script src="supabase.js"></script>
+  
+  <!-- 4. Carregar o script principal -->
   <script src="script.js"></script>
 </body>
 </html>
