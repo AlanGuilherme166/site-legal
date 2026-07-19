@@ -61,6 +61,10 @@
       <span class="desktop-icon-glyph">🪏</span>
       <span class="desktop-icon-label">Trabalho</span>
     </button>
+    <button class="desktop-icon" data-app="codigo" data-icon="💻" data-name="Trabalho: Código" type="button">
+      <span class="desktop-icon-glyph">💻</span>
+      <span class="desktop-icon-label">Trabalho: Código</span>
+    </button>
     <button class="desktop-icon" data-app="player" data-icon="🎵" data-name="Player" type="button">
       <span class="desktop-icon-glyph">🎵</span>
       <span class="desktop-icon-label">Player</span>
@@ -612,6 +616,32 @@
       </div>
     </section>
 
+    <!-- ===== JANELA: TRABALHO: CÓDIGO (IDE) ===== -->
+    <section class="window cmd-window" id="codigo">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">💻</span> trabalho-codigo.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body cmd-body">
+        <div class="cmd-terminal">
+          <div class="codigo-balance-row">
+            <span class="dig-balance-label">Saldo</span>
+            <span class="dig-balance-value" id="codigoBalance">R$ 0</span>
+          </div>
+          <p class="dig-boost-status codigo-boost-status" id="codigoBoostStatus" hidden></p>
+          <div class="cmd-output" id="codigoOutput"></div>
+          <form class="cmd-input-row" id="codigoInputForm">
+            <span class="cmd-prompt">C:\Trabalho\código&gt;</span>
+            <input type="text" id="codigoInput" class="cmd-input" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder='digite /code program - 10s'>
+          </form>
+        </div>
+      </div>
+    </section>
+
     <!-- ===== JANELA: MEU COMPUTADOR ===== -->
     <section class="window meucomputador-window" id="meucomputador">
       <div class="window-titlebar">
@@ -758,6 +788,10 @@
       <button class="start-app-tile" data-app="trabalho" type="button">
         <span class="start-app-icon">🪏</span>
         <span class="start-app-name">Trabalho</span>
+      </button>
+      <button class="start-app-tile" data-app="codigo" type="button">
+        <span class="start-app-icon">💻</span>
+        <span class="start-app-name">Trabalho: Código</span>
       </button>
       <button class="start-app-tile" data-app="player" type="button">
         <span class="start-app-icon">🎵</span>

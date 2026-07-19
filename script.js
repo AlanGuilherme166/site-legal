@@ -994,7 +994,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ? `⚡ Boost ativo: ${moneyBoostMult}x no dinheiro ganho (${Math.floor(restanteMs / 60000)}:${String(Math.floor((restanteMs % 60000) / 1000)).padStart(2, '0')} restantes)`
       : '';
 
-    [aicomidaBoostStatusEl, digBoostStatusEl].forEach(el => {
+    [aicomidaBoostStatusEl, digBoostStatusEl, codigoBoostStatusEl].forEach(el => {
       if (!el) return;
       el.textContent = texto;
       el.hidden = !active;
@@ -1322,6 +1322,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (casinoNegativeWarning) casinoNegativeWarning.hidden = casinoBalance >= 0;
     updateCasinoNegativeWatch();
     renderAicomidaBalance();
+    renderCodigoBalance();
   }
 
   function casinoNumberColor(n){
@@ -2756,6 +2757,171 @@ document.addEventListener('DOMContentLoaded', () => {
       const value = cmdInputEl.value;
       cmdInputEl.value = '';
       cmdHandleCommand(value);
+    });
+  }
+
+  /* =====================================================
+     APP: TRABALHO: CÓDIGO — digite /code program - 10s
+     pra rodar um "trabalho de programação": 10 segundos
+     de código verde passando rápido e no final ganha
+     um valor aleatório (quanto maior, mais raro).
+  ===================================================== */
+  const codigoOutputEl = document.getElementById('codigoOutput');
+  const codigoInputForm = document.getElementById('codigoInputForm');
+  const codigoInputEl = document.getElementById('codigoInput');
+  const codigoBalanceEl = document.getElementById('codigoBalance');
+  const codigoBoostStatusEl = document.getElementById('codigoBoostStatus');
+
+  const CODE_JOB_COMMAND = '/code program - 10s';
+  const CODE_JOB_DURATION_MS = 10000;
+
+  const CODE_REWARDS = [
+    { min: 500,  max: 1000,  weight: 35   },
+    { min: 1000, max: 2000,  weight: 25   },
+    { min: 2000, max: 3500,  weight: 18   },
+    { min: 3500, max: 5000,  weight: 12   },
+    { min: 5000, max: 7000,  weight: 7    },
+    { min: 7000, max: 8500,  weight: 2.5  },
+    { min: 8500, max: 10000, weight: 0.5  }
+  ];
+  const CODE_REWARDS_TOTAL_WEIGHT = CODE_REWARDS.reduce((soma, r) => soma + r.weight, 0);
+
+  let codigoRunning = false;
+
+  function pickCodeReward(){
+    let r = Math.random() * CODE_REWARDS_TOTAL_WEIGHT;
+    for (const reward of CODE_REWARDS){
+      if (r < reward.weight) return reward;
+      r -= reward.weight;
+    }
+    return CODE_REWARDS[0];
+  }
+
+  function codigoAddLine(text, className){
+    if (!codigoOutputEl) return;
+    const p = document.createElement('p');
+    p.className = 'cmd-line' + (className ? ' ' + className : '');
+    p.textContent = text;
+    codigoOutputEl.appendChild(p);
+    codigoOutputEl.scrollTop = codigoOutputEl.scrollHeight;
+  }
+
+  function renderCodigoBalance(){
+    if (!codigoBalanceEl) return;
+    codigoBalanceEl.textContent = `R$ ${casinoBalance}`;
+    codigoBalanceEl.classList.toggle('negative', casinoBalance < 0);
+  }
+
+  function spawnCodeJobPopup(onFinished){
+    const popup = document.createElement('div');
+    popup.className = 'hack-popup';
+    popup.innerHTML = `
+      <div class="hack-popup-titlebar">
+        <span>trabalho-codigo.exe</span>
+        <span class="hack-popup-timer" id="codigoPopupTimer">10s</span>
+      </div>
+      <div class="hack-popup-body" id="codigoPopupBody"></div>
+    `;
+    document.body.appendChild(popup);
+
+    const bodyEl = popup.querySelector('#codigoPopupBody');
+    const timerEl = popup.querySelector('#codigoPopupTimer');
+
+    const startedAt = Date.now();
+
+    const codeInterval = setInterval(() => {
+      const line = document.createElement('p');
+      line.className = 'hack-popup-code-line';
+      line.textContent = hackRandomCodeLine();
+      bodyEl.appendChild(line);
+      bodyEl.scrollTop = bodyEl.scrollHeight;
+      if (bodyEl.childElementCount > 200){
+        bodyEl.removeChild(bodyEl.firstElementChild);
+      }
+    }, 60);
+
+    const timerInterval = setInterval(() => {
+      const restanteS = Math.max(0, Math.ceil((CODE_JOB_DURATION_MS - (Date.now() - startedAt)) / 1000));
+      if (timerEl) timerEl.textContent = `${restanteS}s`;
+    }, 200);
+
+    setTimeout(() => {
+      clearInterval(codeInterval);
+      clearInterval(timerInterval);
+
+      const reward = pickCodeReward();
+      const valorBase = Math.floor(Math.random() * (reward.max - reward.min + 1)) + reward.min;
+      const valor = applyEarnBoost(valorBase);
+
+      bodyEl.innerHTML = `
+        <div class="hack-popup-result">
+          <span class="hack-popup-result-title">TRABALHO CONCLUÍDO</span>
+          <span class="hack-popup-result-sub">Você ganhou R$ ${valor}${getMoneyBoostMult() > 1 ? ` (boost ${getMoneyBoostMult()}x aplicado)` : ''}</span>
+        </div>
+      `;
+
+      const closeRow = document.createElement('div');
+      closeRow.className = 'hack-popup-closerow';
+      closeRow.innerHTML = `<button class="glass-btn hack-popup-okbtn" type="button">Fechar</button>`;
+      popup.appendChild(closeRow);
+      closeRow.querySelector('button').addEventListener('click', () => popup.remove());
+
+      if (onFinished) onFinished(valor);
+    }, CODE_JOB_DURATION_MS);
+  }
+
+  function codigoExecuteJob(){
+    if (codigoRunning) return;
+    codigoRunning = true;
+    if (codigoInputEl) codigoInputEl.disabled = true;
+
+    codigoAddLine('Compilando projeto...', 'cmd-line-info');
+    codigoAddLine('Rodando trabalho de programação (10s)...', 'cmd-line-info');
+
+    spawnCodeJobPopup((valor) => {
+      casinoBalance += valor;
+      renderCasinoBalance();
+      saveCasinoBalance();
+      renderCodigoBalance();
+      renderDigBalance();
+
+      codigoAddLine(`TRABALHO CONCLUÍDO — Você ganhou R$ ${valor}.`, 'cmd-line-success');
+
+      codigoRunning = false;
+      if (codigoInputEl) codigoInputEl.disabled = false;
+    });
+  }
+
+  function codigoHandleCommand(raw){
+    const trimmed = raw.trim();
+    codigoAddLine(`C:\\Trabalho\\código>${trimmed}`, 'cmd-line-echo');
+
+    if (!trimmed) return;
+
+    const normalized = trimmed.toLowerCase().replace(/\s+/g, ' ');
+
+    if (normalized === CODE_JOB_COMMAND){
+      codigoExecuteJob();
+      return;
+    }
+
+    codigoAddLine(`'${trimmed}' não é reconhecido como um comando interno ou externo, um programa operável ou um arquivo em lotes.`, 'cmd-line-error');
+  }
+
+  if (codigoOutputEl){
+    codigoAddLine('Ambiente de trabalho de programação carregado.', 'cmd-line-info');
+    codigoAddLine(`Digite "${CODE_JOB_COMMAND}" e aperte Enter pra começar um trabalho.`, 'cmd-line-info');
+    codigoAddLine('');
+    renderCodigoBalance();
+  }
+
+  if (codigoInputForm && codigoInputEl){
+    codigoInputForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (codigoRunning) return;
+      const value = codigoInputEl.value;
+      codigoInputEl.value = '';
+      codigoHandleCommand(value);
     });
   }
 
