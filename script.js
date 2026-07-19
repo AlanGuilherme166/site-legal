@@ -91,8 +91,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /* contador compartilhado usado pra "cascatear" a posicao inicial de cada
+     janela (cada app abre num ponto ligeiramente deslocado do anterior,
+     em cima da area de trabalho, ao inves de empilhar abaixo dela) */
+  let windowOpenCascade = 0;
+
+  function positionWindowOnFirstOpen(win){
+    // se a janela ja foi posicionada antes (primeira abertura ou arrastada
+    // pelo usuario), mantem onde estava — nao reposiciona a cada abertura
+    if (win.dataset.positioned === '1') return;
+
+    // mede a largura que a janela teria no fluxo normal (definida pelo
+    // max-width proprio de cada app) antes de tira-la do fluxo
+    const rect = win.getBoundingClientRect();
+    const width = rect.width;
+
+    const step = windowOpenCascade % 8;
+    windowOpenCascade++;
+
+    let left = 60 + step * 30;
+    let top = 70 + step * 26;
+
+    const maxLeft = Math.max(20, window.innerWidth - width - 20);
+    const maxTop = Math.max(20, window.innerHeight - 160);
+    left = Math.min(left, maxLeft);
+    top = Math.min(top, maxTop);
+
+    win.style.position = 'fixed';
+    win.style.margin = '0';
+    win.style.width = width + 'px';
+    win.style.left = left + 'px';
+    win.style.top = top + 'px';
+
+    win.dataset.positioned = '1';
+  }
+
   function openWindow(win){
     win.classList.remove('is-closed');
+    positionWindowOnFirstOpen(win);
     ensureTaskbarBtn(win);
     setWindowMinimized(win, false);
     bringToFront(win);
@@ -1115,11 +1151,27 @@ document.addEventListener('DOMContentLoaded', () => {
     showAicomidaFeedback(`${item.emoji} ${item.name} comprado! Foi pro seu Inventário.`, false);
   }
 
+  const AICOMIDA_ITEMS_PER_PAGE = 4;
+  const aicomidaPageState = {}; // categoria -> pagina atual (0-based)
+
   function buildAicomidaCatalogList(containerEl, catalogo, categoria){
     if (!containerEl) return;
+
+    if (aicomidaPageState[categoria] === undefined) aicomidaPageState[categoria] = 0;
+
+    const totalPages = Math.max(1, Math.ceil(catalogo.length / AICOMIDA_ITEMS_PER_PAGE));
+    if (aicomidaPageState[categoria] > totalPages - 1) aicomidaPageState[categoria] = totalPages - 1;
+    const page = aicomidaPageState[categoria];
+
     containerEl.innerHTML = '';
 
-    catalogo.forEach(item => {
+    const itemsWrap = document.createElement('div');
+    itemsWrap.className = 'aicomida-items';
+
+    const start = page * AICOMIDA_ITEMS_PER_PAGE;
+    const pageItems = catalogo.slice(start, start + AICOMIDA_ITEMS_PER_PAGE);
+
+    pageItems.forEach(item => {
       const row = document.createElement('div');
       row.className = 'aicomida-item';
       const efeitoHtml = item.boostMult
@@ -1136,8 +1188,28 @@ document.addEventListener('DOMContentLoaded', () => {
         </span>
         <button class="aicomida-buy-btn" type="button" data-cat="${categoria}" data-item="${item.id}">Comprar</button>
       `;
-      containerEl.appendChild(row);
+      itemsWrap.appendChild(row);
     });
+
+    containerEl.appendChild(itemsWrap);
+
+    // paginacao: so aparece quando os itens nao cabem numa pagina so
+    if (totalPages > 1){
+      const pager = document.createElement('div');
+      pager.className = 'aicomida-pager';
+      for (let i = 0; i < totalPages; i++){
+        const pageBtn = document.createElement('button');
+        pageBtn.type = 'button';
+        pageBtn.className = 'aicomida-page-btn' + (i === page ? ' active' : '');
+        pageBtn.textContent = `Pág. ${i + 1}`;
+        pageBtn.addEventListener('click', () => {
+          aicomidaPageState[categoria] = i;
+          buildAicomidaCatalogList(containerEl, catalogo, categoria);
+        });
+        pager.appendChild(pageBtn);
+      }
+      containerEl.appendChild(pager);
+    }
 
     containerEl.querySelectorAll('.aicomida-buy-btn').forEach(btn => {
       btn.addEventListener('click', () => {
