@@ -140,7 +140,7 @@
             <button class="browser-nav-btn" id="browserHomeBtn" type="button" aria-label="Página inicial">🏠</button>
             <form class="browser-address-row" id="browserAddressForm">
               <span class="browser-address-lock">🔒</span>
-              <input type="text" id="browserAddressInput" class="browser-address-input" placeholder="Pesquisar no Gugle ou colar um link do YouTube" autocomplete="off" spellcheck="false">
+              <input type="text" id="browserAddressInput" class="browser-address-input" placeholder="Pesquisar no Gugle" autocomplete="off" spellcheck="false">
               <button class="browser-go-btn" type="submit">Ir</button>
             </form>
           </div>
@@ -154,26 +154,9 @@
               </div>
               <form class="gugle-search-row" id="gugleSearchForm">
                 <span class="gugle-search-icon">🔍</span>
-                <input type="text" id="gugleSearchInput" class="gugle-search-input" placeholder="Cole aqui o link de um vídeo do YouTube" autocomplete="off" spellcheck="false">
+                <input type="text" id="gugleSearchInput" class="gugle-search-input" placeholder="Pesquisar no Gugle" autocomplete="off" spellcheck="false">
               </form>
-              <p class="gugle-hint">Por enquanto o Gugle só sabe abrir vídeos do YouTube. Cole o link e aperte Enter.</p>
-            </div>
-
-            <!-- PAGINA DE VIDEO -->
-            <div class="browser-page browser-video" id="browserVideoPage" hidden>
-              <div class="browser-video-frame">
-                <iframe id="browserVideoIframe" src="" title="Player do YouTube" frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen></iframe>
-              </div>
-            </div>
-
-            <!-- PAGINA DE ERRO -->
-            <div class="browser-page browser-error" id="browserErrorPage" hidden>
-              <span class="browser-error-icon">🚫</span>
-              <p class="browser-error-title">Essa página não abriu</p>
-              <p class="browser-error-msg" id="browserErrorMsg">Isso não parece um link do YouTube. Por enquanto o navegador só abre vídeos de lá.</p>
-              <button class="glass-btn" id="browserErrorHomeBtn" type="button">Voltar pro início</button>
+              <p class="gugle-hint">Digite algo e aperte Enter pra pesquisar.</p>
             </div>
 
           </div>
@@ -268,6 +251,14 @@
       </div>
       <div class="window-body msn-body">
         <div class="msn-contacts" id="msnContacts">
+          <div class="msn-contact" data-contact="assistente">
+            <span class="msn-contact-avatar">🤖</span>
+            <span class="msn-contact-info">
+              <span class="msn-contact-name">Assistente Virtual</span>
+              <span class="msn-contact-status">● Online</span>
+            </span>
+            <span class="msn-contact-badge" id="badgeAssistente" hidden>0</span>
+          </div>
           <div class="msn-contact active" data-contact="carachato">
             <span class="msn-contact-avatar">🙂</span>
             <span class="msn-contact-info">
@@ -354,6 +345,8 @@
             <span class="aicomida-balance-label">Saldo</span>
             <span class="aicomida-balance-value" id="aicomidaBalance">R$ 0</span>
           </div>
+
+          <p class="aicomida-boost-status" id="aicomidaBoostStatus" hidden></p>
 
           <div class="aicomida-tabs" role="tablist">
             <button class="aicomida-tab active" data-tab="comida" type="button">🍔 Comida</button>
@@ -506,6 +499,8 @@
             <span class="dig-balance-label">Saldo</span>
             <span class="dig-balance-value" id="digBalance">R$ 0</span>
           </div>
+
+          <p class="dig-boost-status" id="digBoostStatus" hidden></p>
 
           <div class="dig-energy-row">
             <span class="dig-energy-label">⚡ Energia</span>

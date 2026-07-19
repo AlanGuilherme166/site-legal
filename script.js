@@ -808,7 +808,10 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'stim_turbo',   emoji: '💊', name: 'Stim Turbo',     price: 2500, heal: 70  },
     { id: 'stim_max',     emoji: '🧪', name: 'Stim Máximo',    price: 4000, heal: 100 },
     { id: 'pocao_sorte',    emoji: '🍀', name: 'Poção da Sorte',    price: 6000,  moneyMult: 1.5 },
-    { id: 'pocao_milagre',  emoji: '🌟', name: 'Poção Milagrosa',   price: 15000, moneyMult: 2.0 }
+    { id: 'pocao_milagre',  emoji: '🌟', name: 'Poção Milagrosa',   price: 15000, moneyMult: 2.0 },
+    { id: 'pocao_dobro',    emoji: '✨', name: 'Poção do Dobro',    price: 4000,  boostMult: 2,  boostMinutes: 5  },
+    { id: 'pocao_quadrupla', emoji: '💠', name: 'Poção Quádrupla',  price: 8000,  boostMult: 4,  boostMinutes: 5  },
+    { id: 'pocao_decupla',  emoji: '🔥', name: 'Poção 10x',         price: 12000, boostMult: 10, boostMinutes: 10 }
   ];
 
   const GAME_CATALOG = [
@@ -907,7 +910,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
           const qtyText = cat.id === 'jogos'
             ? 'Adquirido ✅'
-            : (item.moneyMult ? `Quantidade: ${qtd} · multiplica o saldo por ${item.moneyMult}x` : `Quantidade: ${qtd} · cura ${item.heal} de energia`);
+            : (item.boostMult
+              ? `Quantidade: ${qtd} · multiplica por ${item.boostMult}x o dinheiro ganho durante ${item.boostMinutes} min`
+              : (item.moneyMult
+                ? `Quantidade: ${qtd} · multiplica o saldo por ${item.moneyMult}x`
+                : `Quantidade: ${qtd} · cura ${item.heal} de energia`));
 
           const row = document.createElement('div');
           row.className = 'inventario-item';
@@ -945,10 +952,69 @@ document.addEventListener('DOMContentLoaded', () => {
   // que sao declarados mais abaixo (bloco do Trabalho) — funciona pois essa
   // funcao so roda quando o usuario clica em "Comer/Usar", muito depois do
   // carregamento inicial do script (sem problema de TDZ).
+  /* ---------- BOOST TEMPORARIO DE DINHEIRO (poções da aba Stim) ---------- */
+  const MONEY_BOOST_KEY = 'aero-money-boost';
+  let moneyBoostMult = 1;
+  let moneyBoostEndsAt = 0;
+
+  function loadMoneyBoost(){
+    try{
+      const saved = JSON.parse(localStorage.getItem(MONEY_BOOST_KEY));
+      if (saved && saved.endsAt > Date.now()){
+        moneyBoostMult = saved.mult;
+        moneyBoostEndsAt = saved.endsAt;
+      }
+    }catch(err){ /* ignora */ }
+  }
+
+  function saveMoneyBoost(){
+    try{ localStorage.setItem(MONEY_BOOST_KEY, JSON.stringify({ mult: moneyBoostMult, endsAt: moneyBoostEndsAt })); }catch(err){}
+  }
+
+  function getMoneyBoostMult(){
+    if (moneyBoostEndsAt > Date.now()) return moneyBoostMult;
+    return 1;
+  }
+
+  function applyEarnBoost(valor){
+    return Math.round(valor * getMoneyBoostMult());
+  }
+
+  function activateMoneyBoost(mult, minutes){
+    moneyBoostMult = mult;
+    moneyBoostEndsAt = Date.now() + minutes * 60 * 1000;
+    saveMoneyBoost();
+    renderMoneyBoostStatus();
+  }
+
+  function renderMoneyBoostStatus(){
+    const active = moneyBoostEndsAt > Date.now();
+    const restanteMs = moneyBoostEndsAt - Date.now();
+    const texto = active
+      ? `⚡ Boost ativo: ${moneyBoostMult}x no dinheiro ganho (${Math.floor(restanteMs / 60000)}:${String(Math.floor((restanteMs % 60000) / 1000)).padStart(2, '0')} restantes)`
+      : '';
+
+    [aicomidaBoostStatusEl, digBoostStatusEl].forEach(el => {
+      if (!el) return;
+      el.textContent = texto;
+      el.hidden = !active;
+    });
+  }
+
+  loadMoneyBoost();
+  setInterval(renderMoneyBoostStatus, 1000);
+
   function useConsumable(categoria, itemId){
     const item = findCatalogItem(categoria, itemId);
     if (!item) return;
     if (!inventory[categoria] || !inventory[categoria][itemId]) return;
+
+    if (item.boostMult){
+      activateMoneyBoost(item.boostMult, item.boostMinutes);
+      removeFromInventory(categoria, itemId, 1);
+      if (digResultEl) digResultEl.textContent = `Você usou ${item.name}! Agora todo dinheiro que ganhar é multiplicado por ${item.boostMult}x durante ${item.boostMinutes} minutos.`;
+      return;
+    }
 
     if (item.moneyMult){
       const saldoAntes = casinoBalance;
@@ -990,6 +1056,7 @@ document.addEventListener('DOMContentLoaded', () => {
      Inventário em vez de serem consumidos na hora)
   ===================================================== */
   const aicomidaBalanceEl = document.getElementById('aicomidaBalance');
+  const aicomidaBoostStatusEl = document.getElementById('aicomidaBoostStatus');
   const aicomidaFoodListEl = document.getElementById('aicomidaFoodList');
   const aicomidaStimListEl = document.getElementById('aicomidaStimList');
   const aicomidaFeedbackEl = document.getElementById('aicomidaFeedback');
@@ -1046,9 +1113,11 @@ document.addEventListener('DOMContentLoaded', () => {
     catalogo.forEach(item => {
       const row = document.createElement('div');
       row.className = 'aicomida-item';
-      const efeitoHtml = item.moneyMult
-        ? `<span class="aicomida-item-heal">multiplica o saldo por ${item.moneyMult}x</span>`
-        : `<span class="aicomida-item-heal">+${item.heal} de energia</span>`;
+      const efeitoHtml = item.boostMult
+        ? `<span class="aicomida-item-heal">multiplica por ${item.boostMult}x o dinheiro ganho durante ${item.boostMinutes} min</span>`
+        : (item.moneyMult
+          ? `<span class="aicomida-item-heal">multiplica o saldo por ${item.moneyMult}x</span>`
+          : `<span class="aicomida-item-heal">+${item.heal} de energia</span>`);
       row.innerHTML = `
         <span class="aicomida-item-emoji">${item.emoji}</span>
         <span class="aicomida-item-info">
@@ -1079,6 +1148,7 @@ document.addEventListener('DOMContentLoaded', () => {
      renderDigBalance() e chamada la embaixo, dentro de updateCasinoNegativeWatch,
      que roda toda vez que o saldo do cassino muda) ---------- */
   const digBalanceEl = document.getElementById('digBalance');
+  const digBoostStatusEl = document.getElementById('digBoostStatus');
   const digEnergyFillEl = document.getElementById('digEnergyFill');
   const digEnergyValueEl = document.getElementById('digEnergyValue');
   const digHoleEl = document.getElementById('digHole');
@@ -1188,7 +1258,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       setTimeout(() => {
         const find = pickDigFind();
-        const valor = Math.floor(Math.random() * (find.max - find.min + 1)) + find.min;
+        const valorBase = Math.floor(Math.random() * (find.max - find.min + 1)) + find.min;
+        const valor = applyEarnBoost(valorBase);
 
         casinoBalance += valor;
         renderCasinoBalance();
@@ -1196,7 +1267,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderDigBalance();
 
         if (digResultEl){
-          digResultEl.textContent = `${find.emoji} Você achou: ${find.label}! Ganhou R$ ${valor}.`;
+          digResultEl.textContent = getMoneyBoostMult() > 1
+            ? `${find.emoji} Você achou: ${find.label}! Ganhou R$ ${valor} (boost ${getMoneyBoostMult()}x aplicado).`
+            : `${find.emoji} Você achou: ${find.label}! Ganhou R$ ${valor}.`;
         }
         addDigHistory(find, valor);
 
@@ -1301,9 +1374,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const multiplicador = cor === 'verde' ? 14 : 2;
 
         if (acertou){
-          const ganho = amount * multiplicador;
+          const ganho = applyEarnBoost(amount * multiplicador);
           casinoBalance += ganho;
-          casinoResultEl.textContent = `Saiu ${numeroSorteado} (${cor}). Você ganhou R$ ${ganho}!`;
+          casinoResultEl.textContent = getMoneyBoostMult() > 1
+            ? `Saiu ${numeroSorteado} (${cor}). Você ganhou R$ ${ganho} (boost ${getMoneyBoostMult()}x aplicado)!`
+            : `Saiu ${numeroSorteado} (${cor}). Você ganhou R$ ${ganho}!`;
         } else {
           casinoResultEl.textContent = `Saiu ${numeroSorteado} (${cor}). Você perdeu R$ ${amount}.`;
         }
@@ -1364,9 +1439,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (result[0] === result[1] && result[1] === result[2]){
           const mult = SLOT_PAYOUTS[result[0]] || 5;
-          const ganho = amount * mult;
+          const ganho = applyEarnBoost(amount * mult);
           casinoBalance += ganho;
-          slotsResultEl.textContent = `${result.join(' ')} — combinação! Você ganhou R$ ${ganho} (${mult}x)!`;
+          slotsResultEl.textContent = getMoneyBoostMult() > 1
+            ? `${result.join(' ')} — combinação! Você ganhou R$ ${ganho} (${mult}x · boost ${getMoneyBoostMult()}x)!`
+            : `${result.join(' ')} — combinação! Você ganhou R$ ${ganho} (${mult}x)!`;
         } else {
           slotsResultEl.textContent = `${result.join(' ')} — não foi dessa vez. Você perdeu R$ ${amount}.`;
         }
@@ -1396,10 +1473,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const badgeCarachato = document.getElementById('badgeCarachato');
   const badgeAgiota = document.getElementById('badgeAgiota');
   const badgeNerdsabido = document.getElementById('badgeNerdsabido');
+  const badgeAssistente = document.getElementById('badgeAssistente');
 
-  const contactNames = { carachato: 'Cara Chato', agiota: 'Agiota', nerdsabido: 'Nerd Sabido' };
-  const chatHistory = { carachato: [], agiota: [], nerdsabido: [] };
-  const unread = { carachato: 0, agiota: 0, nerdsabido: 0 };
+  const contactNames = { carachato: 'Cara Chato', agiota: 'Agiota', nerdsabido: 'Nerd Sabido', assistente: 'Assistente Virtual' };
+  const contactBadges = { carachato: badgeCarachato, agiota: badgeAgiota, nerdsabido: badgeNerdsabido, assistente: badgeAssistente };
+  const chatHistory = { carachato: [], agiota: [], nerdsabido: [], assistente: [] };
+  const unread = { carachato: 0, agiota: 0, nerdsabido: 0, assistente: 0 };
   let activeContact = 'carachato';
 
   function formatTime(){
@@ -1426,7 +1505,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateBadge(contact){
-    const badgeEl = contact === 'carachato' ? badgeCarachato : (contact === 'agiota' ? badgeAgiota : badgeNerdsabido);
+    const badgeEl = contactBadges[contact];
     if (!badgeEl) return;
     if (unread[contact] > 0 && activeContact !== contact){
       badgeEl.hidden = false;
@@ -1469,6 +1548,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // mensagem inicial do Cara Chato
   addMessage('carachato', 'them', 'Ooooi! Bora trocar uma ideia? 😄');
   renderChat();
+
+  // mensagem inicial da Assistente Virtual (uma única vez, quando o site começa)
+  addMessage('assistente', 'them', 'Sou sua assistente virtual, vou ajuda-lo a utilizar o sistema, me pergunte o que quiser!! Perguntas prontas: "jogos" (te explico sobre a vitrine de jogos), "trabalho" (te explico sobre o jogo de cavar pra ganhar dinheiro) e "dívidas" (te explico o que rola quando seu saldo fica negativo).');
 
   /* ---------- CARA CHATO: IDIOTICES ALEATORIAS DE TEMPOS EM TEMPOS ---------- */
   const carachatoMessages = [
@@ -1690,6 +1772,71 @@ document.addEventListener('DOMContentLoaded', () => {
     return pickRandom(nerdGreetingReplies);
   }
 
+  /* ---------- ASSISTENTE VIRTUAL: responde por palavras-chave ---------- */
+  const assistenteGreetingKeywords = ['oi', 'ola', 'eae', 'opa', 'salve', 'bom dia', 'boa tarde', 'boa noite', 'e ai', 'oii', 'ooi'];
+  const assistenteJogosKeywords = ['jogos', 'jogo', 'vitrine', 'biblioteca'];
+  const assistenteTrabalhoKeywords = ['trabalho', 'trampo', 'cavar', 'escavacao', 'pa', 'emprego', 'servico'];
+  const assistenteDividasKeywords = ['divida', 'dividas', 'negativo', 'agiota', 'devendo', 'debito'];
+
+  const assistenteXingamentos = [
+    'idiota', 'burro', 'burra', 'imbecil', 'estupido', 'estupida', 'merda', 'porra', 'caralho',
+    'fdp', 'desgraca', 'vagabunda', 'vadia', 'puta', 'arrombado', 'otario', 'otaria', 'vsf',
+    'bosta', 'lixo', 'inutil', 'retardado', 'retardada'
+  ];
+
+  const assistenteCantadas = [
+    'te amo', 'apaixonado por voce', 'apaixonada por voce', 'namorar', 'namora comigo', 'ficar comigo',
+    'sair comigo', 'ficarmos juntos', 'ser meu namorado', 'ser minha namorada', 'quer namorar',
+    'voce e gostosa', 'voce e gata', 'voce e linda', 'voce e linda', 'da seu whats', 'seu instagram',
+    'voce e solteira', 'casar comigo', 'me da um beijo', 'um bj', 'voce e gostosa'
+  ];
+
+  const assistenteTristeReplies = [
+    '😢 Poxa, não precisava ser grosso(a) comigo, eu só tô tentando ajudar...',
+    'Isso me deixou triste. Eu só quero te ajudar a usar o sistema, viu?',
+    '😞 Fiquei chateada com isso. Se quiser, é só me perguntar sobre jogos, trabalho ou dívidas.'
+  ];
+
+  const assistenteCantadaReplies = [
+    'você é esquisito, procure uma mulher de verdade 😅',
+    'calma aí, hein? Sou só um programa. Procure uma mulher de verdade.',
+    'isso foi estranho... vai procurar uma mulher de verdade pra namorar 😬'
+  ];
+
+  const assistenteJogosReply = 'A Vitrine (ícone 🎮) é a lojinha de jogos: lá você compra jogos com o seu saldo do Nubonk e depois joga direto na aba Biblioteca. Cada jogo comprado fica guardado no seu Inventário, então você não perde o que já pagou.';
+  const assistenteTrabalhoReply = 'Na Escavação (ícone da pá 🪏) você cava buracos pra ganhar dinheiro, que cai direto no seu saldo do Nubonk. Cada cavada gasta energia — às vezes você acha só pedra, às vezes ouro, e raramente um diamante gigante! A energia recupera sozinha bem devagar, ou você come algo ou usa um stim no Inventário pra acelerar.';
+  const assistenteDividasReply = 'Se o seu saldo no Nubonk ficar negativo por muito tempo, um agiota aparece aqui no MSN cobrando a dívida. Se você ignorar as cobranças dele por tempo demais, as coisas ficam feias. O melhor é quitar a dívida assim que o seu saldo cobrir o valor, lá na aba Nubonk.';
+
+  const assistenteGenericReplies = [
+    'Não entendi muito bem, mas posso te explicar sobre "jogos", "trabalho" ou "dívidas". É só perguntar!',
+    'Pode me perguntar sobre "jogos", "trabalho" ou "dívidas" que eu te explico certinho 🙂',
+    'Hmm, tenta perguntar sobre "jogos", "trabalho" ou "dívidas" pra eu te ajudar melhor!'
+  ];
+
+  function assistenteReply(text){
+    const normalized = normalizeNerdText(text);
+
+    if (assistenteXingamentos.some(k => normalized.includes(k))){
+      return pickRandom(assistenteTristeReplies);
+    }
+    if (assistenteCantadas.some(k => normalized.includes(k))){
+      return pickRandom(assistenteCantadaReplies);
+    }
+    if (assistenteJogosKeywords.some(k => normalized.includes(k))){
+      return assistenteJogosReply;
+    }
+    if (assistenteTrabalhoKeywords.some(k => normalized.includes(k))){
+      return assistenteTrabalhoReply;
+    }
+    if (assistenteDividasKeywords.some(k => normalized.includes(k))){
+      return assistenteDividasReply;
+    }
+    if (assistenteGreetingKeywords.some(k => normalized.includes(k))){
+      return 'Oi! 😄 Pode me perguntar sobre "jogos", "trabalho" ou "dívidas" que eu te explico como usar o sistema.';
+    }
+    return pickRandom(assistenteGenericReplies);
+  }
+
   function sendMsnMessage(){
     if (!msnComposeInput) return;
     const text = msnComposeInput.value.trim();
@@ -1713,6 +1860,10 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (activeContact === 'nerdsabido'){
       setTimeout(() => {
         addMessage('nerdsabido', 'them', nerdSabidoReply(text));
+      }, 500 + Math.random() * 700);
+    } else if (activeContact === 'assistente'){
+      setTimeout(() => {
+        addMessage('assistente', 'them', assistenteReply(text));
       }, 500 + Math.random() * 700);
     }
   }
@@ -2608,7 +2759,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* ---------- NAVEGADOR (GUGLE + YOUTUBE) ---------- */
+  /* ---------- NAVEGADOR (GUGLE) ---------- */
+  // O player de vídeo do YouTube foi removido: o navegador agora só mostra
+  // a página inicial do Gugle (sem funcionalidade real de busca/navegação).
   const browserBackBtn = document.getElementById('browserBackBtn');
   const browserForwardBtn = document.getElementById('browserForwardBtn');
   const browserReloadBtn = document.getElementById('browserReloadBtn');
@@ -2617,150 +2770,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const browserAddressInput = document.getElementById('browserAddressInput');
   const gugleSearchForm = document.getElementById('gugleSearchForm');
   const gugleSearchInput = document.getElementById('gugleSearchInput');
-  const browserHomePage = document.getElementById('browserHomePage');
-  const browserVideoPage = document.getElementById('browserVideoPage');
-  const browserErrorPage = document.getElementById('browserErrorPage');
-  const browserVideoIframe = document.getElementById('browserVideoIframe');
-  const browserErrorMsg = document.getElementById('browserErrorMsg');
-  const browserErrorHomeBtn = document.getElementById('browserErrorHomeBtn');
 
-  if (browserAddressForm && browserVideoIframe){
+  if (browserBackBtn) browserBackBtn.disabled = true;
+  if (browserForwardBtn) browserForwardBtn.disabled = true;
 
-    // Aceita varios formatos de link do YouTube e devolve so o ID do video (11 caracteres)
-    function extractYouTubeId(raw){
-      if (!raw) return null;
-      let str = raw.trim();
-      if (!str) return null;
-
-      if (!/^https?:\/\//i.test(str) && /youtu/i.test(str)){
-        str = 'https://' + str.replace(/^\/\//, '');
-      }
-
-      try{
-        const url = new URL(str);
-        const host = url.hostname.toLowerCase().replace(/^www\.|^m\./, '');
-
-        if (host === 'youtu.be'){
-          const id = url.pathname.slice(1).split('/')[0];
-          return /^[\w-]{11}$/.test(id) ? id : null;
-        }
-
-        if (host === 'youtube.com' || host === 'youtube-nocookie.com'){
-          if (url.pathname === '/watch'){
-            const id = url.searchParams.get('v');
-            return id && /^[\w-]{11}$/.test(id) ? id : null;
-          }
-          const match = url.pathname.match(/^\/(embed|shorts|live)\/([\w-]{11})/);
-          if (match) return match[2];
-        }
-      }catch(err){
-        if (/^[\w-]{11}$/.test(str)) return str;
-      }
-
-      return null;
-    }
-
-    let browserHistory = [{ type: 'home' }];
-    let browserHistoryIndex = 0;
-
-    function updateBrowserNavButtons(){
-      if (browserBackBtn) browserBackBtn.disabled = browserHistoryIndex <= 0;
-      if (browserForwardBtn) browserForwardBtn.disabled = browserHistoryIndex >= browserHistory.length - 1;
-    }
-
-    function renderBrowserState(state){
-      browserHomePage.hidden = state.type !== 'home';
-      browserVideoPage.hidden = state.type !== 'video';
-      browserErrorPage.hidden = state.type !== 'error';
-
-      if (state.type === 'video'){
-        browserVideoIframe.src = `https://www.youtube.com/embed/${state.id}?autoplay=1&rel=0`;
-        browserAddressInput.value = `https://www.youtube.com/watch?v=${state.id}`;
-      } else if (state.type === 'error'){
-        browserVideoIframe.src = '';
-        if (browserErrorMsg) browserErrorMsg.textContent = 'Isso não parece um link do YouTube. Por enquanto o navegador só abre vídeos de lá.';
-        browserAddressInput.value = state.raw || '';
-      } else {
-        browserVideoIframe.src = '';
-        browserAddressInput.value = '';
-      }
-
-      updateBrowserNavButtons();
-    }
-
-    function navigateBrowser(state){
-      browserHistory = browserHistory.slice(0, browserHistoryIndex + 1);
-      browserHistory.push(state);
-      browserHistoryIndex++;
-      renderBrowserState(state);
-    }
-
-    function browserGoHome(){
-      if (browserHistory[browserHistoryIndex].type !== 'home'){
-        navigateBrowser({ type: 'home' });
-      }
-    }
-
-    function browserGoToUrl(raw){
-      const trimmed = (raw || '').trim();
-      if (!trimmed) return;
-
-      const id = extractYouTubeId(trimmed);
-      if (id){
-        navigateBrowser({ type: 'video', id });
-      } else {
-        navigateBrowser({ type: 'error', raw: trimmed });
-      }
-    }
-
+  if (browserAddressForm){
     browserAddressForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      browserGoToUrl(browserAddressInput.value);
+      browserAddressInput.value = '';
     });
+  }
 
-    if (gugleSearchForm && gugleSearchInput){
-      gugleSearchForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const value = gugleSearchInput.value;
-        gugleSearchInput.value = '';
-        browserGoToUrl(value);
-      });
-    }
-
-    if (browserBackBtn){
-      browserBackBtn.addEventListener('click', () => {
-        if (browserHistoryIndex > 0){
-          browserHistoryIndex--;
-          renderBrowserState(browserHistory[browserHistoryIndex]);
-        }
-      });
-    }
-
-    if (browserForwardBtn){
-      browserForwardBtn.addEventListener('click', () => {
-        if (browserHistoryIndex < browserHistory.length - 1){
-          browserHistoryIndex++;
-          renderBrowserState(browserHistory[browserHistoryIndex]);
-        }
-      });
-    }
-
-    if (browserReloadBtn){
-      browserReloadBtn.addEventListener('click', () => {
-        const state = browserHistory[browserHistoryIndex];
-        if (state.type === 'video'){
-          browserVideoIframe.src = '';
-          requestAnimationFrame(() => {
-            browserVideoIframe.src = `https://www.youtube.com/embed/${state.id}?autoplay=1&rel=0`;
-          });
-        }
-      });
-    }
-
-    if (browserHomeBtn) browserHomeBtn.addEventListener('click', browserGoHome);
-    if (browserErrorHomeBtn) browserErrorHomeBtn.addEventListener('click', browserGoHome);
-
-    renderBrowserState(browserHistory[browserHistoryIndex]);
+  if (gugleSearchForm && gugleSearchInput){
+    gugleSearchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      gugleSearchInput.value = '';
+    });
   }
 
 });
