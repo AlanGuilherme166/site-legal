@@ -3150,6 +3150,14 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     const stories = ['🕳️', '🎰', '🤓', '🤖', '🕴️', '💃'];
 
+    // sorteia, sem repetir, quais das 10 imagens (images/image-1.jpg ... image-10.jpg)
+    // cada post vai usar — muda toda vez que o site é aberto
+    const imagePool = Array.from({ length: 10 }, (_, i) => i + 1);
+    for (let i = imagePool.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [imagePool[i], imagePool[j]] = [imagePool[j], imagePool[i]];
+    }
+
     bodyEl.innerHTML = `
       <div class="aerogram-app">
         <div class="aerogram-header">
@@ -3175,7 +3183,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const feedEl = bodyEl.querySelector('#aerogramFeed');
-    posts.forEach(post => {
+    posts.forEach((post, idx) => {
+      const imgNumber = imagePool[idx % imagePool.length];
       const postEl = document.createElement('article');
       postEl.className = 'aerogram-post';
       postEl.innerHTML = `
@@ -3183,7 +3192,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="aerogram-post-avatar">${post.avatar}</span>
           <span class="aerogram-post-user">${post.user}</span>
         </div>
-        <div class="aerogram-post-image">${post.emoji}</div>
+        <div class="aerogram-post-image">
+          <img src="images/image-${imgNumber}.jpg" alt="Foto de ${post.user}" loading="lazy">
+          <span class="aerogram-post-image-fallback">${post.emoji}</span>
+        </div>
         <div class="aerogram-post-actions">
           <button class="aerogram-like-btn" type="button" aria-label="Curtir">🤍</button>
           <span class="aerogram-comment-icon">💬</span>
@@ -3192,6 +3204,13 @@ document.addEventListener('DOMContentLoaded', () => {
         <p class="aerogram-post-caption"><strong>${post.user}</strong> ${post.caption}</p>
         <p class="aerogram-post-time">há ${post.time}</p>
       `;
+
+      const imgEl = postEl.querySelector('.aerogram-post-image img');
+      const fallbackEl = postEl.querySelector('.aerogram-post-image-fallback');
+      imgEl.addEventListener('error', () => {
+        imgEl.style.display = 'none';
+        fallbackEl.style.display = 'flex';
+      });
 
       const likeBtn = postEl.querySelector('.aerogram-like-btn');
       const likesEl = postEl.querySelector('.aerogram-post-likes');
