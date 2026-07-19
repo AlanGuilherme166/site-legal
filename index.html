@@ -565,6 +565,59 @@
       </div>
     </section>
 
+    <!-- ===== JANELA: JOGO "PÊNALTI DECISIVO" (aberto a partir da Vitrine) ===== -->
+    <section class="window jogo-penalti-window" id="jogo-penalti">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">🥅</span> pênalti-decisivo.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body">
+        <div class="penalti-app">
+
+          <!-- ETAPA 1: escolha do time -->
+          <div class="penalti-stage" id="penaltiStageEscolha">
+            <h2 class="penalti-heading">🥅 Pênalti Decisivo</h2>
+            <p class="penalti-sub">Escolha seu time do Brasileirão pra disputar uma decisão de pênaltis contra um rival sorteado.</p>
+            <div class="penalti-team-grid" id="penaltiTeamGrid"></div>
+          </div>
+
+          <!-- ETAPA 2: partida -->
+          <div class="penalti-stage" id="penaltiStagePartida" hidden>
+            <div class="penalti-scoreboard">
+              <div class="penalti-side" id="penaltiSideUser">
+                <span class="penalti-crest" id="penaltiCrestUser"></span>
+                <span class="penalti-side-name" id="penaltiNameUser"></span>
+                <div class="penalti-dots" id="penaltiDotsUser"></div>
+              </div>
+              <span class="penalti-vs">×</span>
+              <div class="penalti-side" id="penaltiSideRival">
+                <span class="penalti-crest" id="penaltiCrestRival"></span>
+                <span class="penalti-side-name" id="penaltiNameRival"></span>
+                <div class="penalti-dots" id="penaltiDotsRival"></div>
+              </div>
+            </div>
+
+            <p class="penalti-status" id="penaltiStatus">Preparando a disputa...</p>
+
+            <div class="penalti-goal" id="penaltiGoal">
+              <div class="penalti-goal-post"></div>
+              <span class="penalti-ball" id="penaltiBall">⚽</span>
+              <span class="penalti-keeper" id="penaltiKeeper">🧤</span>
+            </div>
+
+            <div class="penalti-actions" id="penaltiActions"></div>
+
+            <button class="glass-btn penalti-restart-btn" id="penaltiRestartBtn" type="button">🔄 Trocar de time</button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
     <!-- ===== JANELA: TRABALHO (ESCAVAÇÃO COM A PÁ) ===== -->
     <section class="window trabalho-window" id="trabalho">
       <div class="window-titlebar">

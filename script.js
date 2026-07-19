@@ -1200,6 +1200,13 @@ document.addEventListener('DOMContentLoaded', () => {
       desc: 'Duelo de tabuleiro pra dois jogadores no mesmo PC. Capture o rei do adversário pra vencer.'
     },
     {
+      id: 'penalti',
+      emoji: '🥅',
+      name: 'Pênalti Decisivo',
+      price: 12000,
+      desc: 'Escolha seu time do Brasileirão e dispute uma decisão de pênaltis contra um rival sorteado. Chute pro canto certo e defenda o goleiro adversário.'
+    },
+    {
       id: 'campo_minado',
       emoji: '💣',
       name: 'Campo Minado',
@@ -3120,13 +3127,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const windowId = gameId === 'fuga_policia' ? 'jogo-fuga-policia' : (gameId === 'xadrez' ? 'jogo-xadrez' : null);
+    const windowId = gameId === 'fuga_policia' ? 'jogo-fuga-policia' : (gameId === 'xadrez' ? 'jogo-xadrez' : (gameId === 'penalti' ? 'jogo-penalti' : null));
     if (!windowId) return;
     const win = windowsByApp[windowId];
     if (!win) return;
 
     if (gameId === 'fuga_policia') escapeResetGame();
     if (gameId === 'xadrez' && chessMode !== 'online') chessResetGame();
+    if (gameId === 'penalti') penaltiVoltarParaEscolha();
 
     openWindow(win);
   }
@@ -4013,6 +4021,261 @@ document.addEventListener('DOMContentLoaded', () => {
   if (chessInviteCloseBtn){
     chessInviteCloseBtn.addEventListener('click', () => { chessInviteModal.hidden = true; });
   }
+
+  /* =====================================================
+     JOGO: PÊNALTI DECISIVO (aberto a partir da Vitrine)
+     Escolha de time (times do Brasileirão da tabela do
+     aeroball.com) + disputa de pênaltis em turnos: você
+     chuta contra o goleiro rival e depois defende os
+     chutes do rival contra o seu goleiro.
+  ===================================================== */
+  const PENALTI_TIMES = [
+    { id: 'PAL', nome: 'Palmeiras',           cor: '#0b6b2f' },
+    { id: 'FLA', nome: 'Flamengo',            cor: '#c62828' },
+    { id: 'FLU', nome: 'Fluminense',          cor: '#7a1030' },
+    { id: 'RBB', nome: 'Red Bull Bragantino', cor: '#d32f2f' },
+    { id: 'CAP', nome: 'Athletico-PR',        cor: '#b71c1c' },
+    { id: 'BAH', nome: 'Bahia',               cor: '#1565c0' },
+    { id: 'CBA', nome: 'Coritiba',            cor: '#2e7d32' },
+    { id: 'SAO', nome: 'São Paulo',           cor: '#c62828' },
+    { id: 'BOT', nome: 'Botafogo',            cor: '#212121' },
+    { id: 'VIT', nome: 'Vitória',             cor: '#b71c1c' },
+    { id: 'ATL', nome: 'Atlético-MG',         cor: '#263238' },
+    { id: 'COR', nome: 'Corinthians',         cor: '#212121' },
+    { id: 'CRU', nome: 'Cruzeiro',            cor: '#1565c0' },
+    { id: 'INT', nome: 'Internacional',       cor: '#c62828' },
+    { id: 'SAN', nome: 'Santos',              cor: '#212121' },
+    { id: 'GRE', nome: 'Grêmio',              cor: '#0d47a1' },
+    { id: 'VAS', nome: 'Vasco da Gama',       cor: '#212121' },
+    { id: 'MIR', nome: 'Mirassol',            cor: '#f9a825' },
+    { id: 'REM', nome: 'Remo',                cor: '#1565c0' },
+    { id: 'CHA', nome: 'Chapecoense',         cor: '#2e7d32' }
+  ];
+
+  const penaltiTeamGridEl = document.getElementById('penaltiTeamGrid');
+  const penaltiStageEscolhaEl = document.getElementById('penaltiStageEscolha');
+  const penaltiStagePartidaEl = document.getElementById('penaltiStagePartida');
+  const penaltiCrestUserEl = document.getElementById('penaltiCrestUser');
+  const penaltiCrestRivalEl = document.getElementById('penaltiCrestRival');
+  const penaltiNameUserEl = document.getElementById('penaltiNameUser');
+  const penaltiNameRivalEl = document.getElementById('penaltiNameRival');
+  const penaltiDotsUserEl = document.getElementById('penaltiDotsUser');
+  const penaltiDotsRivalEl = document.getElementById('penaltiDotsRival');
+  const penaltiStatusEl = document.getElementById('penaltiStatus');
+  const penaltiGoalEl = document.getElementById('penaltiGoal');
+  const penaltiBallEl = document.getElementById('penaltiBall');
+  const penaltiKeeperEl = document.getElementById('penaltiKeeper');
+  const penaltiActionsEl = document.getElementById('penaltiActions');
+  const penaltiRestartBtn = document.getElementById('penaltiRestartBtn');
+
+  const PENALTI_LADOS = [
+    { id: 'esquerda', label: '⬅️ Esquerda' },
+    { id: 'centro',   label: '⬆️ Centro'   },
+    { id: 'direita',  label: '➡️ Direita'  }
+  ];
+
+  let penaltiTimeUser = null;
+  let penaltiTimeRival = null;
+  let penaltiCobrancasUser = [];   // true = gol, false = defendido/perdido
+  let penaltiCobrancasRival = [];
+  let penaltiFase = 'usuario';     // 'usuario' (cobrando) ou 'rival' (defendendo) ou 'fim'
+  let penaltiTravado = false;      // trava os botões durante a animação
+
+  function montarGradeTimesPenalti(){
+    if (!penaltiTeamGridEl) return;
+    penaltiTeamGridEl.innerHTML = '';
+    PENALTI_TIMES.forEach(time => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'penalti-team-btn';
+      btn.innerHTML = `
+        <span class="penalti-crest" style="background:${time.cor}">${time.id}</span>
+        <span class="penalti-team-name">${time.nome}</span>
+      `;
+      btn.addEventListener('click', () => penaltiIniciarPartida(time));
+      penaltiTeamGridEl.appendChild(btn);
+    });
+  }
+
+  // resultado de uma cobrança: quem chuta escolhe um lado, quem defende
+  // escolhe um lado pra se jogar. Acertou o mesmo lado = defendeu.
+  // Mesmo quando o goleiro erra o lado, sobra uma chance pequena de a
+  // bola ir pra fora (trave/travessão), só pra não ser 100% previsível.
+  function penaltiResolverCobranca(ladoChute, ladoDefesa){
+    if (ladoChute === ladoDefesa) return false; // goleiro pegou
+    return Math.random() > 0.12; // ~88% de chance de ser gol
+  }
+
+  function penaltiRenderPlacar(){
+    if (penaltiNameUserEl) penaltiNameUserEl.textContent = penaltiTimeUser ? penaltiTimeUser.nome : '';
+    if (penaltiNameRivalEl) penaltiNameRivalEl.textContent = penaltiTimeRival ? penaltiTimeRival.nome : '';
+    if (penaltiCrestUserEl && penaltiTimeUser){
+      penaltiCrestUserEl.textContent = penaltiTimeUser.id;
+      penaltiCrestUserEl.style.background = penaltiTimeUser.cor;
+    }
+    if (penaltiCrestRivalEl && penaltiTimeRival){
+      penaltiCrestRivalEl.textContent = penaltiTimeRival.id;
+      penaltiCrestRivalEl.style.background = penaltiTimeRival.cor;
+    }
+
+    function renderDots(container, cobrancas){
+      if (!container) return;
+      container.innerHTML = '';
+      for (let i = 0; i < 5; i++){
+        const dot = document.createElement('span');
+        const resultado = cobrancas[i];
+        dot.className = 'penalti-dot' + (
+          resultado === undefined ? ' pending' : (resultado ? ' goal' : ' miss')
+        );
+        container.appendChild(dot);
+      }
+    }
+    renderDots(penaltiDotsUserEl, penaltiCobrancasUser);
+    renderDots(penaltiDotsRivalEl, penaltiCobrancasRival);
+  }
+
+  // decide se a disputa já tem vencedor matemático antes das 5 cobranças
+  // acabarem (igual pênalti de verdade: some quando não dá mais empate)
+  function penaltiVerificarFimAntecipado(){
+    const totalRodadas = 5;
+    const golsUser = penaltiCobrancasUser.filter(r => r === true).length;
+    const golsRival = penaltiCobrancasRival.filter(r => r === true).length;
+    const restamUser = totalRodadas - penaltiCobrancasUser.length;
+    const restamRival = totalRodadas - penaltiCobrancasRival.length;
+
+    if (golsUser > golsRival + restamRival) return true;
+    if (golsRival > golsUser + restamUser) return true;
+    return false;
+  }
+
+  function penaltiEncerrarPartida(){
+    penaltiFase = 'fim';
+    const golsUser = penaltiCobrancasUser.filter(r => r === true).length;
+    const golsRival = penaltiCobrancasRival.filter(r => r === true).length;
+
+    let texto;
+    if (golsUser > golsRival){
+      texto = `🏆 ${penaltiTimeUser.nome} venceu a disputa por ${golsUser} a ${golsRival}! Parabéns, torcedor(a)!`;
+    } else if (golsRival > golsUser){
+      texto = `😔 ${penaltiTimeRival.nome} levou a melhor por ${golsRival} a ${golsUser}. Vai ter revanche?`;
+    } else {
+      texto = `🤝 Empate incrível em ${golsUser} a ${golsRival}! (isso não deveria acontecer, mas beleza)`;
+    }
+
+    if (penaltiStatusEl) penaltiStatusEl.textContent = texto;
+    if (penaltiActionsEl) penaltiActionsEl.innerHTML = '';
+  }
+
+  function penaltiAnimarChute(ladoChute, ladoGoleiro, foiGol, callback){
+    if (!penaltiBallEl || !penaltiKeeperEl){ callback(); return; }
+
+    penaltiBallEl.className = 'penalti-ball penalti-ball-' + ladoChute + (foiGol ? '' : ' penalti-ball-defendido');
+    penaltiKeeperEl.className = 'penalti-keeper penalti-keeper-' + ladoGoleiro;
+
+    setTimeout(() => {
+      penaltiBallEl.className = 'penalti-ball';
+      penaltiKeeperEl.className = 'penalti-keeper';
+      callback();
+    }, 900);
+  }
+
+  function penaltiMontarBotoesLado(onEscolher){
+    if (!penaltiActionsEl) return;
+    penaltiActionsEl.innerHTML = '';
+    PENALTI_LADOS.forEach(lado => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'glass-btn penalti-dir-btn';
+      btn.textContent = lado.label;
+      btn.addEventListener('click', () => {
+        if (penaltiTravado) return;
+        onEscolher(lado.id);
+      });
+      penaltiActionsEl.appendChild(btn);
+    });
+  }
+
+  function penaltiProximaRodada(){
+    if (penaltiFase === 'fim') return;
+
+    if (penaltiFase === 'usuario'){
+      if (penaltiStatusEl) penaltiStatusEl.textContent = `Sua vez de cobrar! Escolha o canto (rodada ${penaltiCobrancasUser.length + 1}/5).`;
+      penaltiMontarBotoesLado((ladoChute) => {
+        penaltiTravado = true;
+        const ladoGoleiro = pickRandom(PENALTI_LADOS).id;
+        const foiGol = penaltiResolverCobranca(ladoChute, ladoGoleiro);
+        penaltiAnimarChute(ladoChute, ladoGoleiro, foiGol, () => {
+          penaltiCobrancasUser.push(foiGol);
+          penaltiRenderPlacar();
+          if (penaltiStatusEl){
+            penaltiStatusEl.textContent = foiGol
+              ? `⚽ GOL do ${penaltiTimeUser.nome}!`
+              : `🧤 O goleiro do ${penaltiTimeRival.nome} defendeu!`;
+          }
+          penaltiTravado = false;
+          setTimeout(() => {
+            if (penaltiVerificarFimAntecipado()){ penaltiEncerrarPartida(); return; }
+            penaltiFase = 'rival';
+            penaltiProximaRodada();
+          }, 1000);
+        });
+      });
+    } else if (penaltiFase === 'rival'){
+      if (penaltiStatusEl) penaltiStatusEl.textContent = `Agora defenda! Escolha pra que lado seu goleiro se joga (rodada ${penaltiCobrancasRival.length + 1}/5).`;
+      penaltiMontarBotoesLado((ladoDefesa) => {
+        penaltiTravado = true;
+        const ladoChute = pickRandom(PENALTI_LADOS).id;
+        const foiGol = penaltiResolverCobranca(ladoChute, ladoDefesa);
+        penaltiAnimarChute(ladoChute, ladoDefesa, foiGol, () => {
+          penaltiCobrancasRival.push(foiGol);
+          penaltiRenderPlacar();
+          if (penaltiStatusEl){
+            penaltiStatusEl.textContent = foiGol
+              ? `⚽ Gol do ${penaltiTimeRival.nome}...`
+              : `🧤 Você defendeu o chute do ${penaltiTimeRival.nome}!`;
+          }
+          penaltiTravado = false;
+          setTimeout(() => {
+            if (penaltiVerificarFimAntecipado()){ penaltiEncerrarPartida(); return; }
+            penaltiFase = 'usuario';
+            penaltiProximaRodada();
+          }, 1000);
+        });
+      });
+    }
+  }
+
+  function penaltiIniciarPartida(timeEscolhido){
+    penaltiTimeUser = timeEscolhido;
+    const rivais = PENALTI_TIMES.filter(t => t.id !== timeEscolhido.id);
+    penaltiTimeRival = pickRandom(rivais);
+    penaltiCobrancasUser = [];
+    penaltiCobrancasRival = [];
+    penaltiFase = 'usuario';
+    penaltiTravado = false;
+
+    if (penaltiStageEscolhaEl) penaltiStageEscolhaEl.hidden = true;
+    if (penaltiStagePartidaEl) penaltiStagePartidaEl.hidden = false;
+
+    penaltiRenderPlacar();
+    penaltiProximaRodada();
+  }
+
+  function penaltiVoltarParaEscolha(){
+    penaltiTimeUser = null;
+    penaltiTimeRival = null;
+    penaltiCobrancasUser = [];
+    penaltiCobrancasRival = [];
+    penaltiFase = 'usuario';
+    penaltiTravado = false;
+
+    if (penaltiStagePartidaEl) penaltiStagePartidaEl.hidden = true;
+    if (penaltiStageEscolhaEl) penaltiStageEscolhaEl.hidden = false;
+    if (penaltiActionsEl) penaltiActionsEl.innerHTML = '';
+  }
+
+  montarGradeTimesPenalti();
+  if (penaltiRestartBtn) penaltiRestartBtn.addEventListener('click', penaltiVoltarParaEscolha);
 
   /* =====================================================
      APP: PROMPT DE COMANDO (CMD) — comando secreto pra

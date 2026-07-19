@@ -2730,6 +2730,12 @@ body.custom-wallpaper .bg-decor{
   margin-right: auto;
 }
 
+.jogo-penalti-window{
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* ---------- APP: XADREZ ---------- */
 .chess-app{
   position: relative;
@@ -2913,6 +2919,228 @@ body.custom-wallpaper .bg-decor{
   font-size: 0.78rem;
   color: var(--text-soft);
   text-align: center;
+}
+
+/* ---------- APP: PÊNALTI DECISIVO ---------- */
+.penalti-app{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.penalti-stage{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.penalti-heading{
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-dark);
+}
+
+.penalti-sub{
+  margin: 0;
+  max-width: 360px;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.penalti-team-grid{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 4px 2px;
+}
+
+.penalti-team-btn{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--mica-border);
+  border-radius: var(--radius-sm);
+  background: var(--mica-fill-strong);
+  cursor: pointer;
+  text-align: left;
+}
+
+.penalti-team-btn:hover{
+  background: rgba(255,255,255,0.5);
+  transform: translateY(-1px);
+}
+
+.penalti-team-name{
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1.2;
+}
+
+.penalti-crest{
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.35);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35), 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.penalti-scoreboard{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.penalti-side{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.penalti-side .penalti-crest{
+  width: 40px;
+  height: 40px;
+  font-size: 0.72rem;
+}
+
+.penalti-side-name{
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.penalti-vs{
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text-soft);
+  flex-shrink: 0;
+}
+
+.penalti-dots{
+  display: flex;
+  gap: 3px;
+}
+
+.penalti-dot{
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.15);
+  border: 1px solid rgba(0,0,0,0.2);
+}
+
+.penalti-dot.goal{
+  background: #2fae4b;
+  border-color: #1e8236;
+}
+
+.penalti-dot.miss{
+  background: #d5311f;
+  border-color: #a11f13;
+}
+
+.penalti-status{
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  min-height: 2.2em;
+  max-width: 340px;
+}
+
+.penalti-goal{
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  height: 130px;
+  background: linear-gradient(180deg, #eafcea 0%, #cdeecb 100%);
+  border-radius: var(--radius-md);
+  border: 2px solid rgba(20,92,48,0.3);
+  overflow: hidden;
+}
+
+.penalti-goal-post{
+  position: absolute;
+  inset: 8px 8px auto 8px;
+  height: 70%;
+  border: 4px solid #ffffff;
+  border-bottom: none;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.5) 0 2px, transparent 2px 10px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.5) 0 2px, transparent 2px 10px);
+}
+
+.penalti-ball{
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  font-size: 1.6rem;
+  line-height: 1;
+  transform: translate(-50%, 0);
+  transition: left 0.85s cubic-bezier(.2,.7,.3,1), bottom 0.85s cubic-bezier(.2,.7,.3,1);
+}
+
+.penalti-ball-esquerda{ left: 18%; bottom: 55px; }
+.penalti-ball-centro{ left: 50%; bottom: 70px; }
+.penalti-ball-direita{ left: 82%; bottom: 55px; }
+
+.penalti-ball-defendido{ opacity: 0.85; }
+
+.penalti-keeper{
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  font-size: 1.5rem;
+  line-height: 1;
+  transform: translate(-50%, 0);
+  transition: left 0.6s ease;
+}
+
+.penalti-keeper-esquerda{ left: 22%; }
+.penalti-keeper-centro{ left: 50%; }
+.penalti-keeper-direita{ left: 78%; }
+
+.penalti-actions{
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.penalti-dir-btn{
+  font-size: 0.76rem;
+  padding: 8px 12px;
+}
+
+.penalti-restart-btn{
+  margin-top: 2px;
+  font-size: 0.76rem;
 }
 
 /* ---------- APP: TRABALHO (ESCAVAÇÃO COM A PÁ) ---------- */
