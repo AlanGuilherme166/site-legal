@@ -4262,6 +4262,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginFormCriar = document.getElementById('loginFormCriar');
   const registerAvatarGrid = document.getElementById('registerAvatarGrid');
 
+  const registerAvatarPreview = document.getElementById('registerAvatarPreview');
   let selectedAvatar = 'icon-1';
 
   if (registerAvatarGrid){
@@ -4280,6 +4281,7 @@ document.addEventListener('DOMContentLoaded', () => {
       selectedAvatar = btn.dataset.avatar;
       registerAvatarGrid.querySelectorAll('.avatar-swatch').forEach(s => s.classList.remove('selected'));
       btn.classList.add('selected');
+      if (registerAvatarPreview) registerAvatarPreview.src = `icons/${selectedAvatar}.jpg`;
     });
   }
 
@@ -4358,19 +4360,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const password = document.getElementById('loginPasswordInput').value;
       if (!username || !password) return;
 
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, username, avatar, codigo, password')
-        .eq('username', username)
-        .maybeSingle();
+      try{
+        const { data, error } = await supabase
+          .from('users')
+          .select('id, username, avatar, codigo, password')
+          .eq('username', username)
+          .maybeSingle();
 
-      if (error || !data || data.password !== password){
-        showLoginError('Usuário ou senha inválidos.');
-        return;
+        if (error || !data || data.password !== password){
+          showLoginError('Usuário ou senha inválidos.');
+          return;
+        }
+
+        saveSession({ id: data.id, username: data.username, avatar: data.avatar, codigo: data.codigo });
+        loginFormEntrar.reset();
+      } catch (err){
+        console.error('Erro ao entrar:', err);
+        showLoginError('Erro de conexão com o Supabase. Verifique a URL/chave em supabase.js.');
       }
-
-      saveSession({ id: data.id, username: data.username, avatar: data.avatar, codigo: data.codigo });
-      loginFormEntrar.reset();
     });
   }
 
@@ -4385,32 +4392,44 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const { data: existente } = await supabase
-        .from('users')
-        .select('id')
-        .eq('username', username)
-        .maybeSingle();
+      try{
+        const { data: existente, error: erroChecagem } = await supabase
+          .from('users')
+          .select('id')
+          .eq('username', username)
+          .maybeSingle();
 
-      if (existente){
-        showLoginError('Esse usuário já existe.');
-        return;
+        if (erroChecagem){
+          console.error('Erro ao checar usuário:', erroChecagem);
+          showLoginError('Erro ao falar com o Supabase (confira a tabela "users" e as policies).');
+          return;
+        }
+
+        if (existente){
+          showLoginError('Esse usuário já existe.');
+          return;
+        }
+
+        const codigo = gerarCodigoAmigo();
+
+        const { data, error } = await supabase
+          .from('users')
+          .insert([{ username, password, avatar: selectedAvatar, codigo }])
+          .select('id, username, avatar, codigo')
+          .single();
+
+        if (error){
+          console.error('Erro ao criar conta:', error);
+          showLoginError('Não foi possível criar a conta: ' + error.message);
+          return;
+        }
+
+        saveSession(data);
+        loginFormCriar.reset();
+      } catch (err){
+        console.error('Erro ao criar conta:', err);
+        showLoginError('Erro de conexão com o Supabase. Verifique a URL/chave em supabase.js.');
       }
-
-      const codigo = gerarCodigoAmigo();
-
-      const { data, error } = await supabase
-        .from('users')
-        .insert([{ username, password, avatar: selectedAvatar, codigo }])
-        .select('id, username, avatar, codigo')
-        .single();
-
-      if (error){
-        showLoginError('Não foi possível criar a conta.');
-        return;
-      }
-
-      saveSession(data);
-      loginFormCriar.reset();
     });
   }
 

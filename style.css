@@ -4188,6 +4188,19 @@ body.custom-wallpaper .bg-decor{
   align-items: stretch;
 }
 
+.login-panel[hidden]{
+  display: none;
+}
+
+.avatar-preview{
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--mica-border);
+  align-self: center;
+}
+
 .login-input{
   width: 100%;
   padding: 9px 12px;
@@ -4319,90 +4332,4 @@ body.custom-wallpaper .bg-decor{
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--text-dark);
-}
-
-.msn-friend-item{
-  cursor: pointer;
-}
-
-.msn-friend-item:hover{
-  background: rgba(120,190,255,0.25);
-}
-
-.msn-friend-item.active{
-  background: rgba(120,190,255,0.4);
-}
-
-.msn-friend-info{
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.msn-friend-status{
-  font-size: 0.65rem;
-  color: #2e9c4a;
-}
-
-.msn-friend-status.offline{
-  color: var(--text-soft);
-}
-
-.msn-chat-loading{
-  font-size: 0.78rem;
-  color: var(--text-soft);
-  text-align: center;
-  margin-top: 12px;
-}
-
-.msn-msg-with-avatar{
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  max-width: 90%;
-  background: transparent !important;
-  border: none !important;
-  padding: 0 !important;
-  color: inherit !important;
-}
-
-.msn-msg-me.msn-msg-with-avatar{
-  flex-direction: row-reverse;
-}
-
-.msn-msg-avatar{
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.msn-msg-content{
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  padding: 6px 10px;
-  border-radius: 12px;
-  background: var(--mica-fill-strong);
-  border: 1px solid var(--mica-border);
-  color: var(--text-dark);
-}
-
-.msn-msg-me .msn-msg-content{
-  background: linear-gradient(135deg, var(--blue-deep), #4a95e0);
-  color: #fff;
-  border: none;
-}
-
-.msn-msg-sender{
-  font-size: 0.65rem;
-  font-weight: 700;
-  opacity: 0.75;
-}
-
-.msn-msg-text{
-  font-size: 0.78rem;
-  line-height: 1.4;
-  word-wrap: break-word;
 }
