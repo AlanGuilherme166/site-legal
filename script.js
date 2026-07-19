@@ -3604,7 +3604,8 @@ document.addEventListener('DOMContentLoaded', () => {
       .single();
 
     if (erroJogo || !game){
-      alert('Não foi possível criar o convite. Tente novamente.');
+      console.error('Erro ao criar partida de xadrez:', erroJogo);
+      alert('Não foi possível criar o convite. Detalhe: ' + (erroJogo ? erroJogo.message : 'partida não retornada'));
       return;
     }
 
@@ -3620,6 +3621,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (erroMsg){
       console.error('Erro ao enviar mensagem de convite:', erroMsg);
+      alert('A partida foi criada, mas a mensagem de convite não chegou pro seu amigo. Detalhe: ' + erroMsg.message);
     }
 
     // quem convida já entra direto na partida, esperando o amigo aceitar
