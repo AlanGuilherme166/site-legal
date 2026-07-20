@@ -2820,6 +2820,10 @@ body.custom-wallpaper .bg-decor{
   gap: 10px;
 }
 
+.pb95-panel[hidden]{
+  display: none;
+}
+
 .pb95-bytes-display{
   margin: 0;
   font-size: 1.4rem;
