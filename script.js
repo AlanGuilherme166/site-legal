@@ -1216,6 +1216,13 @@ document.addEventListener('DOMContentLoaded', () => {
       price: 0,
       free: true,
       desc: 'Clássico Campo Minado 9x9, de graça. Abre numa janela separada do navegador — marque as minas e limpe o campo todo.'
+    },
+    {
+      id: 'progressbar95',
+      emoji: '📊',
+      name: 'ProgressBar95',
+      price: 8000,
+      desc: 'Clicker de bytes numa aba, e numa aba separada você captura arquivos caindo com uma janelinha pra encher a barra de progresso e ganhar bytes bônus pros upgrades.'
     }
   ];
 
@@ -3054,7 +3061,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'vitrine-card';
       card.innerHTML = `
-        <span class="vitrine-card-cover"><img class="vitrine-card-cover-img" src="icones-site/${game.name}.png" alt="${game.name}"></span>
+        <span class="vitrine-card-cover"><img class="vitrine-card-cover-img" src="icones-site/${game.name}.png" alt="${game.name}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'vitrine-card-cover-fallback',textContent:'${game.emoji}'}))"></span>
         <span class="vitrine-card-info">
           <span class="vitrine-card-name">${game.name}</span>
           <span class="vitrine-card-desc">${game.desc}</span>
@@ -3083,7 +3090,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'vitrine-card';
       card.innerHTML = `
-        <span class="vitrine-card-cover"><img class="vitrine-card-cover-img" src="icones-site/${game.name}.png" alt="${game.name}"></span>
+        <span class="vitrine-card-cover"><img class="vitrine-card-cover-img" src="icones-site/${game.name}.png" alt="${game.name}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'vitrine-card-cover-fallback',textContent:'${game.emoji}'}))"></span>
         <span class="vitrine-card-info">
           <span class="vitrine-card-name">${game.name}</span>
           <span class="vitrine-card-desc">${game.desc}</span>
@@ -3130,7 +3137,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const windowId = gameId === 'fuga_policia' ? 'jogo-fuga-policia' : (gameId === 'xadrez' ? 'jogo-xadrez' : (gameId === 'penalti' ? 'jogo-penalti' : null));
+    const windowId = gameId === 'fuga_policia' ? 'jogo-fuga-policia' : (gameId === 'xadrez' ? 'jogo-xadrez' : (gameId === 'penalti' ? 'jogo-penalti' : (gameId === 'progressbar95' ? 'jogo-progressbar95' : null)));
     if (!windowId) return;
     const win = windowsByApp[windowId];
     if (!win) return;
@@ -3138,6 +3145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (gameId === 'fuga_policia') escapeResetGame();
     if (gameId === 'xadrez' && chessMode !== 'online') chessResetGame();
     if (gameId === 'penalti') penaltiVoltarParaEscolha();
+    if (gameId === 'progressbar95') pb95OnOpen();
 
     openWindow(win);
   }
@@ -3377,6 +3385,365 @@ document.addEventListener('DOMContentLoaded', () => {
     renderVitrineLoja();
     renderVitrineBiblioteca();
   }
+
+  /* =====================================================
+     JOGO "PROGRESSBAR95" (aberto a partir da Vitrine)
+     Aba 1: clicker básico (clique pra gerar bytes, compre
+     upgrades que aumentam bytes por clique e bytes por segundo).
+     Aba 2: coletor — arquivos caem e você move uma "janelinha"
+     (que não pode sair da área do jogo) pra pegar os bons 🟦
+     e encher a barra de progresso; arquivos corrompidos 🟥
+     esvaziam a barra. Ao encher 100%, ganha bytes bônus.
+  ===================================================== */
+  const PB95_SAVE_KEY = 'aero-progressbar95-save';
+
+  const PB95_UPGRADES = [
+    { id: 'turbo',     emoji: '👆', name: 'Clique Turbo',         desc: '+1 byte por clique',     baseCost: 15,   costMult: 1.15, type: 'click', amount: 1  },
+    { id: 'bg',        emoji: '⚙️', name: 'Processo em 2º Plano', desc: '+1 byte por segundo',    baseCost: 30,   costMult: 1.15, type: 'auto',  amount: 1  },
+    { id: 'compress',  emoji: '🗜️', name: 'Compressão de Dados',  desc: '+5 bytes por clique',     baseCost: 250,  costMult: 1.15, type: 'click', amount: 5  },
+    { id: 'server',    emoji: '🖥️', name: 'Servidor Dedicado',    desc: '+10 bytes por segundo',   baseCost: 600,  costMult: 1.15, type: 'auto',  amount: 10 },
+    { id: 'overclock', emoji: '🚀', name: 'Overclock',            desc: '+25 bytes por clique',    baseCost: 4000, costMult: 1.15, type: 'click', amount: 25 },
+    { id: 'fiber',     emoji: '🌐', name: 'Fibra Óptica',         desc: '+50 bytes por segundo',   baseCost: 9000, costMult: 1.15, type: 'auto',  amount: 50 }
+  ];
+
+  let pb95State = { bytes: 0, owned: {}, round: 1, progress: 0, bestRound: 1 };
+  let pb95ClickPower = 1;
+  let pb95AutoPerSec = 0;
+
+  function pb95Recalc(){
+    pb95ClickPower = 1;
+    pb95AutoPerSec = 0;
+    PB95_UPGRADES.forEach(upg => {
+      const owned = pb95State.owned[upg.id] || 0;
+      if (owned <= 0) return;
+      if (upg.type === 'click') pb95ClickPower += owned * upg.amount;
+      else pb95AutoPerSec += owned * upg.amount;
+    });
+  }
+
+  function pb95Load(){
+    try{
+      const saved = localStorage.getItem(PB95_SAVE_KEY);
+      if (saved){
+        const parsed = JSON.parse(saved);
+        pb95State.bytes = Number(parsed.bytes) || 0;
+        pb95State.owned = (parsed && parsed.owned) || {};
+        pb95State.round = Number(parsed.round) || 1;
+        pb95State.progress = Number(parsed.progress) || 0;
+        pb95State.bestRound = Number(parsed.bestRound) || pb95State.round;
+      }
+    } catch(e){ /* save corrompido, ignora e comeca do zero */ }
+    pb95Recalc();
+  }
+
+  function pb95Save(){
+    try{
+      localStorage.setItem(PB95_SAVE_KEY, JSON.stringify({
+        bytes: pb95State.bytes,
+        owned: pb95State.owned,
+        round: pb95State.round,
+        progress: pb95State.progress,
+        bestRound: pb95State.bestRound
+      }));
+    } catch(e){ /* localStorage indisponivel, ignora */ }
+  }
+
+  pb95Load();
+
+  const pb95Win = document.getElementById('jogo-progressbar95');
+  const pb95BytesValueEl = document.getElementById('pb95BytesValue');
+  const pb95RateDisplayEl = document.getElementById('pb95RateDisplay');
+  const pb95ClickBtn = document.getElementById('pb95ClickBtn');
+  const pb95UpgradesListEl = document.getElementById('pb95UpgradesList');
+  const pb95RoundEl = document.getElementById('pb95Round');
+  const pb95RoundRewardEl = document.getElementById('pb95RoundReward');
+  const pb95ProgressFillEl = document.getElementById('pb95ProgressFill');
+  const pb95ProgressLabelEl = document.getElementById('pb95ProgressLabel');
+  const pb95CatchAreaEl = document.getElementById('pb95CatchArea');
+  const pb95PaddleEl = document.getElementById('pb95Paddle');
+  const pb95StartBtn = document.getElementById('pb95StartBtn');
+
+  function pb95FormatNumber(n){
+    return Math.floor(n).toLocaleString('pt-BR');
+  }
+
+  function pb95RenderStats(){
+    if (pb95BytesValueEl) pb95BytesValueEl.textContent = pb95FormatNumber(pb95State.bytes);
+    if (pb95RateDisplayEl) pb95RateDisplayEl.textContent = `+${pb95FormatNumber(pb95ClickPower)} por clique · +${pb95FormatNumber(pb95AutoPerSec)}/s`;
+  }
+
+  function pb95Cost(upg){
+    const owned = pb95State.owned[upg.id] || 0;
+    return Math.ceil(upg.baseCost * Math.pow(upg.costMult, owned));
+  }
+
+  function pb95RenderUpgrades(){
+    if (!pb95UpgradesListEl) return;
+    pb95UpgradesListEl.innerHTML = '';
+    PB95_UPGRADES.forEach(upg => {
+      const owned = pb95State.owned[upg.id] || 0;
+      const cost = pb95Cost(upg);
+      const canAfford = pb95State.bytes >= cost;
+      const card = document.createElement('div');
+      card.className = 'pb95-upgrade-card';
+      card.innerHTML = `
+        <span class="pb95-upgrade-icon">${upg.emoji}</span>
+        <span class="pb95-upgrade-info">
+          <span class="pb95-upgrade-name">${upg.name}${owned > 0 ? ` <span class="pb95-upgrade-owned">x${owned}</span>` : ''}</span>
+          <span class="pb95-upgrade-desc">${upg.desc}</span>
+        </span>
+        <button class="pb95-upgrade-btn${canAfford ? '' : ' disabled'}" type="button" data-upg="${upg.id}">💾 ${pb95FormatNumber(cost)}</button>
+      `;
+      pb95UpgradesListEl.appendChild(card);
+    });
+
+    pb95UpgradesListEl.querySelectorAll('.pb95-upgrade-btn').forEach(btn => {
+      btn.addEventListener('click', () => pb95Buy(btn.getAttribute('data-upg')));
+    });
+  }
+
+  function pb95Buy(id){
+    const upg = PB95_UPGRADES.find(u => u.id === id);
+    if (!upg) return;
+    const cost = pb95Cost(upg);
+    if (pb95State.bytes < cost) return;
+    pb95State.bytes -= cost;
+    pb95State.owned[id] = (pb95State.owned[id] || 0) + 1;
+    pb95Recalc();
+    pb95Save();
+    pb95RenderStats();
+    pb95RenderUpgrades();
+  }
+
+  if (pb95ClickBtn){
+    pb95ClickBtn.addEventListener('click', () => {
+      pb95State.bytes += pb95ClickPower;
+      pb95ClickBtn.classList.remove('pb95-pulse');
+      void pb95ClickBtn.offsetWidth; // reinicia a animacao do clique
+      pb95ClickBtn.classList.add('pb95-pulse');
+      pb95RenderStats();
+      pb95RenderUpgrades();
+      pb95Save();
+    });
+  }
+
+  // bytes passivos: roda sempre que o site estiver aberto, independente da janela estar visivel
+  setInterval(() => {
+    if (pb95AutoPerSec <= 0) return;
+    pb95State.bytes += pb95AutoPerSec;
+    pb95RenderStats();
+    pb95RenderUpgrades();
+    pb95Save();
+  }, 1000);
+
+  /* ---------- abas internas do ProgressBar95 (Clicker / Coletor) ---------- */
+  const pb95Tabs = document.querySelectorAll('.pb95-tab');
+  const pb95Panels = document.querySelectorAll('.pb95-panel');
+
+  function pb95SwitchTab(target){
+    pb95Tabs.forEach(t => t.classList.toggle('active', t.dataset.pb95tab === target));
+    pb95Panels.forEach(p => { p.hidden = p.dataset.pb95panel !== target; });
+    if (target !== 'coletor') pb95PauseRound();
+  }
+
+  pb95Tabs.forEach(tab => {
+    tab.addEventListener('click', () => pb95SwitchTab(tab.dataset.pb95tab));
+  });
+
+  /* ---------- COLETOR: arquivos caindo, janelinha e barra de progresso ---------- */
+  let pb95Running = false;
+  let pb95Drops = [];
+  let pb95PaddleX = 0;
+  let pb95SpawnTimer = null;
+  let pb95RafId = null;
+  let pb95LastFrame = 0;
+
+  const PB95_PADDLE_W = 64;
+  const PB95_PADDLE_H = 16;
+  const PB95_DROP_SIZE = 22;
+
+  function pb95AreaWidth(){ return pb95CatchAreaEl ? pb95CatchAreaEl.clientWidth : 300; }
+  function pb95AreaHeight(){ return pb95CatchAreaEl ? pb95CatchAreaEl.clientHeight : 260; }
+
+  function pb95ClampPaddle(){
+    const maxX = Math.max(0, pb95AreaWidth() - PB95_PADDLE_W);
+    pb95PaddleX = Math.min(Math.max(pb95PaddleX, 0), maxX);
+    if (pb95PaddleEl) pb95PaddleEl.style.left = pb95PaddleX + 'px';
+  }
+
+  if (pb95PaddleEl){
+    pb95PaddleX = (pb95AreaWidth() - PB95_PADDLE_W) / 2;
+    pb95ClampPaddle();
+  }
+
+  if (pb95CatchAreaEl){
+    pb95CatchAreaEl.addEventListener('mousemove', (e) => {
+      const rect = pb95CatchAreaEl.getBoundingClientRect();
+      pb95PaddleX = e.clientX - rect.left - PB95_PADDLE_W / 2;
+      pb95ClampPaddle();
+    });
+    pb95CatchAreaEl.addEventListener('touchmove', (e) => {
+      if (!e.touches || !e.touches[0]) return;
+      const rect = pb95CatchAreaEl.getBoundingClientRect();
+      pb95PaddleX = e.touches[0].clientX - rect.left - PB95_PADDLE_W / 2;
+      pb95ClampPaddle();
+      if (e.cancelable) e.preventDefault();
+    }, { passive: false });
+
+    pb95CatchAreaEl.setAttribute('tabindex', '0');
+    pb95CatchAreaEl.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft'){ pb95PaddleX -= 26; pb95ClampPaddle(); }
+      if (e.key === 'ArrowRight'){ pb95PaddleX += 26; pb95ClampPaddle(); }
+    });
+  }
+
+  function pb95RenderProgress(){
+    const pct = Math.max(0, Math.min(100, Math.round(pb95State.progress)));
+    if (pb95ProgressFillEl) pb95ProgressFillEl.style.width = pct + '%';
+    if (pb95ProgressLabelEl) pb95ProgressLabelEl.textContent = pct + '%';
+    if (pb95RoundEl) pb95RoundEl.textContent = String(pb95State.round);
+  }
+
+  function pb95ShowFloatText(x, y, text, isBad){
+    if (!pb95CatchAreaEl) return;
+    const el = document.createElement('span');
+    el.className = 'pb95-float-text' + (isBad ? ' bad' : '');
+    el.textContent = text;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    pb95CatchAreaEl.appendChild(el);
+    setTimeout(() => el.remove(), 700);
+  }
+
+  function pb95SpawnDrop(){
+    if (!pb95CatchAreaEl) return;
+    const isBad = Math.random() < 0.3;
+    const el = document.createElement('div');
+    el.className = 'pb95-drop' + (isBad ? ' bad' : '');
+    el.textContent = isBad ? '🟥' : '🟦';
+    const maxX = Math.max(0, pb95AreaWidth() - PB95_DROP_SIZE);
+    const x = Math.random() * maxX;
+    el.style.left = x + 'px';
+    el.style.top = '-24px';
+    pb95CatchAreaEl.appendChild(el);
+    pb95Drops.push({ el, x, y: -24, bad: isBad, caught: false });
+  }
+
+  function pb95SpawnInterval(){ return Math.max(340, 900 - (pb95State.round - 1) * 30); }
+  function pb95FallSpeed(){ return Math.min(260, 90 + (pb95State.round - 1) * 6); }
+
+  function pb95CompleteRound(){
+    const reward = Math.round(40 + pb95State.round * 12);
+    pb95State.bytes += reward;
+    pb95State.round += 1;
+    if (pb95State.round > pb95State.bestRound) pb95State.bestRound = pb95State.round;
+    pb95State.progress = 0;
+    if (pb95RoundRewardEl){
+      pb95RoundRewardEl.textContent = `+${pb95FormatNumber(reward)} bytes! 🎉`;
+      setTimeout(() => { if (pb95RoundRewardEl) pb95RoundRewardEl.textContent = ''; }, 1800);
+    }
+    pb95RenderStats();
+    pb95RenderUpgrades();
+    pb95Save();
+  }
+
+  function pb95Tick(timestamp){
+    if (!pb95Running) return;
+    if (!pb95LastFrame) pb95LastFrame = timestamp;
+    const dt = Math.min(0.05, (timestamp - pb95LastFrame) / 1000);
+    pb95LastFrame = timestamp;
+
+    const speed = pb95FallSpeed();
+    const areaH = pb95AreaHeight();
+    const paddleY = areaH - PB95_PADDLE_H - 6;
+
+    for (let i = pb95Drops.length - 1; i >= 0; i--){
+      const drop = pb95Drops[i];
+      drop.y += speed * dt;
+      drop.el.style.top = drop.y + 'px';
+
+      const overlapY = drop.y + PB95_DROP_SIZE >= paddleY && drop.y <= paddleY + PB95_PADDLE_H;
+      const overlapX = drop.x + PB95_DROP_SIZE >= pb95PaddleX && drop.x <= pb95PaddleX + PB95_PADDLE_W;
+
+      if (!drop.caught && overlapY && overlapX){
+        drop.caught = true;
+        if (drop.bad){
+          const loss = 10 + Math.random() * 8;
+          pb95State.progress = Math.max(0, pb95State.progress - loss);
+          pb95ShowFloatText(drop.x, drop.y, `-${Math.round(loss)}%`, true);
+        } else {
+          const gain = 6 + Math.random() * 4;
+          pb95State.progress = Math.min(100, pb95State.progress + gain);
+          pb95ShowFloatText(drop.x, drop.y, `+${Math.round(gain)}%`, false);
+        }
+        drop.el.remove();
+        pb95Drops.splice(i, 1);
+        pb95RenderProgress();
+
+        if (pb95State.progress >= 100){
+          pb95CompleteRound();
+          pb95Drops.forEach(d => d.el.remove());
+          pb95Drops = [];
+        }
+        continue;
+      }
+
+      if (drop.y > areaH){
+        drop.el.remove();
+        pb95Drops.splice(i, 1);
+      }
+    }
+
+    pb95RafId = requestAnimationFrame(pb95Tick);
+  }
+
+  function pb95StartRound(){
+    if (pb95Running) return;
+    pb95Running = true;
+    pb95LastFrame = 0;
+    if (pb95StartBtn) pb95StartBtn.textContent = '⏸ Pausar';
+    pb95SpawnTimer = setInterval(pb95SpawnDrop, pb95SpawnInterval());
+    pb95RafId = requestAnimationFrame(pb95Tick);
+  }
+
+  function pb95PauseRound(){
+    if (!pb95Running) return;
+    pb95Running = false;
+    if (pb95SpawnTimer) clearInterval(pb95SpawnTimer);
+    pb95SpawnTimer = null;
+    if (pb95RafId) cancelAnimationFrame(pb95RafId);
+    pb95RafId = null;
+    if (pb95StartBtn) pb95StartBtn.textContent = pb95State.progress > 0 ? '▶ Continuar' : '▶ Iniciar rodada';
+    pb95Save();
+  }
+
+  if (pb95StartBtn){
+    pb95StartBtn.addEventListener('click', () => {
+      if (pb95Running) pb95PauseRound();
+      else pb95StartRound();
+    });
+  }
+
+  function pb95OnOpen(){
+    pb95RenderStats();
+    pb95RenderUpgrades();
+    pb95RenderProgress();
+    if (pb95StartBtn && !pb95Running){
+      pb95StartBtn.textContent = pb95State.progress > 0 ? '▶ Continuar' : '▶ Iniciar rodada';
+    }
+  }
+
+  // pausa o coletor se a janela do jogo for minimizada ou fechada
+  if (pb95Win){
+    const pb95CloseBtn = pb95Win.querySelector('.vista-close');
+    const pb95MinBtn = pb95Win.querySelector('.vista-min');
+    if (pb95CloseBtn) pb95CloseBtn.addEventListener('click', pb95PauseRound);
+    if (pb95MinBtn) pb95MinBtn.addEventListener('click', pb95PauseRound);
+  }
+
+  pb95RenderStats();
+  pb95RenderUpgrades();
+  pb95RenderProgress();
 
   /* ---------- JOGO: FUGA DA POLÍCIA (grade 6x6, turnos, 2 guardas) ----------
      Regra de "prender contra a parede": a cada turno, cada guarda tenta

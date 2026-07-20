@@ -2582,6 +2582,11 @@ body.custom-wallpaper .bg-decor{
   object-fit: cover;
 }
 
+.vitrine-card-cover-fallback{
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
 .vitrine-card-info{
   display: flex;
   flex-direction: column;
@@ -2760,6 +2765,295 @@ body.custom-wallpaper .bg-decor{
   max-width: 420px;
   margin-left: auto;
   margin-right: auto;
+}
+
+.jogo-progressbar95-window{
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ---------- APP: PROGRESSBAR95 (clicker + coletor de arquivos) ---------- */
+.pb95-app{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.pb95-heading{
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-dark);
+}
+
+.pb95-tabs{
+  display: flex;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.pb95-tab{
+  padding: 7px 16px;
+  border: 1px solid var(--mica-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  cursor: pointer;
+}
+
+.pb95-tab.active{
+  background: var(--mica-fill-strong);
+  color: var(--text-dark);
+  border-color: rgba(120,190,255,0.7);
+}
+
+.pb95-panel{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.pb95-bytes-display{
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.pb95-rate-display{
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--text-soft);
+}
+
+.pb95-click-btn{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 3px solid var(--mica-border);
+  background: linear-gradient(180deg, var(--mica-fill-strong), var(--mica-fill));
+  box-shadow: 0 8px 18px var(--mica-shadow);
+  cursor: pointer;
+  font-family: var(--font-body);
+  color: var(--text-dark);
+  transition: transform 0.08s ease;
+}
+
+.pb95-click-btn:active{
+  transform: scale(0.94);
+}
+
+.pb95-click-btn.pb95-pulse{
+  animation: pb95PulseAnim 0.22s ease;
+}
+
+@keyframes pb95PulseAnim{
+  0%{ box-shadow: 0 8px 18px var(--mica-shadow); }
+  40%{ box-shadow: 0 0 0 10px rgba(120,190,255,0.25), 0 8px 18px var(--mica-shadow); }
+  100%{ box-shadow: 0 8px 18px var(--mica-shadow); }
+}
+
+.pb95-click-icon{
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.pb95-click-label{
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.pb95-upgrades{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.pb95-upgrade-card{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.14);
+  border: 1px solid var(--mica-border);
+  text-align: left;
+}
+
+.pb95-upgrade-icon{
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.pb95-upgrade-info{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pb95-upgrade-name{
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.pb95-upgrade-owned{
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.pb95-upgrade-desc{
+  font-size: 0.7rem;
+  color: var(--text-soft);
+}
+
+.pb95-upgrade-btn{
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--mica-border);
+  background: var(--mica-fill-strong);
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.pb95-upgrade-btn.disabled{
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pb95-coletor-sub{
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--text-soft);
+  max-width: 340px;
+}
+
+.pb95-coletor-hud{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.pb95-round-reward{
+  color: #1e9d5c;
+}
+
+.pb95-progress-track{
+  position: relative;
+  width: 100%;
+  height: 18px;
+  border-radius: 9px;
+  background: rgba(0,0,0,0.18);
+  border: 1px solid var(--mica-border);
+  overflow: hidden;
+}
+
+.pb95-progress-fill{
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--cyan-aero), var(--blue-deep));
+  transition: width 0.15s ease;
+}
+
+.pb95-progress-label{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+}
+
+.pb95-catch-area{
+  position: relative;
+  width: 100%;
+  height: 260px;
+  border-radius: var(--radius-md);
+  background: rgba(0,0,0,0.18);
+  border: 2px solid var(--mica-border);
+  overflow: hidden;
+  cursor: none;
+  touch-action: none;
+}
+
+.pb95-catch-area:focus{
+  outline: 2px solid rgba(120,190,255,0.7);
+}
+
+.pb95-drop{
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.pb95-paddle{
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  width: 64px;
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--titlebar-grad-top), var(--titlebar-grad-bottom));
+  border: 1px solid var(--mica-border);
+  box-shadow: 0 2px 6px var(--mica-shadow);
+  pointer-events: none;
+}
+
+.pb95-float-text{
+  position: absolute;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #1e9d5c;
+  pointer-events: none;
+  animation: pb95FloatUp 0.7s ease forwards;
+}
+
+.pb95-float-text.bad{
+  color: #d5311f;
+}
+
+@keyframes pb95FloatUp{
+  0%{ opacity: 1; transform: translateY(0); }
+  100%{ opacity: 0; transform: translateY(-24px); }
+}
+
+.pb95-start-btn{
+  margin-top: 2px;
 }
 
 /* ---------- APP: XADREZ ---------- */
