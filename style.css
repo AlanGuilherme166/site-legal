@@ -1247,9 +1247,15 @@ body.custom-wallpaper .bg-decor{
 }
 
 .desktop-icon-img{
-  width: 1.9rem;
-  height: 1.9rem;
-  object-fit: contain;
+  width: 1.9rem !important;
+  height: 1.9rem !important;
+  max-width: 1.9rem !important;
+  max-height: 1.9rem !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  object-fit: contain !important;
+  flex-shrink: 0;
+  display: block;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
 }
 
