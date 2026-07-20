@@ -1241,6 +1241,16 @@ body.custom-wallpaper .bg-decor{
 .desktop-icon-glyph{
   font-size: 1.9rem;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.desktop-icon-img{
+  width: 1.9rem;
+  height: 1.9rem;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
 }
 
 .desktop-icon-label{
@@ -1340,6 +1350,9 @@ body.custom-wallpaper .bg-decor{
   border: 2px solid transparent;
   cursor: pointer;
   transition: transform 0.12s ease, border-color 0.15s ease;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .accent-swatch{
@@ -2554,6 +2567,13 @@ body.custom-wallpaper .bg-decor{
   justify-content: center;
   border-radius: var(--radius-md);
   background: rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+
+.vitrine-card-cover-img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .vitrine-card-info{

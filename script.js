@@ -560,19 +560,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const personalizarResetBtn = document.getElementById('personalizarResetBtn');
 
   const WALLPAPERS = {
-    aero:   'radial-gradient(circle at 20% 15%, #bfe6ff, transparent 55%), linear-gradient(135deg, #7fc7ff, #1e6fd9)',
-    sunset: 'radial-gradient(circle at 20% 15%, #ffe3bf, transparent 55%), linear-gradient(135deg, #ffb37f, #d9426f)',
-    forest: 'radial-gradient(circle at 20% 15%, #d9ffc9, transparent 55%), linear-gradient(135deg, #8fdc7a, #1e7d47)',
-    purple: 'radial-gradient(circle at 20% 15%, #ecd9ff, transparent 55%), linear-gradient(135deg, #c98fff, #5a1e9d)',
-    dark:   'radial-gradient(circle at 20% 15%, #3a3a3a, transparent 55%), linear-gradient(135deg, #2a2a2a, #08060c)',
-    cyan:   'radial-gradient(circle at 20% 15%, #d9fffb, transparent 55%), linear-gradient(135deg, #6fe3d6, #0e7a6e)'
+    aero:   'wallpaper/azul.png',
+    sunset: 'wallpaper/laranja.png',
+    forest: 'wallpaper/verde.png',
+    purple: 'wallpaper/roxo.png',
+    dark:   'wallpaper/preto.png',
+    cyan:   'wallpaper/ciano.png'
   };
 
   function applyWallpaper(key, persist){
-    const css = WALLPAPERS[key] || WALLPAPERS.aero;
+    const img = WALLPAPERS[key] || WALLPAPERS.aero;
     if (wallpaperLayer){
-      wallpaperLayer.style.backgroundImage = '';
-      wallpaperLayer.style.background = css;
+      wallpaperLayer.style.background = 'none';
+      wallpaperLayer.style.backgroundImage = `url("${img}")`;
+      wallpaperLayer.style.backgroundSize = 'cover';
+      wallpaperLayer.style.backgroundPosition = 'center';
+      wallpaperLayer.style.backgroundRepeat = 'no-repeat';
     }
     document.querySelectorAll('.wallpaper-swatch').forEach(sw => {
       sw.classList.toggle('selected', sw.dataset.wallpaper === key);
@@ -3051,7 +3054,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'vitrine-card';
       card.innerHTML = `
-        <span class="vitrine-card-cover">${game.emoji}</span>
+        <span class="vitrine-card-cover"><img class="vitrine-card-cover-img" src="icones-site/${game.name}.png" alt="${game.name}"></span>
         <span class="vitrine-card-info">
           <span class="vitrine-card-name">${game.name}</span>
           <span class="vitrine-card-desc">${game.desc}</span>
@@ -3080,7 +3083,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'vitrine-card';
       card.innerHTML = `
-        <span class="vitrine-card-cover">${game.emoji}</span>
+        <span class="vitrine-card-cover"><img class="vitrine-card-cover-img" src="icones-site/${game.name}.png" alt="${game.name}"></span>
         <span class="vitrine-card-info">
           <span class="vitrine-card-name">${game.name}</span>
           <span class="vitrine-card-desc">${game.desc}</span>
