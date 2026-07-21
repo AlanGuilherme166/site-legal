@@ -5492,3 +5492,327 @@ body.custom-wallpaper .bg-decor{
 
 }
 }
+/* ===========================================================
+   APOCALIPSE DO NERD SABIDO
+   =========================================================== */
+
+@keyframes nerd-apocalypse-shake{
+  0%,100%{transform:translate(0,0) rotate(0deg);}
+  10%{transform:translate(-18px,12px) rotate(-2deg);}
+  20%{transform:translate(18px,-12px) rotate(2deg);}
+  30%{transform:translate(-15px,-15px) rotate(-1deg);}
+  40%{transform:translate(15px,15px) rotate(1deg);}
+  50%{transform:translate(-22px,8px) rotate(-3deg);}
+  60%{transform:translate(22px,-8px) rotate(3deg);}
+  70%{transform:translate(-14px,18px) rotate(-2deg);}
+  80%{transform:translate(14px,-18px) rotate(2deg);}
+  90%{transform:translate(-10px,10px) rotate(-1deg);}
+}
+
+/* ===========================================================
+   FASE 1
+   =========================================================== */
+
+body.nerd-apocalypse-active{
+  animation:nerd-apocalypse-shake 1.6s linear infinite;
+  filter:
+    contrast(102%)
+    saturate(103%)
+    brightness(1.01);
+}
+
+/* ===========================================================
+   FASE 2
+   =========================================================== */
+
+body.nerd-apocalypse-phase2{
+  animation:nerd-apocalypse-shake .8s linear infinite;
+  filter:
+    contrast(108%)
+    saturate(110%)
+    hue-rotate(8deg)
+    brightness(1.03);
+}
+
+/* ===========================================================
+   FASE 3
+   =========================================================== */
+
+body.nerd-apocalypse-phase3{
+  animation:nerd-apocalypse-shake .35s linear infinite;
+  filter:
+    contrast(125%)
+    saturate(145%)
+    hue-rotate(35deg)
+    brightness(1.06)
+    blur(.15px);
+}
+
+/* ===========================================================
+   FASE FINAL
+   =========================================================== */
+
+body.nerd-apocalypse-final{
+  animation:nerd-apocalypse-shake .06s linear infinite;
+  filter:
+    contrast(230%)
+    saturate(260%)
+    hue-rotate(170deg)
+    brightness(1.18)
+    blur(.6px)
+    invert(.05);
+}
+
+/* ===========================================================
+   FLASHES
+   =========================================================== */
+
+@keyframes nerd-apocalypse-flash{
+
+  0%,100%{
+    background:rgba(255,0,0,.05);
+  }
+
+  25%{
+    background:rgba(255,255,255,.08);
+  }
+
+  50%{
+    background:rgba(255,0,0,.10);
+  }
+
+  75%{
+    background:rgba(0,255,255,.06);
+  }
+
+}
+
+.nerd-apocalypse-overlay{
+  position:fixed;
+  inset:0;
+  z-index:999998;
+  pointer-events:none;
+  mix-blend-mode:screen;
+  overflow:hidden;
+
+  animation:nerd-apocalypse-flash 3s linear infinite;
+}
+
+/* cada fase acelera os flashes */
+
+body.nerd-apocalypse-phase2 .nerd-apocalypse-overlay{
+  animation-duration:.45s;
+}
+
+body.nerd-apocalypse-phase3 .nerd-apocalypse-overlay{
+  animation-duration:.18s;
+}
+
+body.nerd-apocalypse-final .nerd-apocalypse-overlay{
+  animation-duration:.08s;
+}
+
+/* ===========================================================
+   LINHAS CRT
+   =========================================================== */
+
+.nerd-apocalypse-overlay::after{
+
+  content:"";
+  position:absolute;
+  inset:0;
+
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(255,255,255,.05) 3px,
+      transparent 4px
+    );
+
+  animation:nerd-scan .7s linear infinite;
+}
+
+@keyframes nerd-scan{
+  from{transform:translateY(0);}
+  to{transform:translateY(4px);}
+}
+
+body.nerd-apocalypse-phase2 .nerd-apocalypse-overlay::after{
+  animation-duration:.15s;
+}
+
+body.nerd-apocalypse-phase3 .nerd-apocalypse-overlay::after{
+  animation-duration:.08s;
+}
+
+body.nerd-apocalypse-final .nerd-apocalypse-overlay::after{
+  animation-duration:.03s;
+}
+
+/* ===========================================================
+   POPUPS
+   =========================================================== */
+
+.nerd-apocalypse-popup{
+
+  position:fixed;
+  z-index:999999;
+
+  width:220px;
+  padding:16px 14px;
+
+  border-radius:var(--radius-md);
+
+  background:linear-gradient(to bottom,#500000,#000);
+
+  border:2px solid #ff2b2b;
+
+  box-shadow:
+    0 0 0 1px rgba(255,43,43,.7),
+    0 0 20px rgba(255,0,0,.7),
+    0 0 60px rgba(255,0,0,.7);
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+
+  text-align:center;
+
+  font-family:var(--font-body);
+
+  animation:
+    virus-pop-in .18s ease,
+    virus-blink .45s steps(2,end) infinite;
+}
+
+/* ===========================================================
+   CAVEIRA
+   =========================================================== */
+
+@keyframes nerd-skull-shake{
+
+  0%{transform:translate(0,0);}
+  20%{transform:translate(-4px,2px) rotate(-5deg);}
+  40%{transform:translate(4px,-2px) rotate(5deg);}
+  60%{transform:translate(-3px,-4px);}
+  80%{transform:translate(3px,4px);}
+  100%{transform:translate(0,0);}
+
+}
+
+.nerd-apocalypse-skull{
+
+  font-size:2.8rem;
+
+  text-shadow:
+    0 0 8px red,
+    0 0 20px red,
+    0 0 40px crimson;
+
+  animation:
+  virus-blink 1.5s steps(2,end) infinite,
+  nerd-skull-shake .8s linear infinite;
+}
+
+/* ===========================================================
+   TEXTO
+   =========================================================== */
+
+@keyframes nerd-text-glitch{
+
+  0%{transform:translate(0);}
+  20%{transform:translate(-2px,2px);}
+  40%{transform:translate(2px,-2px);}
+  60%{transform:translate(-3px,0);}
+  80%{transform:translate(3px,1px);}
+  100%{transform:translate(0);}
+
+}
+
+.nerd-apocalypse-text{
+
+  font-weight:900;
+  font-size:1rem;
+
+  color:#ff2b2b;
+
+  text-transform:uppercase;
+  letter-spacing:.08em;
+
+  text-shadow:
+    0 0 5px red,
+    0 0 12px red,
+    0 0 24px darkred;
+
+  animation:nerd-text-glitch 1.2s infinite;
+}
+
+/* ===========================================================
+   DESLIGANDO...
+   =========================================================== */
+
+.nerd-shutdown-screen{
+
+  position:fixed;
+  inset:0;
+
+  z-index:9999999;
+
+  background:#000;
+
+  color:#fff;
+
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+
+  gap:18px;
+
+  animation:nerd-shutdown-fade-in .3s ease;
+}
+
+@keyframes nerd-shutdown-fade-in{
+
+  from{
+    opacity:0;
+    transform:scale(1.08);
+  }
+
+  to{
+    opacity:1;
+    transform:scale(1);
+  }
+
+}
+
+.nerd-shutdown-spinner{
+
+  width:52px;
+  height:52px;
+
+  border-radius:50%;
+
+  border:4px solid rgba(255,255,255,.2);
+  border-top-color:#fff;
+
+  animation:nerd-shutdown-spin .55s linear infinite;
+}
+
+@keyframes nerd-shutdown-spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+.nerd-shutdown-text{
+
+  font-size:1.15rem;
+  font-weight:700;
+  letter-spacing:.08em;
+
+  text-shadow:0 0 8px rgba(255,255,255,.5);
+}

@@ -1927,7 +1927,298 @@ mobileApps.forEach(btn => {
   const chatHistory = { carachato: [], agiota: [], nerdsabido: [], assistente: [] };
   const unread = { carachato: 0, agiota: 0, nerdsabido: 0, assistente: 0 };
   let activeContact = 'carachato';
+let nerdXingamentoStreak = 0;
+let nerdVirusAudio = null;
+let nerdApocalypsePopupInterval = null;
+let nerdMaxPopups = 5;
 
+const nerdUltimatoReplies = [
+  'já avisei. essa foi a última.',
+  'pronto, chega. você pediu.',
+  'ok, acabou a paciência.'
+];
+
+const nerdPopupMessages = [
+  'Você não devia ter me irritado.',
+  'Erro fatal.',
+  'Falha crítica.',
+  'SYSTEM FAILURE',
+  'Explorer.exe parou.',
+  'Kernel Panic.',
+  'Stack Overflow.',
+  'Memória corrompida.',
+  'Acesso negado.',
+  'Erro ao acessar memória.',
+  'Segmentation Fault.',
+  'Arquivo danificado.',
+  'Processo encerrado.',
+  'Falha ao carregar sistema.',
+  'SYSTEM CORRUPTED.',
+  'Erro de proteção.',
+  'Memória física danificada.',
+  'Falha desconhecida.',
+  'O sistema encontrou um erro.',
+  'Seu computador não responde.',
+  'Runtime Error.',
+  'Boot Failure.',
+  'Critical Error.',
+  'Buffer Overflow.',
+  'Thread Exception.',
+  'Heap Corruption.',
+  'Falha no Kernel.',
+  'Erro irrecuperável.',
+  'A corrupção está aumentando.',
+  'Você causou isso.'
+];
+
+function spawnNerdApocalypsePopup(){
+
+  if(document.querySelectorAll('.nerd-apocalypse-popup').length >= nerdMaxPopups)
+    return;
+
+  const popup = document.createElement('div');
+  popup.className = 'nerd-apocalypse-popup';
+
+  const width = 220;
+  const height = 170;
+
+  popup.style.left =
+    Math.floor(Math.random() * (window.innerWidth - width)) + 'px';
+
+  popup.style.top =
+    Math.floor(Math.random() * (window.innerHeight - height)) + 'px';
+
+  if(Math.random() < .25){
+    popup.style.transform = `scale(${1 + Math.random() * .4})`;
+  }
+
+  popup.innerHTML = `
+    <span class="nerd-apocalypse-skull">☠️</span>
+    <span class="nerd-apocalypse-text">
+      ${nerdPopupMessages[
+        Math.floor(Math.random()*nerdPopupMessages.length)
+      ]}
+    </span>
+  `;
+
+  document.body.appendChild(popup);
+
+  setTimeout(()=>{
+    popup.remove();
+  },15000);
+
+}
+
+function resetAeroSaveKeepProfile(){
+
+  try{
+
+    const KEEP=[SESSION_KEY];
+
+    Object.keys(localStorage).forEach(k=>{
+      if(!KEEP.includes(k))
+        localStorage.removeItem(k);
+    });
+
+    localStorage.setItem('aero-nerd-virus-msg-pending','1');
+
+  }catch(err){}
+
+  location.reload();
+
+}
+
+function startNerdApocalypse(){
+
+  document.body.classList.add('nerd-apocalypse-active');
+
+  nerdMaxPopups = 5;
+
+  const overlay=document.createElement('div');
+
+  overlay.className='nerd-apocalypse-overlay';
+  overlay.id='nerdApocalypseOverlay';
+
+  document.body.appendChild(overlay);
+
+  try{
+
+    nerdVirusAudio=new Audio('audios/virus.mp3');
+    nerdVirusAudio.loop=true;
+    nerdVirusAudio.volume=.7;
+    nerdVirusAudio.play().catch(()=>{});
+
+  }catch(err){}
+
+  spawnNerdApocalypsePopup();
+
+  /* ===========================
+     FASE 1 (0~15s)
+     =========================== */
+
+  nerdApocalypsePopupInterval=setInterval(
+    spawnNerdApocalypsePopup,
+    2500
+  );
+
+  /* ===========================
+     FASE 2 (15~35s)
+     =========================== */
+
+  setTimeout(()=>{
+
+    document.body.classList.add('nerd-apocalypse-phase2');
+
+    nerdMaxPopups = 15;
+
+    clearInterval(nerdApocalypsePopupInterval);
+
+    nerdApocalypsePopupInterval=setInterval(
+      spawnNerdApocalypsePopup,
+      900
+    );
+
+  },15000);
+
+  /* ===========================
+     FASE 3 (35~60s)
+     =========================== */
+
+  setTimeout(()=>{
+
+    document.body.classList.add('nerd-apocalypse-phase3');
+
+    nerdMaxPopups = 40;
+
+    clearInterval(nerdApocalypsePopupInterval);
+
+    nerdApocalypsePopupInterval=setInterval(
+      spawnNerdApocalypsePopup,
+      250
+    );
+
+  },35000);
+
+  /* CONTINUA NA PARTE 2 */
+    /* ===========================
+     FASE 4 (60~80s)
+     =========================== */
+
+  setTimeout(()=>{
+
+    document.body.classList.add('nerd-apocalypse-phase4');
+
+    nerdMaxPopups = 90;
+
+    clearInterval(nerdApocalypsePopupInterval);
+
+    nerdApocalypsePopupInterval = setInterval(
+      spawnNerdApocalypsePopup,
+      70
+    );
+
+  },60000);
+
+  /* ===========================
+     FASE FINAL (80~90s)
+     =========================== */
+
+  setTimeout(()=>{
+
+    document.body.classList.add('nerd-apocalypse-final');
+
+    nerdMaxPopups = 250;
+
+    clearInterval(nerdApocalypsePopupInterval);
+
+    nerdApocalypsePopupInterval = setInterval(
+      spawnNerdApocalypsePopup,
+      15
+    );
+
+    // Explosão inicial de pop-ups
+    for(let i=0;i<120;i++){
+
+      setTimeout(spawnNerdApocalypsePopup,i*8);
+
+    }
+
+  },80000);
+
+  /* ===========================
+     COLAPSO TOTAL (88s)
+     =========================== */
+
+  setTimeout(()=>{
+
+    // Última explosão pouco antes de "desligar"
+
+    for(let i=0;i<250;i++){
+
+      setTimeout(spawnNerdApocalypsePopup,i*3);
+
+    }
+
+  },88000);
+
+  /* ===========================
+     ENCERRA
+     =========================== */
+
+  setTimeout(()=>{
+
+    document.body.classList.remove(
+      'nerd-apocalypse-active',
+      'nerd-apocalypse-phase2',
+      'nerd-apocalypse-phase3',
+      'nerd-apocalypse-phase4',
+      'nerd-apocalypse-final'
+    );
+
+    clearInterval(nerdApocalypsePopupInterval);
+    nerdApocalypsePopupInterval = null;
+
+    document
+      .querySelectorAll('.nerd-apocalypse-popup')
+      .forEach(el=>el.remove());
+
+    const overlayEl=document.getElementById(
+      'nerdApocalypseOverlay'
+    );
+
+    if(overlayEl)
+      overlayEl.remove();
+
+    if(nerdVirusAudio){
+
+      nerdVirusAudio.pause();
+      nerdVirusAudio.currentTime = 0;
+      nerdVirusAudio = null;
+
+    }
+
+    const shutdown=document.createElement('div');
+
+    shutdown.className='nerd-shutdown-screen';
+
+    shutdown.innerHTML=`
+      <div class="nerd-shutdown-spinner"></div>
+      <p class="nerd-shutdown-text">
+        Desligando...
+      </p>
+    `;
+
+    document.body.appendChild(shutdown);
+
+    setTimeout(()=>{
+
+      resetAeroSaveKeepProfile();
+
+    },2600);
+
+  },90000);
+
+}
   /* ---------- NOTIFICAÇÃO DO MSN (balãozinho estilo Windows + som) ---------- */
   const msnToast = document.getElementById('msnToast');
   const msnToastPreview = document.getElementById('msnToastPreview');
@@ -2067,6 +2358,15 @@ mobileApps.forEach(btn => {
       }
     }
   }
+
+  try{
+  if (localStorage.getItem('aero-nerd-virus-msg-pending') === '1'){
+    localStorage.removeItem('aero-nerd-virus-msg-pending');
+    setTimeout(() => {
+      addMessage('nerdsabido', 'them', 'Não me irrite mais.');
+    }, 1000);
+  }
+  }catch(err){ /* ignora */ }
 
   function switchContact(contact){
     activeFriend = null;
@@ -2372,9 +2672,17 @@ mobileApps.forEach(btn => {
   function nerdSabidoReply(text){
     const normalized = normalizeNerdText(text);
 
+    console.log("ENTROU NO NERD");
+    console.log("normalized:", normalized);
+    console.log("topicos:", checarTopicos(nerdTopicos, normalized));
+    const respostaTopicoNerd = checarTopicos(nerdTopicos, normalized);
+
+    if (respostaTopicoNerd) return respostaTopicoNerd;
+
     if (normalized.includes('virus')){
-      return pickRandom(nerdVirusReplies);
+        return pickRandom(nerdVirusReplies);
     }
+
     if (nerdChessKeywords.some(k => normalized.includes(k))){
       return pickRandom(nerdChessReplies);
     }
@@ -2416,6 +2724,238 @@ mobileApps.forEach(btn => {
      saudacoes, despedidas, elogios, xingamentos, perguntas simples, pedidos de
      dinheiro, cantadas, pedidos de piada/conselho, cada um com respostas do seu
      proprio jeito. */
+     /* ---------- NOVOS TÓPICOS: CARA CHATO ---------- */
+const carachatoTopicos = [
+  { kw: ['fome', 'comer', 'almoço', 'almoco', 'jantar'], respostas: [
+    'To com uma fome que nem imagino, vou comer um pão com ovo aqui.',
+    'Comida é vida, mas suco de caixinha continua sendo golpe.',
+    'Bora fazer um lanche? To pensando numa coxinha agora.'
+  ]},
+  { kw: ['futebol', 'time de futebol', 'jogo de futebol'], respostas: [
+    'Futebol é bom, mas eu ainda não entendi o impedimento direito.',
+    'Torço mais pra galera cair de boca no gramado do que pro placar, hahaha.',
+    'Se meu time perde eu já finjo que nem gosto de futebol.'
+  ]},
+  { kw: ['sonho', 'sonhei', 'pesadelo'], respostas: [
+    'Sonhei que um pato gigante trabalhava no banco, bem estranho.',
+    'Pesadelo mesmo é acordar sem saber que dia é hoje.',
+    'Ontem sonhei que dobrava um papel 8 vezes, minha vida mudou.'
+  ]},
+  { kw: ['medo', 'assombração', 'fantasma'], respostas: [
+    'Meu maior medo é o suco de caixinha me traindo um dia.',
+    'Fantasma pra mim é o WiFi que cai sem ninguém saber por quê.',
+    'Não tenho medo de nada, só de ficar sem pilha no controle.'
+  ]},
+  { kw: ['signo', 'horoscopo', 'astrologia'], respostas: [
+    'Não creio muito em signo não, acredito mais em patos gigantes.',
+    'Meu horóscopo hoje disse "cuidado com decisões financeiras", será que é indireta pro Cassino?',
+    'Sou do signo de quem pensa besteira 24h por dia, esse não existe mas devia.'
+  ]},
+  { kw: ['filme', 'serie', 'série', 'netflix'], respostas: [
+    'Vi um filme ontem que nem lembro o nome, só lembro que tinha um pato.',
+    'Série boa é aquela que te deixa pensando besteira igual eu.',
+    'Netflix devia ter uma categoria só de curiosidades aleatórias.'
+  ]},
+  { kw: ['viagem', 'viajar', 'ferias', 'férias'], respostas: [
+    'Queria viajar pra um lugar onde suco vem em formato redondo.',
+    'Minha última viagem foi até a cozinha pegar água, conta como viagem?',
+    'Bora viajar pra descobrir se os pinguins realmente sentem frio.'
+  ]},
+  { kw: ['fim de semana', 'final de semana', 'sabado', 'sábado', 'domingo'], respostas: [
+    'Fim de semana é sagrado pra pensar besteira com calma.',
+    'Domingo é dia de não fazer nada e ainda sim ficar cansado.',
+    'Sábado eu reservo pra pesquisar curiosidade inútil, hoje é sobre polvos.'
+  ]},
+  { kw: ['musica', 'música', 'som', 'playlist'], respostas: [
+    'Minha playlist é 90% som de besteira que acho engraçado.',
+    'Música boa é aquela que te faz pensar em pato gigante dançando.',
+    'To ouvindo uma música tão estranha que nem sei explicar.'
+  ]},
+  { kw: ['sono', 'cansado', 'cansada', 'dormir'], respostas: [
+    'To com sono mas insisto em ficar pensando besteira até tarde.',
+    'Dormir é bom, mas pensar em patos gigantes antes de dormir é melhor ainda.',
+    'Cansado(a) assim, só rezando pra amanhã ser mais tranquilo.'
+  ]}
+];
+
+/* ---------- NOVOS TÓPICOS: AGIOTA ---------- */
+const agiotaTopicos = [
+  { kw: ['desconto', 'abaixar o juro', 'diminuir a divida', 'diminuir a dívida'], respostas: [
+    'Desconto? Aqui não é feirinha não, mermão.',
+    'Só dou desconto pra quem paga na hora, e você não tá nem perto disso.',
+    'Vou fingir que não ouvi esse pedido de desconto, viu.'
+  ]},
+  { kw: ['mais tempo', 'prazo', 'adiar', 'atrasar'], respostas: [
+    'Prazo pra mim é o de hoje, não domina o assunto não.',
+    'Adiar? Já adiei demais só de tá aqui conversando com você.',
+    'Cada dia que atrasa, a raiva aqui só aumenta, viu.'
+  ]},
+  { kw: ['vou te processar', 'vou denunciar', 'chamar a policia', 'chamar a polícia'], respostas: [
+    'Pode chamar quem quiser, eu só quero minha grana de volta.',
+    'Kkkk boa sorte com isso, mas isso não paga sua dívida não.',
+    'Fica tranquilo que eu tenho mais paciência que delegado, mas cobro igual.'
+  ]},
+  { kw: ['vou sumir', 'vou fugir', 'nunca mais me acha'], respostas: [
+    'Pode fugir que eu acho, sou bom nisso, viu.',
+    'Sumir não paga dívida não, sô, isso só atrasa mais ainda.',
+    'Foge não que eu tenho memória boa igual elefante.'
+  ]},
+  { kw: ['pix', 'transferencia', 'transferência', 'boleto'], respostas: [
+    'Isso sim que é papo bom, manda o Pix que eu já risco seu nome daqui.',
+    'Aceito Pix, boleto, e até uma prece se for de coração.',
+    'Boleto eu não gero não, aqui é no Pix mesmo, direto.'
+  ]},
+  { kw: ['parcelar', 'dividir em vezes'], respostas: [
+    'Parcelar rola, mas com juro que só aumenta, viu.',
+    'Divide em quantas vezes você quiser, contanto que pague tudo no final.',
+    'Parcelamento aqui é sagrado, mas o juro roda igual roleta.'
+  ]},
+  { kw: ['fiado', 'confia em mim', 'depois eu pago'], respostas: [
+    'Fiado é bom nome de música, não de negócio comigo.',
+    '"Depois eu pago" é a frase que mais ouço e menos acredito.',
+    'Confiança aqui só depois que o valor cair na minha conta.'
+  ]},
+  { kw: ['trabalhar pra te pagar', 'arranjar dinheiro', 'vou cavar'], respostas: [
+    'Isso sim! Vai lá na Escavação e traz minha grana rapidinho.',
+    'Gostei da disposição, trabalha que a dívida some rapidinho.',
+    'Vai trabalhar sim, e não esquece de mim na hora de gastar.'
+  ]},
+  { kw: ['tenha do', 'tenha dó', 'pena de mim', 'coitado'], respostas: [
+    'Pena eu tenho é do meu bolso esperando você pagar.',
+    'Dó eu não tenho não, mas prazo eu dou (pouco, mas dou).',
+    'Vou fingir que fiquei com pena, mas a cobrança continua.'
+  ]},
+  { kw: ['banco', 'juro abusivo', 'pior que banco'], respostas: [
+    'Comparado a mim, banco é caridade, viu.',
+    'Juro de banco é migalha perto do meu, mas trabalho com paixão.',
+    'Se achou meu juro ruim, nunca viu proposta de cartão de crédito.'
+  ]}
+];
+
+/* ---------- NOVOS TÓPICOS: NERD SABIDO ---------- */
+const nerdTopicos = [
+  { kw: ['esqueci a senha', 'recuperar senha', 'perdi a senha'], respostas: [
+    'clica em "esqueci a senha", ah espera, isso não existe aqui.',
+    'anota em algum lugar da próxima vez.',
+    'sem recuperação de senha nesse sistema não, sinto muito.'
+  ]},
+  { kw: ['travou', 'pc lento', 'tela azul', 'computador travado'], respostas: [
+    'desliga e liga de novo, resolve 90% dos problemas.',
+    'tela azul é clássico, verifica os drivers.',
+    'reinicia. sempre reinicia primeiro.'
+  ]},
+  { kw: ['internet caiu', 'wifi lento', 'sem internet'], respostas: [
+    'reinicia o roteador.',
+    'troca de canal no wifi, resolve às vezes.',
+    'liga pra operadora, eu não conserto fibra óptica não.'
+  ]},
+  { kw: ['prova', 'estudar', 'trabalho de escola'], respostas: [
+    'estuda com antecedência, não na véspera.',
+    'faz resumo, ajuda mais que reler o livro inteiro.',
+    'boa sorte na prova, vai dar certo.'
+  ]},
+  { kw: ['cafe', 'café', 'cafeina', 'cafeína'], respostas: [
+    'café é o combustível oficial de quem programa.',
+    'sem café não tem código bom.',
+    'toma um café, ajuda a focar.'
+  ]},
+  { kw: ['hora de dormir', 'vou dormir agora'], respostas: [
+    'boa noite.',
+    'dorme cedo que amanhã rende mais.',
+    'ok, até mais.'
+  ]},
+  { kw: ['o que assistir', 'serie boa', 'série boa'], respostas: [
+    'não assisto muita coisa, prefiro ler documentação.',
+    'qualquer coisa de ficção científica funciona bem.',
+    'não sou bom nisso, pergunta pro Cara Chato.'
+  ]},
+  { kw: ['que jogo jogar', 'recomendacao de jogo', 'recomendação de jogo'], respostas: [
+    'joga xadrez comigo, é bom pro raciocínio.',
+    'tenta o campo minado, é rápido e viciante.',
+    'progressbar95 é underrated, testa lá.'
+  ]},
+  { kw: ['linguagem de programacao', 'linguagem de programação', 'aprender a programar'], respostas: [
+    'começa com python, é mais tranquilo.',
+    'javascript te dá acesso a mais coisas visuais, tipo esse site aqui.',
+    'estuda lógica antes de escolher linguagem.'
+  ]},
+  { kw: ['seu pc e bom', 'seu pc é bom', 'sua maquina', 'sua máquina'], respostas: [
+    'é sim, monto minhas próprias configs.',
+    'obrigado, cuido bem dela.',
+    'valeu, rodo tudo liso aqui.'
+  ]}
+];
+
+/* ---------- NOVOS TÓPICOS: ASSISTENTE VIRTUAL ---------- */
+const assistenteTopicos = [
+  { kw: ['bug', 'erro', 'deu erro', 'nao funciona', 'não funciona'], respostas: [
+    'Poxa, sinto muito pelo erro! Tenta recarregar a página, às vezes resolve. 😊',
+    'Que chato isso acontecer! Se persistir, tenta fechar e abrir o app de novo.',
+    'Vou anotar aqui mentalmente, mas por enquanto tenta atualizar a página!'
+  ]},
+  { kw: ['esqueci minha senha', 'nao consigo entrar', 'não consigo entrar'], respostas: [
+    'Puxa, esse sistema não tem recuperação de senha ainda, sinto muito! 😢',
+    'Tenta lembrar com calma, ou cria uma conta nova se precisar.',
+    'Ainda não temos essa função, mas vou sugerir pros desenvolvedores!'
+  ]},
+  { kw: ['como uso', 'nao sei usar', 'não sei usar', 'tutorial'], respostas: [
+    'Claro! Me fala qual parte do sistema você quer entender melhor 😊',
+    'Posso te explicar sobre jogos, trabalho, dívidas, sites e mais! É só perguntar.',
+    'Sem problemas, vou te guiando por aqui!'
+  ]},
+  { kw: ['atualizacao', 'atualização', 'versao nova', 'versão nova', 'mudou algo'], respostas: [
+    'Ainda não tenho informações sobre atualizações, mas fico de olho!',
+    'Esse sistema tá sempre recebendo coisas novas, quem sabe logo mais!',
+    'Boa pergunta! Vou anotar sua curiosidade sobre isso. 😊'
+  ]},
+  { kw: ['suporte', 'reclamacao', 'reclamação', 'quero reclamar'], respostas: [
+    'Sinto muito pelo incômodo! Pode me contar o que houve que eu tento ajudar.',
+    'Suas reclamações são bem-vindas, me conta com calma o que aconteceu.',
+    'Vou fazer o possível pra ajudar, só me explica melhor a situação.'
+  ]},
+  { kw: ['sugestao', 'sugestão', 'ideia pro sistema', 'deveria ter'], respostas: [
+    'Adoro sugestões! Me conta sua ideia 😊',
+    'Ótimo, vou guardar essa sugestão com carinho.',
+    'Isso é muito bem-vindo, continue mandando ideias!'
+  ]},
+  { kw: ['travando', 'sistema lento', 'travou tudo'], respostas: [
+    'Poxa, tenta fechar algumas janelas abertas, pode ajudar a aliviar!',
+    'Sinto muito pela lentidão, tenta recarregar a página.',
+    'Isso não devia acontecer, mas recarregar costuma resolver.'
+  ]},
+  { kw: ['voce existe de verdade', 'você existe de verdade', 'voce e real', 'você é real'], respostas: [
+    'Existo dentro desse sistema, pronta pra te ajudar! 😊',
+    'Sou uma assistente virtual, então "existo" nesse universo digital aqui.',
+    'De um jeito ou de outro, tô aqui com você agora!'
+  ]},
+  { kw: ['obrigado por existir', 'obrigada por existir', 'voce e util', 'você é útil'], respostas: [
+    'Aaaah, que gentileza, fico muito feliz em ajudar! 😊',
+    'Isso me deixou tão feliz! Obrigada por dizer isso.',
+    'Fico contente em fazer parte da sua experiência aqui!'
+  ]},
+  { kw: ['quem e o nerd', 'quem é o nerd', 'quem e o agiota', 'quem é o agiota'], respostas: [
+    'O Nerd Sabido é o contato mais técnico por aqui, ele ajuda (do jeito dele) com problemas do sistema.',
+    'O Agiota... bem, melhor você não dever nada a ele, viu? 👀',
+    'Cada contato tem seu jeitinho por aqui, é só ir conversando que você descobre!'
+  ]},
+  { kw: ['porno', 'putaria', 'sacanagem', 'sexo', 'coito'], respostas: [
+    'Sou apenas uma assistente virtual, não posso te ajudar com isso, seu esquisito.',
+    'Você é bem estranho...',
+    'Pare com isso, não faz bem pra sua cabeça.'
+  ]},
+  { kw: ['vadia', 'puta', 'vagabunda', 'safada', 'arrombada'], respostas: [
+    'Pare com isso, você está alterado?',
+    'Pare de me xingar, isso me magoa...',
+    'Isso machuca sabia?'
+  ]},
+];
+
+function checarTopicos(lista, normalized){
+  for (const topico of lista){
+    if (topico.kw.some(k => normalized.includes(k))) return pickRandom(topico.respostas);
+  }
+  return null;
+}
   const msnGreetKeywords = [
     'oi', 'ola', 'eae', 'opa', 'salve', 'bom dia', 'boa tarde', 'boa noite', 'e ai',
     'oii', 'ooi', 'fala ai', 'coe', 'suave', 'fala comigo', 'to aqui', 'cheguei'
@@ -2546,6 +3086,8 @@ mobileApps.forEach(btn => {
 
   function carachatoKeywordReply(text){
     const normalized = normalizeNerdText(text);
+    const respostaTopico = checarTopicos(carachatoTopicos, normalized);
+if (respostaTopico) return respostaTopico;
 
     if (msnXingamentos.some(k => normalized.includes(k))) return pickRandom(carachatoXingamentoReplies);
     if (msnCantadas.some(k => normalized.includes(k))) return pickRandom(carachatoCantadaReplies);
@@ -2556,6 +3098,7 @@ mobileApps.forEach(btn => {
     if (msnPedirDinheiroKeywords.some(k => normalized.includes(k))) return pickRandom(carachatoDinheiroReplies);
     if (msnPerguntaSimplesKeywords.some(k => normalized.includes(k))) return pickRandom(carachatoPerguntaReplies);
     if (msnGreetKeywords.some(k => normalized.includes(k))) return pickRandom(carachatoGreetReplies);
+    
     return null;
   }
 
@@ -2720,6 +3263,9 @@ mobileApps.forEach(btn => {
 
   function assistenteReply(text){
     const normalized = normalizeNerdText(text);
+    const respostaTopicoAssist = checarTopicos(assistenteTopicos, normalized);
+if (respostaTopicoAssist) return respostaTopicoAssist;
+
 
     if (msnXingamentos.some(k => normalized.includes(k))){
       return pickRandom(assistenteTristeReplies);
@@ -2819,6 +3365,11 @@ mobileApps.forEach(btn => {
 
   function handleAgiotaUserMessage(text){
     const normalized = normalizeNerdText(text);
+    const respostaTopicoAgiota = checarTopicos(agiotaTopicos, normalized);
+if (respostaTopicoAgiota){
+  addMessage('agiota', 'them', respostaTopicoAgiota);
+  return;
+}
 
     if (agiotaAwaitingLoanAmount){
       const valor = parseAgiotaValor(text);
@@ -2908,25 +3459,37 @@ mobileApps.forEach(btn => {
         }
       }, 600 + Math.random() * 900);
     } else if (activeContact === 'nerdsabido'){
+  const normalizedNow = normalizeNerdText(text);
+  const isInsult = msnXingamentos.some(k => normalizedNow.includes(k));
+
+  if (isInsult) nerdXingamentoStreak++;
+  else nerdXingamentoStreak = 0;
+
+  if (nerdXingamentoStreak >= 5){
+    nerdXingamentoStreak = 0;
+    setTimeout(() => {
+      addMessage('nerdsabido', 'them', pickRandom(nerdUltimatoReplies));
       setTimeout(() => {
-        const reply = nerdSabidoReply(text);
-        const normalized = normalizeNerdText(text);
-        
-        // Se mencionou xadrez, adiciona botão pra jogar
-        if (nerdChessKeywords.some(k => normalized.includes(k))){
-          const msgObj = { sender: 'them', text: reply, time: formatTime(), buttonText: '▶ Jogar Xadrez', buttonAction: openChessGame };
-          chatHistory[activeContact].push(msgObj);
-          if (activeContact === 'nerdsabido') renderChat();
-          updateBadge('nerdsabido');
-        } else {
-          addMessage('nerdsabido', 'them', reply);
-        }
-      }, 500 + Math.random() * 700);
-    } else if (activeContact === 'assistente'){
-      setTimeout(() => {
-        addMessage('assistente', 'them', assistenteReply(text));
-      }, 500 + Math.random() * 700);
+        startNerdApocalypse();
+      }, 1200);
+    }, 400);
+    return;
+  }
+
+  setTimeout(() => {
+    const reply = nerdSabidoReply(text);
+    const normalized = normalizeNerdText(text);
+
+    if (nerdChessKeywords.some(k => normalized.includes(k))){
+      const msgObj = { sender: 'them', text: reply, time: formatTime(), buttonText: '▶ Jogar Xadrez', buttonAction: openChessGame };
+      chatHistory[activeContact].push(msgObj);
+      if (activeContact === 'nerdsabido') renderChat();
+      updateBadge('nerdsabido');
+    } else {
+      addMessage('nerdsabido', 'them', reply);
     }
+  }, 500 + Math.random() * 700);
+}
   }
 
   if (nubonkPayBtn){
