@@ -1515,6 +1515,7 @@ body.custom-wallpaper .bg-decor{
   font-size: 0.78rem;
   line-height: 1.4;
   word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .msn-msg-them{
