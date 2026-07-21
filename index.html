@@ -11,6 +11,89 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- =========================
+     INTERFACE MOBILE
+========================= -->
+
+<div id="mobileUI" class="mobile-ui">
+
+    <div class="mobile-statusbar">
+
+        <span>09:41</span>
+
+        <span>📶 📡 🔋</span>
+
+    </div>
+
+    <div class="mobile-home">
+
+        <div class="mobile-grid">
+
+            <button class="mobile-app" data-app="inicio">
+                <img src="icones-site/Início.png">
+                <span>Início</span>
+            </button>
+
+            <button class="mobile-app" data-app="navegador">
+                <img src="icones-site/Navegador.png">
+                <span>Navegador</span>
+            </button>
+
+            <button class="mobile-app" data-app="cassino">
+                <img src="icones-site/Cassino.png">
+                <span>Cassino</span>
+            </button>
+
+            <button class="mobile-app" data-app="msn">
+                <img src="icones-site/MSN.png">
+                <span>MSN</span>
+            </button>
+
+            <button class="mobile-app" data-app="vitrine">
+                <img src="icones-site/Vitrine.png">
+                <span>Vitrine</span>
+            </button>
+
+            <button class="mobile-app" data-app="inventario">
+                <img src="icones-site/Inventário.png">
+                <span>Inventário</span>
+            </button>
+
+            <button class="mobile-app" data-app="trabalho">
+                <img src="icones-site/Trabalho.png">
+                <span>Trabalho</span>
+            </button>
+
+            <button class="mobile-app" data-app="player">
+                <img src="icones-site/Player.png">
+                <span>Player</span>
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="mobile-dock">
+
+        <button class="dock-btn" data-app="inicio">
+            <img src="icones-site/Início.png">
+        </button>
+
+        <button class="dock-btn" data-app="navegador">
+            <img src="icones-site/Navegador.png">
+        </button>
+
+        <button class="dock-btn" data-app="msn">
+            <img src="icones-site/MSN.png">
+        </button>
+
+        <button class="dock-btn" data-app="inventario">
+            <img src="icones-site/Inventário.png">
+        </button>
+
+    </div>
+
+</div>
 
   <!-- Fundo decorativo: bolhas de luz ao estilo Frutiger Aero (somem no tema escuro) -->
   <div class="bg-decor" id="bgDecor" aria-hidden="true">
@@ -1135,5 +1218,14 @@
   
   <!-- 4. Carregar o script principal -->
   <script src="script.js"></script>
+  <script>
+
+if(window.innerWidth <= 900){
+
+    document.body.classList.add("mobile-mode");
+
+}
+
+</script>
 </body>
 </html>

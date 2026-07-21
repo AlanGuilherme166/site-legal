@@ -5389,18 +5389,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ===== SITE 2: aerogram.com — rede social estilo Instagram ===== */
   function renderSiteAerogram(bodyEl){
-    const posts = [
+    // posts dos 4 contatos que também existem no MSN (2 posts de cada = 8 posts)
+    const msnProfilePosts = [
       { user: 'zeburacoficial', avatar: '🕳️', emoji: '🚗', caption: 'Cavando mais um buraco pra pagar o Agiota 😅', likes: 214, time: '2h' },
-      { user: 'cassino.aero', avatar: '🎰', emoji: '🎲', caption: 'Hoje é dia de sorte! Ou não. 🤷', likes: 1032, time: '4h' },
-      { user: 'nerd.sabido', avatar: '🤓', emoji: '💻', caption: 'Ninguém lê os termos de uso mesmo né', likes: 87, time: '6h' },
-      { user: 'assistente.virtual', avatar: '🤖', emoji: '📊', caption: 'Dica do dia: quite suas dívidas antes que fiquem "feias".', likes: 512, time: '9h' },
-      { user: 'agiota.oficial', avatar: '🕴️', emoji: '💸', caption: 'Alguém aí me deve alguma coisa? 👀', likes: 3, time: '1d' }
+      { user: 'zeburacoficial', avatar: '🕳️', emoji: '🕳️', caption: 'Buraco novo, dívida nova, vida boa', likes: 176, time: '8h' },
+      { user: 'Cara Chato', avatar: '🙂', emoji: '📢', caption: 'Hoje reclamei de 12 coisas antes do café ☕', likes: 45, time: '1h' },
+      { user: 'Cara Chato', avatar: '🙂', emoji: '😤', caption: 'Ninguém aguenta mais eu reclamando, mas eu continuo', likes: 63, time: '5h' },
+      { user: 'Agiota', avatar: '🕴️', emoji: '💸', caption: 'Alguém aí me deve alguma coisa? 👀', likes: 3, time: '1d' },
+      { user: 'Agiota', avatar: '🕴️', emoji: '📈', caption: 'Juros baixos? Aqui não. Aqui os juros sobem que nem foguete 🚀', likes: 27, time: '3h' },
+      { user: 'Nerd Sabido', avatar: '🤓', emoji: '💻', caption: 'Ninguém lê os termos de uso mesmo né', likes: 87, time: '6h' },
+      { user: 'Nerd Sabido', avatar: '🤓', emoji: '📚', caption: 'Decorei a Wikipédia inteira e continuo sozinho', likes: 112, time: '9h' }
     ];
-    const stories = ['🕳️', '🎰', '🤓', '🤖', '🕴️', '💃'];
 
-    // sorteia, sem repetir, quais das 10 imagens (images/image-1.jpg ... image-10.jpg)
+    // pool de 24 perfis aleatórios que só existem dentro do aerogram (nomes sem nexo)
+    const randomProfilesPool = [
+      { user: 'Marcelo Bolafina', avatar: '🎳', emoji: '🍕', caption: 'Hoje derrubei todos os pinos e o respeito da galera', likes: 58, time: '3h' },
+      { user: 'Maria Carro Mouse', avatar: '🖱️', emoji: '🚗', caption: 'Cliquei duas vezes e o carro ligou sozinho', likes: 91, time: '5h' },
+      { user: 'Ernesto Empilhadeira', avatar: '🏗️', emoji: '📦', caption: 'Empilhei minhas contas do mesmo jeito que empilho caixa', likes: 34, time: '7h' },
+      { user: 'Jurandir Sanduíche', avatar: '🥪', emoji: '🧀', caption: 'Sou basicamente feito de duas fatias de pão e problema', likes: 120, time: '2h' },
+      { user: 'Vanuza Parafuso', avatar: '🔩', emoji: '🛠️', caption: 'Apertando parafuso e desapertando amizade', likes: 44, time: '10h' },
+      { user: 'Robervaldo Guarda-chuva', avatar: '☂️', emoji: '🌧️', caption: 'Só abro quando já tá tudo molhado, sempre atrasado', likes: 67, time: '1h' },
+      { user: 'Cleusa Micro-ondas', avatar: '📡', emoji: '🍗', caption: '3 minutos de potência alta e minha vida esquenta junto', likes: 203, time: '4h' },
+      { user: 'Adalberto Tomada', avatar: '🔌', emoji: '⚡', caption: 'Tentando encaixar na vida e ninguém me dá espaço', likes: 12, time: '12h' },
+      { user: 'Rosangela Extintor', avatar: '🧯', emoji: '🔥', caption: 'Apago fogueira dos outros e deixo a minha pegando', likes: 78, time: '6h' },
+      { user: 'Wanderley Liquidificador', avatar: '🥤', emoji: '🍹', caption: 'Bato tudo até virar suco e ainda fico com sede', likes: 145, time: '2h' },
+      { user: 'Neusa Disquete', avatar: '💾', emoji: '📀', caption: '1.44 MB de memória e nenhuma pra lembrar da senha', likes: 29, time: '15h' },
+      { user: 'Osvaldo Ventilador', avatar: '🌀', emoji: '💨', caption: 'Girando a vida toda e não saio do lugar', likes: 51, time: '9h' },
+      { user: 'Marlene Cortador de Grama', avatar: '🌱', emoji: '🌾', caption: 'Aparo o mato dos outros e o meu quintal é uma selva', likes: 83, time: '3h' },
+      { user: 'Aparecido Micro-ônibus', avatar: '🚌', emoji: '🚏', caption: 'Pequeno mas levo mais gente que ônibus grande', likes: 39, time: '11h' },
+      { user: 'Ivonete Chinelo', avatar: '🩴', emoji: '🦶', caption: 'Voei longe hoje, ninguém tava esperando', likes: 260, time: '1h' },
+      { user: 'Reginaldo Cabo USB', avatar: '🔌', emoji: '🔋', caption: 'Nunca entra do primeiro jeito, sempre no terceiro', likes: 17, time: '13h' },
+      { user: 'Sueli Panela de Pressão', avatar: '🍲', emoji: '💨', caption: 'Segurando a pressão da semana até explodir sexta', likes: 132, time: '4h' },
+      { user: 'Deivinho Escova de Dentes', avatar: '🪥', emoji: '🦷', caption: 'Uso 2 minutos por dia e finjo que é rotina de skincare', likes: 22, time: '8h' },
+      { user: 'Marilda Cadeira Giratória', avatar: '🪑', emoji: '💫', caption: 'Rodei tanto no trabalho que perdi o rumo da carreira', likes: 95, time: '5h' },
+      { user: 'Anísio Controle Remoto', avatar: '📺', emoji: '🔋', caption: 'Sempre some debaixo do sofá igual minha motivação', likes: 61, time: '7h' },
+      { user: 'Cida Pen-Drive', avatar: '💽', emoji: '📁', caption: '32 GB de memória e ninguém nunca me devolve', likes: 48, time: '10h' },
+      { user: 'Waldemar Sofá-Cama', avatar: '🛋️', emoji: '🛏️', caption: 'De dia móvel, de noite cama, sempre com as costas doendo', likes: 74, time: '6h' },
+      { user: 'Tereza Batedeira', avatar: '🍰', emoji: '🧁', caption: 'Bati tanto a massa que virei a fofoca do bairro', likes: 158, time: '2h' },
+      { user: 'Juracy Máquina de Lavar', avatar: '🧺', emoji: '🫧', caption: 'Lavo roupa suja de todo mundo, menos a minha', likes: 106, time: '9h' }
+    ];
+
+    // sorteia 12 perfis aleatórios distintos do pool de 24
+    const shuffledPool = [...randomProfilesPool];
+    for (let i = shuffledPool.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledPool[i], shuffledPool[j]] = [shuffledPool[j], shuffledPool[i]];
+    }
+    const chosenRandomProfiles = shuffledPool.slice(0, 12);
+
+    // junta os 8 posts do MSN com os 12 aleatórios (total mínimo: 20 posts) e embaralha a ordem
+    const posts = [...msnProfilePosts, ...chosenRandomProfiles];
+    for (let i = posts.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [posts[i], posts[j]] = [posts[j], posts[i]];
+    }
+
+    const stories = ['🕳️', '🙂', '🕴️', '🤓', '🤖', '🎳', '🥪', '☂️'];
+
+    // sorteia, sem repetir, quais das 20 imagens (images/image-1.jpg ... image-20.jpg)
     // cada post vai usar — muda toda vez que o site é aberto
-    const imagePool = Array.from({ length: 10 }, (_, i) => i + 1);
+    const imagePool = Array.from({ length: 20 }, (_, i) => i + 1);
     for (let i = imagePool.length - 1; i > 0; i--){
       const j = Math.floor(Math.random() * (i + 1));
       [imagePool[i], imagePool[j]] = [imagePool[j], imagePool[i]];
@@ -6377,5 +6425,32 @@ document.addEventListener('DOMContentLoaded', () => {
     setupPresence();
     setupMessagesRealtime();
   }
+  /* ============================
+   MOBILE
+============================ */
+
+if (window.innerWidth <= 900) {
+
+    document.querySelectorAll(".mobile-app, .dock-btn").forEach(btn => {
+
+        btn.addEventListener("click", () => {
+
+            const app = btn.dataset.app;
+
+            const desktopIcon = document.querySelector(`.desktop-icon[data-app="${app}"]`);
+
+            if (desktopIcon) {
+
+                desktopIcon.dispatchEvent(new MouseEvent("dblclick", {
+                    bubbles: true
+                }));
+
+            }
+
+        });
+
+    });
+
+}
 
 });
