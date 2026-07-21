@@ -1461,6 +1461,43 @@ body.custom-wallpaper .bg-decor{
   font-size: 1.3rem;
 }
 
+.msn-contact-avatar img{
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.msn-contact-avatar .msn-avatar-fallback{
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  border-radius: 50%;
+}
+
+/* Aerogram avatars (posts & stories) */
+.aerogram-post-avatar img,
+.aerogram-story img{
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.aerogram-post-avatar .aerogram-avatar-fallback,
+.aerogram-story .aerogram-avatar-fallback{
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
 .msn-contact-info{
   display: flex;
   flex-direction: column;

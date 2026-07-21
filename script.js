@@ -1922,6 +1922,50 @@ mobileApps.forEach(btn => {
   const badgeNerdsabido = document.getElementById('badgeNerdsabido');
   const badgeAssistente = document.getElementById('badgeAssistente');
 
+  // helpers: normalizar nomes para arquivos e inserir avatares circulares
+  function slugifyName(name){
+    return String(name).toLowerCase().replace(/[^a-z0-9]+/g, '').replace(/\s+/g, '');
+  }
+
+  function setMsnContactAvatars(){
+    if (!msnContactsEl) return;
+    msnContactsEl.querySelectorAll('.msn-contact').forEach(el => {
+      const c = el.dataset.contact || '';
+      const avatarWrap = el.querySelector('.msn-contact-avatar');
+      if (!avatarWrap) return;
+
+      // tenta carregar imagem em /avatares/<contact>.png
+      const filename = `avatares/${c}.png`;
+      const img = document.createElement('img');
+      img.alt = el.dataset.name || c;
+      img.src = filename;
+
+      // fallback: mostra o emoji/texto original caso a imagem falhe
+      const fallback = document.createElement('span');
+      fallback.className = 'msn-avatar-fallback';
+      fallback.textContent = avatarWrap.textContent.trim();
+
+      img.addEventListener('error', () => {
+        // não encontrou a imagem; mostra fallback
+        if (avatarWrap.firstChild !== fallback) avatarWrap.innerHTML = '';
+        if (!avatarWrap.contains(fallback)) avatarWrap.appendChild(fallback);
+      });
+
+      img.addEventListener('load', () => {
+        // imagem carregada com sucesso
+        avatarWrap.innerHTML = '';
+        avatarWrap.appendChild(img);
+      });
+
+      // tenta inserir imediatamente; se não carregar, o handler mostra fallback
+      avatarWrap.innerHTML = '';
+      avatarWrap.appendChild(img);
+    });
+  }
+
+  // roda na inicializacao do MSN
+  setMsnContactAvatars();
+
   const contactNames = { carachato: 'Cara Chato', agiota: 'Agiota', nerdsabido: 'Nerd Sabido', assistente: 'Assistente Virtual' };
   const contactBadges = { carachato: badgeCarachato, agiota: badgeAgiota, nerdsabido: badgeNerdsabido, assistente: badgeAssistente };
   const chatHistory = { carachato: [], agiota: [], nerdsabido: [], assistente: [] };
@@ -6087,6 +6131,41 @@ if (respostaTopicoAgiota){
         <p class="aerogram-post-caption"><strong>${post.user}</strong> ${post.caption}</p>
         <p class="aerogram-post-time">há ${post.time}</p>
       `;
+
+      // substitui o avatar textual por uma imagem circular, tentando caminhos
+      (function attachAerogramAvatar(){
+        const avatarWrap = postEl.querySelector('.aerogram-post-avatar');
+        if (!avatarWrap) return;
+
+        const slug = slugifyName(post.user);
+        const tryPaths = [`avatares/${slug}.png`, `avatares/${slug}.jpg`, `aerogram/${slug}.png`, `aerogram/${slug}.jpg`];
+        let attempt = 0;
+        const img = document.createElement('img');
+        img.alt = post.user;
+
+        function tryNext(){
+          if (attempt >= tryPaths.length){
+            // nenhum arquivo encontrado — mostra fallback emoji
+            avatarWrap.innerHTML = '';
+            const fb = document.createElement('span');
+            fb.className = 'aerogram-avatar-fallback';
+            fb.textContent = post.avatar;
+            avatarWrap.appendChild(fb);
+            return;
+          }
+          img.src = tryPaths[attempt++];
+        }
+
+        img.addEventListener('load', () => {
+          avatarWrap.innerHTML = '';
+          avatarWrap.appendChild(img);
+        });
+
+        img.addEventListener('error', () => tryNext());
+
+        // inicia tentativas
+        tryNext();
+      })();
 
       const imgEl = postEl.querySelector('.aerogram-post-image img');
       const fallbackEl = postEl.querySelector('.aerogram-post-image-fallback');
