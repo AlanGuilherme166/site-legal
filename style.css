@@ -5460,4 +5460,21 @@ body.custom-wallpaper .bg-decor{
 
     }
 
+    @media (max-width:900px){
+
+.window{
+
+    border-radius:0 !important;
+
+    max-width:none !important;
+
+}
+
+.window-titlebar{
+
+    cursor:default;
+
+}
+
+}
 }

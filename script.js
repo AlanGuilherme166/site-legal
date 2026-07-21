@@ -6437,15 +6437,20 @@ if (window.innerWidth <= 900) {
 
             const app = btn.dataset.app;
 
-            const desktopIcon = document.querySelector(`.desktop-icon[data-app="${app}"]`);
+            const janela = document.getElementById(app);
 
-            if (desktopIcon) {
+            if (!janela) return;
 
-                desktopIcon.dispatchEvent(new MouseEvent("dblclick", {
-                    bubbles: true
-                }));
+            janela.classList.remove("is-closed");
 
-            }
+            janela.style.display = "flex";
+            janela.style.position = "fixed";
+            janela.style.left = "0";
+            janela.style.top = "42px";
+            janela.style.width = "100vw";
+            janela.style.height = "calc(100vh - 42px)";
+            janela.style.margin = "0";
+            janela.style.zIndex = "9999999";
 
         });
 
