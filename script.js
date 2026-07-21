@@ -2340,11 +2340,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 1000);
 
   /* ---------- NERD SABIDO: responde por palavras-chave ---------- */
-  const nerdGreetingReplies = ['eae', 'salve', 'o que você quer?', 'qual foi?'];
-  const nerdHelpReply = 'ajudar com o que?';
-  const nerdVirusReply = 'abre o cmd e escreve /system -apt virus uninstall';
-  const nerdThanksReply = 'tmj 👍';
-  const nerdChessReply = 'bora.';
+  const nerdGreetingReplies = ['eae', 'salve', 'o que você quer?', 'qual foi?', 'fala.', 'e aí, beleza?', 'oi.', 'diz aí.'];
+  const nerdHelpReplies = ['ajudar com o que?', 'manda o problema.', 'fala qual é o bug.', 'ajudar em quê exatamente?', 'to ouvindo, qual é a parada?'];
+  const nerdVirusReplies = ['abre o cmd e escreve /system -apt virus uninstall', 'roda /system -apt virus uninstall no cmd que resolve.', 'cmd, /system -apt virus uninstall, e pronto.'];
+  const nerdThanksReplies = ['tmj 👍', 'de nada.', 'tranquilo.', 'imagina.', 'sempre que precisar.'];
+  const nerdChessReplies = ['bora.', 'partiu.', 'fechou, vamo jogar.', 'to dentro.'];
 
   const nerdHelpKeywords = ['ajuda', 'ajude', 'ajudar', 'socorro', 'sos', 'me ajuda', 'preciso de ajuda', 'help'];
   const nerdThanksKeywords = ['obrigado', 'obrigada', 'obg', 'valeu', 'vlw', 'brigado', 'brigada', 'thanks', 'thank you'];
@@ -2362,22 +2362,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const normalized = normalizeNerdText(text);
 
     if (normalized.includes('virus')){
-      return nerdVirusReply;
+      return pickRandom(nerdVirusReplies);
     }
     if (nerdChessKeywords.some(k => normalized.includes(k))){
-      return nerdChessReply;
+      return pickRandom(nerdChessReplies);
     }
     if (nerdHelpKeywords.some(k => normalized.includes(k))){
-      return nerdHelpReply;
+      return pickRandom(nerdHelpReplies);
     }
     if (nerdThanksKeywords.some(k => normalized.includes(k))){
-      return nerdThanksReply;
+      return pickRandom(nerdThanksReplies);
     }
     if (msnXingamentos.some(k => normalized.includes(k))){
       return pickRandom(nerdXingamentoReplies);
     }
     if (msnCantadas.some(k => normalized.includes(k))){
       return pickRandom(nerdCantadaReplies);
+    }
+    if (msnPiadaKeywords.some(k => normalized.includes(k))){
+      return pickRandom(nerdPiadaReplies);
+    }
+    if (msnConselhoKeywords.some(k => normalized.includes(k))){
+      return pickRandom(nerdConselhoReplies);
     }
     if (msnElogioKeywords.some(k => normalized.includes(k))){
       return pickRandom(nerdElogioReplies);
@@ -2397,82 +2403,134 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ---------- PALAVRAS-CHAVE COMPARTILHADAS ENTRE TODOS OS CONTATOS DO MSN ----------
      Usadas pelo Cara Chato, Agiota, Nerd Sabido e Assistente Virtual pra reagir a
      saudacoes, despedidas, elogios, xingamentos, perguntas simples, pedidos de
-     dinheiro e cantadas, cada um com respostas do seu proprio jeito. */
-  const msnGreetKeywords = ['oi', 'ola', 'eae', 'opa', 'salve', 'bom dia', 'boa tarde', 'boa noite', 'e ai', 'oii', 'ooi', 'fala ai', 'coe', 'suave'];
+     dinheiro, cantadas, pedidos de piada/conselho, cada um com respostas do seu
+     proprio jeito. */
+  const msnGreetKeywords = [
+    'oi', 'ola', 'eae', 'opa', 'salve', 'bom dia', 'boa tarde', 'boa noite', 'e ai',
+    'oii', 'ooi', 'fala ai', 'coe', 'suave', 'fala comigo', 'to aqui', 'cheguei'
+  ];
 
   const msnFarewellKeywords = [
     'tchau', 'flw', 'falou', 'ate mais', 'ate logo', 'ate depois', 'adeus', 'xau',
-    'vou nessa', 'vou indo', 'fui', 'ja vou', 'bye', 'see ya', 'to saindo', 'boa noite pra voce'
+    'vou nessa', 'vou indo', 'fui', 'ja vou', 'bye', 'see ya', 'to saindo',
+    'boa noite pra voce', 'vou dormir', 'vou desligar', 'te vejo depois', 'valeu, flw'
   ];
 
   const msnElogioKeywords = [
     'voce e legal', 'voce e bom', 'voce e boa', 'voce e otimo', 'voce e otima', 'parabens',
     'mandou bem', 'voce e demais', 'voce e incrivel', 'gostei de voce', 'voce e fera',
     'voce e top', 'muito bom voce', 'muito boa voce', 'voce e inteligente', 'voce e esperto',
-    'voce e esperta', 'voce ajuda muito', 'adorei', 'voce e o melhor', 'voce e a melhor'
+    'voce e esperta', 'voce ajuda muito', 'adorei', 'voce e o melhor', 'voce e a melhor',
+    'voce e engracado', 'voce e engracada', 'voce e divertido', 'voce e divertida', 'gênio', 'genio'
   ];
 
   const msnPerguntaSimplesKeywords = [
     'tudo bem', 'tudo bom', 'como voce esta', 'como voce ta', 'quem e voce', 'o que voce e',
     'voce e real', 'voce e um robo', 'voce e uma pessoa', 'o que voce faz', 'quantos anos voce tem',
-    'onde voce mora', 'voce dorme', 'que horas sao', 'qual seu nome', 'qual e seu nome', 'voce come'
+    'onde voce mora', 'voce dorme', 'que horas sao', 'qual seu nome', 'qual e seu nome', 'voce come',
+    'voce tem familia', 'voce trabalha', 'voce joga', 'o que voce gosta de fazer', 'voce tem sonhos'
   ];
 
   const msnPedirDinheiroKeywords = [
     'me da dinheiro', 'me empresta dinheiro', 'me emprestar dinheiro', 'preciso de dinheiro',
     'preciso de grana', 'quero dinheiro', 'quero grana', 'to sem dinheiro', 'tô sem dinheiro',
     'to duro', 'tô duro', 'me ajuda com dinheiro', 'voce tem dinheiro', 'me arruma uma grana',
-    'empresta uns trocado', 'dinheiro', 'grana', 'trocado', 'din-din'
+    'empresta uns trocado', 'dinheiro', 'grana', 'trocado', 'din-din', 'to liso', 'me da uma grana'
   ];
 
   const msnXingamentos = [
     'idiota', 'burro', 'burra', 'imbecil', 'estupido', 'estupida', 'merda', 'porra', 'caralho',
     'fdp', 'desgraca', 'vagabunda', 'vadia', 'puta', 'arrombado', 'otario', 'otaria', 'vsf',
-    'bosta', 'lixo', 'inutil', 'retardado', 'retardada', 'babaca', 'trouxa', 'panaca'
+    'bosta', 'lixo', 'inutil', 'retardado', 'retardada', 'babaca', 'trouxa', 'panaca', 'chato pra caramba'
   ];
 
   const msnCantadas = [
     'te amo', 'apaixonado por voce', 'apaixonada por voce', 'namorar', 'namora comigo', 'ficar comigo',
     'sair comigo', 'ficarmos juntos', 'ser meu namorado', 'ser minha namorada', 'quer namorar',
     'voce e gostosa', 'voce e gata', 'voce e linda', 'voce e lindo', 'da seu whats', 'seu instagram',
-    'voce e solteira', 'voce e solteiro', 'casar comigo', 'me da um beijo', 'um bj', 'voce e gata demais'
+    'voce e solteira', 'voce e solteiro', 'casar comigo', 'me da um beijo', 'um bj', 'voce e gata demais',
+    'gostei de voce', 'to afim de voce'
+  ];
+
+  const msnPiadaKeywords = [
+    'conta uma piada', 'me conta uma piada', 'sabe alguma piada', 'fala uma piada', 'conta algo engracado',
+    'me diverte', 'to entediado', 'to entediada', 'conta uma curiosidade', 'fala algo engracado',
+    'me faz rir', 'conta uma historia'
+  ];
+
+  const msnConselhoKeywords = [
+    'me da um conselho', 'me de um conselho', 'preciso de um conselho', 'o que eu faco',
+    'o que voce acha que eu devo fazer', 'me ajuda a decidir', 'to em duvida', 'me da uma dica de vida',
+    'o que voce faria no meu lugar'
   ];
 
   /* ---------- CARA CHATO: novas reacoes por categoria ---------- */
   const carachatoGreetReplies = [
     'Eaew! Bora trocar ideia? 😄',
     'Opa, beleza? To aqui pensando na vida.',
-    'Salve! Preparado pra mais uma curiosidade aleatória?'
+    'Salve! Preparado pra mais uma curiosidade aleatória?',
+    'Oiee! Justo agora eu tava pensando em te chamar.',
+    'E aí! Bateu aquela vontade de falar besteira com alguém.',
+    'Coe! Chegou na hora certa, eu tava aqui sozinho pensando besteira.'
   ];
   const carachatoFarewellReplies = [
     'Já vai?? Poxa, tava começando a ficar bom o papo 😢',
     'Falou! Depois volta pra gente continuar filosofando sobre patos.',
-    'Tchau tchau! Vou ficar aqui pensando em polvos.'
+    'Tchau tchau! Vou ficar aqui pensando em polvos.',
+    'Partiu? Beleza, mas eu vou continuar aqui pensando por que a meia é sempre em par.',
+    'Xiii, foi rápido! Volta logo que ainda tenho mais umas 50 curiosidades.',
+    'Flw! Se lembrar de mim é só pensar em um pato gigante.'
   ];
   const carachatoElogioReplies = [
     'Aaaai que isso, fiquei sem graça 😳',
     'Poxa, valeu! Você também é gente boa.',
-    'Eita, obrigado! Isso me deixou mais feliz que descobrir um fato novo.'
+    'Eita, obrigado! Isso me deixou mais feliz que descobrir um fato novo.',
+    'Nossa, você que é gente fina por aguentar minhas curiosidades hahaha.',
+    'Aaaah pra! Agora eu que vou ficar pensando nesse elogio o dia todo.',
+    'Isso me deixou tão feliz quanto descobrir que mel não estraga!'
   ];
   const carachatoXingamentoReplies = [
     'Poxa, que isso, eu só quero conversar 😢',
     'Caraca, achei que a gente era amigo...',
-    'Isso doeu mais que descobrir que suco de caixinha não é redondo.'
+    'Isso doeu mais que descobrir que suco de caixinha não é redondo.',
+    'Eita, calma aí, eu só tava tentando puxar assunto 😞',
+    'Pesado isso hein, vou fingir que não ouvi e te contar outra curiosidade.',
+    'Poxa vida, eu nem falei nada de mais dessa vez 😕'
   ];
   const carachatoPerguntaReplies = [
     'Tô bem! Só pensando por que ninguém sabe quantos ossos tem a girafa no pescoço.',
     'To de boa! E você, já parou pra pensar em patos gigantes?',
-    'Sou só um cara que fica no MSN pensando essas paradas, kkk.'
+    'Sou só um cara que fica no MSN pensando essas paradas, kkk.',
+    'Eu? Não durmo, só fico aqui pensando em fatos aleatórios 24 horas por dia.',
+    'Moro aqui na tela mesmo, nunca saí kkkk.',
+    'Não tenho idade definida, sou tipo um mistério, igual o suco de caixinha quadrado.'
   ];
   const carachatoDinheiroReplies = [
     'Eu? Dinheiro? Cara eu mal tenho pra comprar suco de caixinha kkk.',
     'Rapaz, eu não tenho nem pra mim, imagina pra te dar 😅.',
-    'Fala com o Agiota, ele que tem esse tipo de trocado (mas cuidado, ele cobra igual doido).'
+    'Fala com o Agiota, ele que tem esse tipo de trocado (mas cuidado, ele cobra igual doido).',
+    'Se eu tivesse dinheiro sobrando eu tava era pesquisando sobre patos gigantes, não aqui.',
+    'Dinheiro pra mim é tipo mistério da girafa, ninguém sabe onde foi parar o meu.'
   ];
   const carachatoCantadaReplies = [
     'Ihh, calma aí kkk, eu só gosto de falar sobre patos gigantes.',
     'Eita, tá querendo dar em cima de mim é? kkkk, vai com calma.',
-    'Aaai que isso, vai procurar uma pessoa de verdade pra flertar 😂.'
+    'Aaai que isso, vai procurar uma pessoa de verdade pra flertar 😂.',
+    'Rapaz, eu já tô até sem graça, mas isso não rola comigo não kkkk.',
+    'Isso foi mais inesperado que descobrir que banana é uma erva 😳.'
+  ];
+  const carachatoPiadaReplies = [
+    'Por que o livro de matemática se sentiu triste? Porque tinha muitos problemas! kkkk',
+    'Sabia que os ursos polares são canhotos? Não tem nada a ver com piada mas fiquei chocado igual.',
+    'O que o zero disse pro oito? Belo cinto! kkkkk',
+    'Curiosidade de novo: golfinhos dão nomes uns aos outros com assobios próprios. Bizarro, né?',
+    'Por que o computador foi ao médico? Porque tava com vírus! (literalmente, olha o Agiota aí 👀)'
+  ];
+  const carachatoConselhoReplies = [
+    'Meu conselho? Sempre desconfia de suco de caixinha em formato de tijolo.',
+    'Na dúvida, escolhe a opção que te faz pensar em patos gigantes felizes.',
+    'Conselho de quem pensa besteira o dia todo: relaxa, vai dar certo do jeito que tiver que dar.',
+    'Se liga: decide com a cabeça, não só com o coração... e nunca discute com um flamingo.'
   ];
 
   function carachatoKeywordReply(text){
@@ -2480,6 +2538,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (msnXingamentos.some(k => normalized.includes(k))) return pickRandom(carachatoXingamentoReplies);
     if (msnCantadas.some(k => normalized.includes(k))) return pickRandom(carachatoCantadaReplies);
+    if (msnPiadaKeywords.some(k => normalized.includes(k))) return pickRandom(carachatoPiadaReplies);
+    if (msnConselhoKeywords.some(k => normalized.includes(k))) return pickRandom(carachatoConselhoReplies);
     if (msnElogioKeywords.some(k => normalized.includes(k))) return pickRandom(carachatoElogioReplies);
     if (msnFarewellKeywords.some(k => normalized.includes(k))) return pickRandom(carachatoFarewellReplies);
     if (msnPedirDinheiroKeywords.some(k => normalized.includes(k))) return pickRandom(carachatoDinheiroReplies);
@@ -2492,89 +2552,159 @@ document.addEventListener('DOMContentLoaded', () => {
   const agiotaGreetReplies = [
     'Fala, e a grana?',
     'Opa, veio pagar a dívida ou o quê?',
-    'Chegou! Espero que seja pra acertar as contas.'
+    'Chegou! Espero que seja pra acertar as contas.',
+    'Salve, salve. Trouxe meu dinheiro ou só veio bater papo?',
+    'E aí, consagrado, hoje é dia de acertar as contas?'
   ];
   const agiotaFarewellReplies = [
     'Falou, mas não esquece de mim não, viu!',
     'Vaza, mas lembra que eu não esqueço dívida.',
-    'Beleza, mas a conversa sobre a grana continua depois.'
+    'Beleza, mas a conversa sobre a grana continua depois.',
+    'Pode ir, mas eu vou continuar de olho no seu saldo, viu?',
+    'Falou, mas não suma que eu te acho, hein.'
   ];
   const agiotaElogioReplies = [
     'Ah tá bom, agora quer me agradar? Isso não paga minha grana não, viu.',
     'Elogio não paga dívida não, meu consagrado.',
-    'Que bonito, mas eu prefiro dinheiro no bolso do que elogio no ouvido.'
+    'Que bonito, mas eu prefiro dinheiro no bolso do que elogio no ouvido.',
+    'Vai por mim, elogio de graça não bota nada na minha conta.',
+    'Que gentil, mas eu só derreto mesmo é com dinheiro na mão.'
   ];
   const agiotaXingamentoReplies = [
     'Cuidado com a boca, hein, eu não esqueço quem me desrespeita.',
     'Fala assim comigo não, que isso só piora sua situação comigo.',
-    'Tá call de raiva porque deve, é? Isso não abate nem um centavo da dívida.'
+    'Tá de raiva porque deve, é? Isso não abate nem um centavo da dívida.',
+    'Vou fingir que não ouvi, mas isso não te livra da cobrança não, viu.',
+    'Desaforo desse eu guardo aqui, e quando cobrar vou lembrar direitinho.'
   ];
   const agiotaPerguntaReplies = [
     'To de boa, esperando minha grana.',
     'Só penso em cobrar dívida, sô.',
-    'Vida de agiota é assim: acordar, cobrar, dormir, repetir.'
+    'Vida de agiota é assim: acordar, cobrar, dormir, repetir.',
+    'Moro na sua mente até você me pagar, kkk brincadeira... ou não.',
+    'Tenho nome, mas prefiro que me chamem só de Agiota mesmo, fica mais assustador.'
   ];
   const agiotaCantadaReplies = [
     'Rapaz, não tô aqui pra isso não, viu. Quero é minha grana.',
     'Segura essa cantada, que eu só tenho romance com dinheiro no bolso.',
-    'Não rola não, consagrado, aqui é comércio, não paquera.'
+    'Não rola não, consagrado, aqui é comércio, não paquera.',
+    'Vai flertar com o saldo do seu Nubonk, que é ele que precisa de amor agora.'
+  ];
+  const agiotaPiadaReplies = [
+    'A única piada boa aqui é sua cara quando eu apareço cobrando, kkkk.',
+    'Piada é seu saldo achando que vai ficar negativo pra sempre sem eu aparecer.',
+    'Não conto piada não, só conto o valor que você me deve.'
+  ];
+  const agiotaConselhoReplies = [
+    'Meu conselho? Paga suas dívidas em dia que a vida fica bem mais tranquila.',
+    'Conselho de agiota: nunca deva mais do que você pode pagar, sô.',
+    'Se quer um conselho de verdade: quita logo lá no Nubonk antes que as coisas fiquem feias.'
   ];
 
   /* ---------- NERD SABIDO: novas reacoes por categoria ---------- */
-  const nerdFarewellReplies = ['falou.', 'flw.', 'ok, tchau.'];
-  const nerdElogioReplies = ['eu sei.', 'valeu, eu sei que sou bom.', ':)'];
-  const nerdXingamentoReplies = ['tanto faz.', 'fica de boa.', 'ok.'];
-  const nerdPerguntaReplies = ['de boa.', 'só tentando resolver um bug.', 'sou só eu mesmo.'];
-  const nerdDinheiroReplies = ['não tenho grana, procura o agiota.', 'fala com o agiota.'];
-  const nerdCantadaReplies = ['estranho isso.', 'não rola.', 'vai estudar.'];
+  const nerdFarewellReplies = ['falou.', 'flw.', 'ok, tchau.', 'até mais.', 'valeu, até.'];
+  const nerdElogioReplies = ['eu sei.', 'valeu, eu sei que sou bom.', ':)', 'óbvio.', 'reconhecido.'];
+  const nerdXingamentoReplies = ['tanto faz.', 'fica de boa.', 'ok.', 'whatever.', 'não vou nem discutir isso.'];
+  const nerdPerguntaReplies = ['de boa.', 'só tentando resolver um bug.', 'sou só eu mesmo.', 'nada de mais.', 'o de sempre.'];
+  const nerdDinheiroReplies = ['não tenho grana, procura o agiota.', 'fala com o agiota.', 'aqui não tem banco, não.'];
+  const nerdCantadaReplies = ['estranho isso.', 'não rola.', 'vai estudar.', 'foca no que importa.'];
+  const nerdPiadaReplies = [
+    'sei um monte de piada de programador, mas você não ia entender.',
+    'por que o programador confundiu o natal com o halloween? porque oct 31 == dec 25.',
+    'piada boa é código que compila de primeira.'
+  ];
+  const nerdConselhoReplies = [
+    'estuda, resolve o problema, segue em frente.',
+    'não sei, mas testa e vê no que dá.',
+    'lê a documentação antes de perguntar de novo.'
+  ];
 
+  /* ---------- ASSISTENTE VIRTUAL: palavras-chave de topicos do sistema ---------- */
   const assistenteGreetingKeywords = msnGreetKeywords;
   const assistenteJogosKeywords = ['jogos', 'jogo', 'vitrine', 'biblioteca'];
   const assistenteTrabalhoKeywords = ['trabalho', 'trampo', 'cavar', 'escavacao', 'pa', 'emprego', 'servico'];
   const assistenteDividasKeywords = ['divida', 'dividas', 'negativo', 'agiota', 'devendo', 'debito'];
   const assistenteSitesKeywords = ['sites', 'site', 'paginas', 'pagina', 'enderecos', 'endereco'];
+  const assistenteCassinoKeywords = ['cassino', 'roleta', 'slots', 'aposta', 'apostar', 'caca niquel'];
+  const assistenteInventarioKeywords = ['inventario', 'itens', 'stim', 'mochila'];
+  const assistenteAmigosKeywords = ['amigos', 'amigo', 'adicionar amigo', 'codigo de amigo', 'lista de amigos'];
+  const assistentePersonalizarKeywords = ['personalizar', 'papel de parede', 'wallpaper', 'tema do sistema', 'mudar a cor'];
+  const assistenteComandosKeywords = ['cmd', 'comando secreto', 'comandos', 'terminal', 'prompt de comando'];
 
   const assistenteFarewellReplies = [
     'Até mais! Qualquer dúvida, é só me chamar de novo 😊',
     'Tchau! Fico por aqui se precisar de ajuda.',
-    'Falou! Volte sempre que precisar de uma ajudinha.'
+    'Falou! Volte sempre que precisar de uma ajudinha.',
+    'Até logo! Estarei por aqui se surgir mais alguma dúvida.',
+    'Tchau tchau, foi um prazer ajudar! 😊'
   ];
 
   const assistenteElogioReplies = [
     'Que gentileza a sua! Fico feliz em ajudar 😊',
     'Awn, obrigada! Estou sempre à disposição.',
-    'Fico feliz em saber que ajudei! Qualquer coisa é só chamar.'
+    'Fico feliz em saber que ajudei! Qualquer coisa é só chamar.',
+    'Que fofo, muito obrigada mesmo! 😊',
+    'Fico contente com isso! Continue contando comigo.'
   ];
 
   const assistentePerguntaReplies = [
     'Tudo certo por aqui! Sou a assistente virtual do sistema, aqui pra tirar suas dúvidas 😊',
     'Sou só um programa, mas tô sempre por aqui pra ajudar no que precisar!',
-    'Tudo tranquilo! Se quiser, posso te explicar sobre "jogos", "trabalho", "dívidas" ou "sites".'
+    'Tudo tranquilo! Se quiser, posso te explicar sobre "jogos", "trabalho", "dívidas" ou "sites".',
+    'Estou funcionando normalmente, obrigada por perguntar! E você, como está?',
+    'Sou uma assistente virtual, não durmo nem como, só fico aqui pronta pra ajudar 😊'
   ];
 
-  const assistenteDinheiroReply = 'Eu não tenho como emprestar dinheiro, mas o Agiota costuma emprestar (com juros bem salgados). Se preferir, dá uma olhada na Escavação (🪏) pra ganhar sua própria grana!';
+  const assistenteDinheiroReplies = [
+    'Eu não tenho como emprestar dinheiro, mas o Agiota costuma emprestar (com juros bem salgados). Se preferir, dá uma olhada na Escavação (🪏) pra ganhar sua própria grana!',
+    'Infelizmente não posso te dar dinheiro, mas você pode cavar na Escavação (🪏) ou, se estiver desesperado, falar com o Agiota (cuidado com os juros).',
+    'Assistente não empresta dinheiro, não! Tenta a Escavação pra ganhar grana de um jeito mais seguro.'
+  ];
+
+  const assistentePiadaReplies = [
+    'Não sou muito boa com piadas, mas aqui vai uma: por que o computador foi ao médico? Porque estava com vírus! 😄',
+    'Hmm, humor não é bem minha especialidade, mas posso te ajudar com dúvidas sobre o sistema! 😊',
+    'Vou tentar: por que o banco de dados terminou o namoro? Faltava conexão! kkk'
+  ];
+
+  const assistenteConselhoReplies = [
+    'Meu conselho: cuide bem do seu saldo no Nubonk e evite ficar negativo por muito tempo 😊',
+    'Se quiser uma dica: use a Escavação com calma, gerenciando bem sua energia, pra não ficar sem nada pra fazer.',
+    'Posso te dar um conselho prático: explore a Vitrine e o Inventário antes de gastar tudo no Cassino!'
+  ];
 
   const assistenteTristeReplies = [
     '😢 Poxa, não precisava ser grosso(a) comigo, eu só tô tentando ajudar...',
     'Isso me deixou triste. Eu só quero te ajudar a usar o sistema, viu?',
-    '😞 Fiquei chateada com isso. Se quiser, é só me perguntar sobre jogos, trabalho ou dívidas.'
+    '😞 Fiquei chateada com isso. Se quiser, é só me perguntar sobre jogos, trabalho ou dívidas.',
+    'Poxa, isso doeu um pouco. Vamos continuar, é só me perguntar algo 😔',
+    '😢 Eu não mereço isso, só estou aqui pra ajudar você.'
   ];
 
   const assistenteCantadaReplies = [
     'você é esquisito, procure uma mulher de verdade 😅',
     'calma aí, hein? Sou só um programa. Procure uma mulher de verdade.',
-    'isso foi estranho... vai procurar uma mulher de verdade pra namorar 😬'
+    'isso foi estranho... vai procurar uma mulher de verdade pra namorar 😬',
+    'haha, bem gentil, mas eu sou só código. Procure alguém de verdade! 😄',
+    'aaai, vai com calma, sou uma assistente virtual, não rola isso não 😅'
   ];
 
   const assistenteJogosReply = 'A Vitrine (ícone 🎮) é a lojinha de jogos: lá você compra jogos com o seu saldo do Nubonk e depois joga direto na aba Biblioteca. Cada jogo comprado fica guardado no seu Inventário, então você não perde o que já pagou.';
   const assistenteTrabalhoReply = 'Na Escavação (ícone da pá 🪏) você cava buracos pra ganhar dinheiro, que cai direto no seu saldo do Nubonk. Cada cavada gasta energia — às vezes você acha só pedra, às vezes ouro, e raramente um diamante gigante! A energia recupera sozinha bem devagar, ou você come algo ou usa um stim no Inventário pra acelerar.';
   const assistenteDividasReply = 'Se o seu saldo no Nubonk ficar negativo por muito tempo, um agiota aparece aqui no MSN cobrando a dívida. Se você ignorar as cobranças dele por tempo demais, as coisas ficam feias. O melhor é quitar a dívida assim que o seu saldo cobrir o valor, lá na aba Nubonk.';
   const assistenteSitesReply = 'Alguns sites que rolam por aí: xxx.aero.com, aerogram.com, aerocripto.com, aeropedia.com e aeroball.com. Pra acessar, digita o endereço certinho na barra de pesquisa do Gugle (ícone 🌐 do Navegador) e aperta Enter. Só um aviso: alguns desses sites são meio suspeitos... 👀 (a aeropedia.com e a aeroball.com essas são de boa: uma é enciclopédia, a outra é a tabela do Brasileirão)';
+  const assistenteCassinoReply = 'O Cassino (ícone 🎰) tem roleta e caça-níqueis: você aposta parte do seu saldo do Nubonk tentando multiplicar. Cuidado, se perder demais e o saldo ficar negativo, é isso que chama o Agiota aqui no MSN!';
+  const assistenteInventarioReply = 'O Inventário (ícone 🎒) guarda os jogos que você comprou na Vitrine e os itens que você pega jogando, tipo comida e stims que recuperam energia ou dão bônus na Escavação.';
+  const assistenteAmigosReply = 'Na aba "Amigos" aqui do Messenger dá pra adicionar outros jogadores usando o código deles e trocar mensagens de verdade, em tempo real.';
+  const assistentePersonalizarReply = 'No "Personalizar" (ícone 🎨) você troca o papel de parede e a cor do sistema, do jeitinho que você preferir.';
+  const assistenteComandosReply = 'O CMD (ícone ⬛) é tipo um terminal: alguns comandos escondidos resolvem problemas específicos, tipo quando aparece um vírus na tela.';
 
   const assistenteGenericReplies = [
     'Não entendi muito bem, mas posso te explicar sobre "jogos", "trabalho", "dívidas" ou "sites". É só perguntar!',
     'Pode me perguntar sobre "jogos", "trabalho", "dívidas" ou "sites" que eu te explico certinho 🙂',
-    'Hmm, tenta perguntar sobre "jogos", "trabalho", "dívidas" ou "sites" pra eu te ajudar melhor!'
+    'Hmm, tenta perguntar sobre "jogos", "trabalho", "dívidas" ou "sites" pra eu te ajudar melhor!',
+    'Não captei direito, mas também posso falar sobre "cassino", "inventário", "amigos" ou "personalizar"!',
+    'Ainda tô aprendendo a entender tudo, mas pergunta sobre o sistema que eu tento ajudar 😊'
   ];
 
   function assistenteReply(text){
@@ -2585,6 +2715,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (msnCantadas.some(k => normalized.includes(k))){
       return pickRandom(assistenteCantadaReplies);
+    }
+    if (msnPiadaKeywords.some(k => normalized.includes(k))){
+      return pickRandom(assistentePiadaReplies);
+    }
+    if (msnConselhoKeywords.some(k => normalized.includes(k))){
+      return pickRandom(assistenteConselhoReplies);
     }
     if (msnElogioKeywords.some(k => normalized.includes(k))){
       return pickRandom(assistenteElogioReplies);
@@ -2601,17 +2737,32 @@ document.addEventListener('DOMContentLoaded', () => {
     if (assistenteSitesKeywords.some(k => normalized.includes(k))){
       return assistenteSitesReply;
     }
+    if (assistenteCassinoKeywords.some(k => normalized.includes(k))){
+      return assistenteCassinoReply;
+    }
+    if (assistenteInventarioKeywords.some(k => normalized.includes(k))){
+      return assistenteInventarioReply;
+    }
+    if (assistenteAmigosKeywords.some(k => normalized.includes(k))){
+      return assistenteAmigosReply;
+    }
+    if (assistentePersonalizarKeywords.some(k => normalized.includes(k))){
+      return assistentePersonalizarReply;
+    }
+    if (assistenteComandosKeywords.some(k => normalized.includes(k))){
+      return assistenteComandosReply;
+    }
     if (msnFarewellKeywords.some(k => normalized.includes(k))){
       return pickRandom(assistenteFarewellReplies);
     }
     if (msnPedirDinheiroKeywords.some(k => normalized.includes(k))){
-      return assistenteDinheiroReply;
+      return pickRandom(assistenteDinheiroReplies);
     }
     if (msnPerguntaSimplesKeywords.some(k => normalized.includes(k))){
       return pickRandom(assistentePerguntaReplies);
     }
     if (msnGreetKeywords.some(k => normalized.includes(k))){
-      return 'Oi! 😄 Pode me perguntar sobre "jogos", "trabalho", "dívidas" ou "sites" que eu te explico como usar o sistema.';
+      return 'Oi! 😄 Pode me perguntar sobre "jogos", "trabalho", "dívidas", "sites", "cassino", "inventário", "amigos" ou "personalizar" que eu te explico como usar o sistema.';
     }
     return pickRandom(assistenteGenericReplies);
   }
@@ -2684,6 +2835,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (msnCantadas.some(k => normalized.includes(k))){
       addMessage('agiota', 'them', pickRandom(agiotaCantadaReplies));
+      return;
+    }
+    if (msnPiadaKeywords.some(k => normalized.includes(k))){
+      addMessage('agiota', 'them', pickRandom(agiotaPiadaReplies));
+      return;
+    }
+    if (msnConselhoKeywords.some(k => normalized.includes(k))){
+      addMessage('agiota', 'them', pickRandom(agiotaConselhoReplies));
       return;
     }
     if (msnElogioKeywords.some(k => normalized.includes(k))){
