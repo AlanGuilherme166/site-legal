@@ -476,6 +476,17 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', () => {
     desktopIconEls.forEach(i => i.classList.remove('selected'));
   });
+  /* ===== MOBILE APPS ===== */
+const mobileApps = document.querySelectorAll('.mobile-app');
+mobileApps.forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const app = btn.dataset.app;
+    if (app && windowsByApp[app]) {
+      toggleWindowFromTrigger(windowsByApp[app]);
+    }
+  });
+});
 
   function setIconsVisible(visible){
     if (!desktopIcons) return;
