@@ -3262,6 +3262,7 @@ if (respostaTopico) return respostaTopico;
   ];
 
   function assistenteReply(text){
+    console.log("Assistente foi chamada");
     const normalized = normalizeNerdText(text);
     const respostaTopicoAssist = checarTopicos(assistenteTopicos, normalized);
 if (respostaTopicoAssist) return respostaTopicoAssist;
@@ -3458,6 +3459,18 @@ if (respostaTopicoAgiota){
           addMessage('carachato', 'them', pickRandom(carachatoMessages));
         }
       }, 600 + Math.random() * 900);
+      } else if (activeContact === 'assistente'){
+
+  setTimeout(() => {
+
+    const reply = assistenteReply(text);
+
+    if (reply){
+      addMessage('assistente', 'them', reply);
+    }
+
+  }, 500 + Math.random() * 700);
+
     } else if (activeContact === 'nerdsabido'){
   const normalizedNow = normalizeNerdText(text);
   const isInsult = msnXingamentos.some(k => normalizedNow.includes(k));
