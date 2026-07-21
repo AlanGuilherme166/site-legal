@@ -1238,6 +1238,20 @@ body.custom-wallpaper .bg-decor{
   border-color: rgba(120,190,255,0.6);
 }
 
+/* Retângulo de seleção por arrasto */
+.selection-rectangle {
+  position: fixed;
+  border: 2px dashed rgba(120, 190, 255, 0.8);
+  background: rgba(120, 190, 255, 0.15);
+  pointer-events: none;
+  z-index: 5;
+  display: none;
+}
+
+.selection-rectangle.active {
+  display: block;
+}
+
 .desktop-icon-glyph{
   font-size: 1.9rem;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));

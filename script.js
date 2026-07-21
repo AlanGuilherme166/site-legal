@@ -6458,4 +6458,71 @@ if (window.innerWidth <= 900) {
 
 }
 
+  /* =====================================================
+     DRAG SELECTION - SELECIONAR MÚLTIPLOS ÍCONES
+  ===================================================== */
+  let isSelecting = false;
+  let startX, startY;
+  const selectionBox = document.createElement('div');
+  selectionBox.className = 'selection-rectangle';
+  document.body.appendChild(selectionBox);
+
+  desktopIcons.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.desktop-icon')) return;
+    
+    isSelecting = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    selectionBox.style.left = startX + 'px';
+    selectionBox.style.top = startY + 'px';
+    selectionBox.style.width = '0';
+    selectionBox.style.height = '0';
+    selectionBox.classList.add('active');
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isSelecting) return;
+
+    const currentX = e.clientX;
+    const currentY = e.clientY;
+    
+    const minX = Math.min(startX, currentX);
+    const minY = Math.min(startY, currentY);
+    const width = Math.abs(currentX - startX);
+    const height = Math.abs(currentY - startY);
+
+    selectionBox.style.left = minX + 'px';
+    selectionBox.style.top = minY + 'px';
+    selectionBox.style.width = width + 'px';
+    selectionBox.style.height = height + 'px';
+
+    desktopIconEls.forEach(icon => {
+      const iconRect = icon.getBoundingClientRect();
+      const boxRect = {
+        left: minX,
+        top: minY,
+        right: minX + width,
+        bottom: minY + height
+      };
+
+      const intersects = !(
+        iconRect.right < boxRect.left ||
+        iconRect.left > boxRect.right ||
+        iconRect.bottom < boxRect.top ||
+        iconRect.top > boxRect.bottom
+      );
+
+      if (intersects) {
+        icon.classList.add('selected');
+      } else {
+        icon.classList.remove('selected');
+      }
+    });
+  });
+
+  document.addEventListener('mouseup', () => {
+    isSelecting = false;
+    selectionBox.classList.remove('active');
+  });
+
 });
