@@ -2336,14 +2336,15 @@ body.custom-wallpaper .bg-decor{
   gap: 8px;
 }
 
-.aicomida-pager{
+.aicomida-pager, .vitrine-pager{
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
   gap: 6px;
+  margin-top: 4px;
 }
 
-.aicomida-page-btn{
+.aicomida-page-btn, .vitrine-page-btn{
   padding: 5px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--mica-border);
@@ -2356,11 +2357,11 @@ body.custom-wallpaper .bg-decor{
   transition: transform 0.12s ease, background 0.12s ease;
 }
 
-.aicomida-page-btn:hover{
+.aicomida-page-btn:hover, .vitrine-page-btn:hover{
   background: var(--mica-fill);
 }
 
-.aicomida-page-btn.active{
+.aicomida-page-btn.active, .vitrine-page-btn.active{
   background: var(--mica-fill-strong);
   color: var(--text-dark);
   border-color: rgba(120,190,255,0.7);
@@ -2823,6 +2824,246 @@ body.custom-wallpaper .bg-decor{
   max-width: 420px;
   margin-left: auto;
   margin-right: auto;
+}
+
+.jogo-zumbi-window{
+  max-width: 620px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ---------- APP: SOBREVIVÊNCIA ZUMBI ---------- */
+.zumbi-app{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.zumbi-heading{
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-dark);
+}
+
+.zumbi-sub{
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  max-width: 480px;
+  line-height: 1.5;
+}
+
+.zumbi-controls-info{
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+.zumbi-start-btn{
+  margin-top: 6px;
+}
+
+.zumbi-stage-jogo{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.zumbi-hud{
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.zumbi-hud-row{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zumbi-hp-track{
+  position: relative;
+  flex: 1;
+  height: 15px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.18);
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.22);
+}
+
+.zumbi-hp-fill{
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(to right, #ff6b6b, #c0181f);
+  transition: width 0.2s ease;
+}
+
+.zumbi-hp-label{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+.zumbi-timer{
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  min-width: 56px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.zumbi-xp-track{
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.14);
+  overflow: hidden;
+}
+
+.zumbi-xp-fill{
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(to right, #9bf05c, #3f9e1c);
+  transition: width 0.2s ease;
+}
+
+.zumbi-level{
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  min-width: 48px;
+  text-align: right;
+}
+
+.zumbi-canvas-wrap{
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.28);
+  border: 1px solid rgba(0,0,0,0.28);
+  line-height: 0;
+}
+
+.zumbi-canvas{
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  background: #1c2b18;
+  cursor: crosshair;
+}
+
+.zumbi-overlay{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 20px;
+  background: rgba(8,12,8,0.84);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  text-align: center;
+}
+
+.zumbi-overlay[hidden]{
+  display: none;
+}
+
+.zumbi-overlay-title{
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.zumbi-gameover-stats{
+  margin: 0;
+  font-size: 0.85rem;
+  color: #e9e9e9;
+  line-height: 1.65;
+}
+
+.zumbi-upgrade-grid{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  max-width: 480px;
+}
+
+.zumbi-upgrade-card{
+  width: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 10px;
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.94);
+  border: 1px solid rgba(255,255,255,0.4);
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.zumbi-upgrade-card:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.4);
+}
+
+.zumbi-upgrade-card:active{
+  transform: scale(0.97);
+}
+
+.zumbi-upgrade-emoji{
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.zumbi-upgrade-name{
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #1b2530;
+}
+
+.zumbi-upgrade-desc{
+  font-size: 0.68rem;
+  color: #4b5a68;
+  line-height: 1.35;
+}
+
+.zumbi-upgrade-tag{
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 10px;
+  background: #eef2f5;
+  color: #33546f;
+}
+
+.zumbi-hint{
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--text-soft);
 }
 
 /* ---------- APP: PROGRESSBAR95 (clicker + coletor de arquivos) ---------- */
@@ -3515,6 +3756,311 @@ body.custom-wallpaper .bg-decor{
 }
 
 .penalti-restart-btn{
+  margin-top: 2px;
+  font-size: 0.76rem;
+}
+
+/* ---------- JOGO: FUTEBOL DE TURNOS ---------- */
+.futebol-app{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.futebol-stage{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.futebol-stage[hidden]{
+  display: none;
+}
+
+.jogo-futebol-window{
+  max-width: 540px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.futebol-heading{
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-dark);
+}
+
+.futebol-sub{
+  margin: 0;
+  max-width: 380px;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.futebol-team-grid{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 4px 2px;
+}
+
+.futebol-team-btn{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--mica-border);
+  border-radius: var(--radius-sm);
+  background: var(--mica-fill-strong);
+  cursor: pointer;
+  text-align: left;
+}
+
+.futebol-team-btn:hover{
+  background: rgba(255,255,255,0.5);
+  transform: translateY(-1px);
+}
+
+.futebol-team-name{
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1.2;
+}
+
+.futebol-crest{
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.35);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35), 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.futebol-scoreboard{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 10px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.22));
+  border: 1px solid var(--mica-border);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 4px 14px var(--mica-shadow);
+}
+
+.futebol-side{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 4px 2px;
+  border-radius: var(--radius-sm);
+  border-top: 3px solid var(--cor-time, transparent);
+}
+
+.futebol-side .futebol-crest{
+  width: 48px;
+  height: 48px;
+  font-size: 0.8rem;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.55), 0 0 0 3px rgba(255,255,255,0.35), 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.futebol-side-name{
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.futebol-placar{
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dark);
+  flex-shrink: 0;
+  min-width: 76px;
+  letter-spacing: 0.5px;
+  transition: transform 0.2s ease;
+}
+
+.futebol-placar.gol-pulse{
+  animation: futebolGolPulse 0.6s ease;
+}
+
+@keyframes futebolGolPulse{
+  0%{ transform: scale(1.5); color: #f9a825; }
+  100%{ transform: scale(1); }
+}
+
+.futebol-rodada{
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.futebol-status{
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  min-height: 2.2em;
+  max-width: 340px;
+}
+
+.futebol-field{
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  height: 380px;
+  background: linear-gradient(180deg, #4fae5b 0%, #3f9a4c 50%, #4fae5b 100%);
+  border-radius: var(--radius-md);
+  border: 2px solid rgba(20,92,48,0.4);
+  overflow: hidden;
+}
+
+.futebol-field-halfline{
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 50%;
+  height: 2px;
+  background: rgba(255,255,255,0.55);
+  transform: translateY(-50%);
+}
+
+.futebol-field-circle{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 46px;
+  height: 46px;
+  border: 2px solid rgba(255,255,255,0.55);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.futebol-field-box{
+  position: absolute;
+  left: 50%;
+  width: 96px;
+  height: 40px;
+  border: 2px solid rgba(255,255,255,0.55);
+  transform: translateX(-50%);
+}
+
+.futebol-box-rival{ top: 0; border-top: none; }
+.futebol-box-user{ bottom: 0; border-bottom: none; }
+
+.futebol-formation{
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.futebol-player-dot{
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+  border: 1.5px solid rgba(255,255,255,0.7);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3), 0 1px 3px rgba(0,0,0,0.3);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.futebol-player-dot.com-bola{
+  box-shadow: 0 0 0 3px #f9d423, 0 2px 6px rgba(0,0,0,0.4);
+  transform: translate(-50%, -50%) scale(1.2);
+  z-index: 2;
+}
+
+.futebol-ball-marker{
+  position: absolute;
+  left: 50%;
+  font-size: 1.5rem;
+  line-height: 1;
+  transform: translate(-50%, 0);
+  transition: top 0.7s cubic-bezier(.2,.7,.3,1);
+  z-index: 3;
+}
+
+.futebol-ball-marker.rival-posse{
+  filter: hue-rotate(150deg);
+}
+
+.futebol-actions{
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.futebol-action-btn{
+  font-size: 0.76rem;
+  padding: 8px 12px;
+}
+
+.futebol-player-btn{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-top: 2px solid var(--cor-time, transparent);
+}
+
+.futebol-player-btn-num{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--cor-time, #999);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.futebol-player-btn small{
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+.futebol-cancel-btn{
+  opacity: 0.85;
+}
+
+.futebol-restart-btn{
   margin-top: 2px;
   font-size: 0.76rem;
 }

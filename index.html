@@ -758,6 +758,125 @@
       </div>
     </section>
 
+    <!-- ===== JANELA: JOGO "SOBREVIVÊNCIA ZUMBI" (aberto a partir da Vitrine) ===== -->
+    <section class="window jogo-zumbi-window" id="jogo-zumbi">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">🧟</span> sobrevivência-zumbi.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body">
+        <div class="zumbi-app" id="zumbiApp">
+
+          <!-- TELA INICIAL -->
+          <div class="zumbi-stage zumbi-stage-inicio" id="zumbiStageInicio">
+            <h2 class="zumbi-heading">🧟 Sobrevivência Zumbi</h2>
+            <p class="zumbi-sub">Uma horda infinita de zumbis vem vindo. Ande pra fugir deles, colete os itens ⭐ de XP e escolha upgrades pra montar seu arsenal. Sobreviva o máximo de tempo possível!</p>
+            <p class="zumbi-controls-info">🖥️ Use <b>WASD</b> ou as <b>setas</b> pra mover.<br>📱 No celular, arraste o dedo pela tela de jogo.</p>
+            <button class="glass-btn zumbi-start-btn" id="zumbiStartBtn" type="button">▶ Começar</button>
+          </div>
+
+          <!-- TELA DE JOGO -->
+          <div class="zumbi-stage zumbi-stage-jogo" id="zumbiStageJogo" hidden>
+            <div class="zumbi-hud">
+              <div class="zumbi-hud-row">
+                <div class="zumbi-hp-track">
+                  <div class="zumbi-hp-fill" id="zumbiHpFill"></div>
+                  <span class="zumbi-hp-label" id="zumbiHpLabel">100/100</span>
+                </div>
+                <span class="zumbi-timer" id="zumbiTimer">00:00</span>
+              </div>
+              <div class="zumbi-hud-row">
+                <div class="zumbi-xp-track">
+                  <div class="zumbi-xp-fill" id="zumbiXpFill"></div>
+                </div>
+                <span class="zumbi-level" id="zumbiLevel">Nv. 1</span>
+              </div>
+            </div>
+
+            <div class="zumbi-canvas-wrap">
+              <canvas class="zumbi-canvas" id="zumbiCanvas" width="560" height="360"></canvas>
+
+              <!-- OVERLAY: ESCOLHA DE UPGRADE (level up) -->
+              <div class="zumbi-overlay zumbi-levelup" id="zumbiLevelupOverlay" hidden>
+                <p class="zumbi-overlay-title">⭐ Suba de nível! Escolha um upgrade:</p>
+                <div class="zumbi-upgrade-grid" id="zumbiUpgradeGrid"></div>
+              </div>
+
+              <!-- OVERLAY: GAME OVER -->
+              <div class="zumbi-overlay zumbi-gameover" id="zumbiGameoverOverlay" hidden>
+                <p class="zumbi-overlay-title">💀 Você foi devorado!</p>
+                <p class="zumbi-gameover-stats" id="zumbiGameoverStats"></p>
+                <button class="glass-btn zumbi-restart-btn" id="zumbiRestartBtn" type="button">🔄 Jogar novamente</button>
+              </div>
+            </div>
+
+            <p class="zumbi-hint">🖥️ WASD / setas para mover · 📱 arraste o dedo na tela pra mover</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== JANELA: JOGO "FUTEBOL DE TURNOS" (aberto a partir da Vitrine) ===== -->
+    <section class="window jogo-futebol-window" id="jogo-futebol">
+      <div class="window-titlebar">
+        <span class="titlebar-title"><span class="titlebar-icon">⚽</span> futebol-de-turnos.exe</span>
+        <span class="titlebar-controls">
+          <button class="vista-btn vista-min" aria-label="Minimizar">_</button>
+          <button class="vista-btn vista-max" aria-label="Maximizar">▢</button>
+          <button class="vista-btn vista-close" aria-label="Fechar">×</button>
+        </span>
+      </div>
+      <div class="window-body">
+        <div class="futebol-app" id="futebolApp">
+
+          <!-- ETAPA 1: escolha do time -->
+          <div class="futebol-stage" id="futebolStageEscolha">
+            <h2 class="futebol-heading">⚽ Futebol de Turnos</h2>
+            <p class="futebol-sub">Escolha seu time do Brasileirão e dispute uma partida por turnos contra um rival sorteado. Avance a bola com Passe ou Drible, Recue quando precisar se organizar, e Chute ao Gol quando estiver perto o suficiente.</p>
+            <div class="futebol-team-grid" id="futebolTeamGrid"></div>
+          </div>
+
+          <!-- ETAPA 2: partida -->
+          <div class="futebol-stage" id="futebolStagePartida" hidden>
+            <div class="futebol-scoreboard">
+              <div class="futebol-side" id="futebolSideUser">
+                <span class="futebol-crest" id="futebolCrestUser"></span>
+                <span class="futebol-side-name" id="futebolNameUser"></span>
+              </div>
+              <span class="futebol-placar" id="futebolPlacar">0 × 0</span>
+              <div class="futebol-side" id="futebolSideRival">
+                <span class="futebol-crest" id="futebolCrestRival"></span>
+                <span class="futebol-side-name" id="futebolNameRival"></span>
+              </div>
+            </div>
+
+            <p class="futebol-rodada" id="futebolRodada">Rodada 1/12</p>
+            <p class="futebol-status" id="futebolStatus">Preparando a partida...</p>
+
+            <div class="futebol-field" id="futebolField">
+              <div class="futebol-field-halfline"></div>
+              <div class="futebol-field-circle"></div>
+              <div class="futebol-field-box futebol-box-rival"></div>
+              <div class="futebol-field-box futebol-box-user"></div>
+              <div class="futebol-formation" id="futebolFormationRival"></div>
+              <div class="futebol-formation" id="futebolFormationUser"></div>
+              <span class="futebol-ball-marker" id="futebolBallMarker">🏃</span>
+            </div>
+
+            <div class="futebol-actions" id="futebolActions"></div>
+
+            <button class="glass-btn futebol-restart-btn" id="futebolRestartBtn" type="button">🔄 Trocar de time</button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
     <!-- ===== JANELA: TRABALHO (ESCAVAÇÃO COM A PÁ) ===== -->
     <section class="window trabalho-window" id="trabalho">
       <div class="window-titlebar">

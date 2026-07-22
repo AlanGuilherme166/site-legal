@@ -1234,6 +1234,20 @@ mobileApps.forEach(btn => {
       name: 'ProgressBar95',
       price: 8000,
       desc: 'Clicker de bytes numa aba, e numa aba separada você captura arquivos caindo com uma janelinha pra encher a barra de progresso e ganhar bytes bônus pros upgrades.'
+    },
+    {
+      id: 'zumbi_sobrevivencia',
+      emoji: '🧟',
+      name: 'Sobrevivência Zumbi',
+      price: 18000,
+      desc: 'Roguelike de ação: fuja de uma horda infinita de zumbis, colete XP e monte um arsenal de upgrades. Sobreviva o máximo de tempo possível.'
+    },
+    {
+      id: 'futebol_turnos',
+      emoji: '⚽',
+      name: 'Futebol de Turnos',
+      price: 14000,
+      desc: 'Escolha seu time do Brasileirão e jogue uma partida por turnos vista de cima: passe, drible, recue e chute ao gol quando estiver perto o suficiente.'
     }
   ];
 
@@ -4039,11 +4053,44 @@ if (respostaTopicoAgiota){
     vitrineFeedbackTimeout = setTimeout(() => { vitrineFeedbackEl.hidden = true; }, 2400);
   }
 
+  // paginacao da vitrine: mesma ideia da paginacao do aicomida, so que
+  // aplicada nas duas abas (loja e biblioteca) pra nao ficar muito cheio
+  // conforme mais jogos vao entrando no catalogo.
+  const VITRINE_ITEMS_PER_PAGE = 4;
+  const vitrinePageState = { loja: 0, biblioteca: 0 };
+
+  function renderVitrinePager(containerEl, totalItems, categoria, onChange){
+    const totalPages = Math.max(1, Math.ceil(totalItems / VITRINE_ITEMS_PER_PAGE));
+    if (vitrinePageState[categoria] > totalPages - 1) vitrinePageState[categoria] = totalPages - 1;
+    if (totalPages <= 1) return;
+
+    const pager = document.createElement('div');
+    pager.className = 'vitrine-pager';
+    for (let i = 0; i < totalPages; i++){
+      const pageBtn = document.createElement('button');
+      pageBtn.type = 'button';
+      pageBtn.className = 'vitrine-page-btn' + (i === vitrinePageState[categoria] ? ' active' : '');
+      pageBtn.textContent = `Pág. ${i + 1}`;
+      pageBtn.addEventListener('click', () => {
+        vitrinePageState[categoria] = i;
+        onChange();
+      });
+      pager.appendChild(pageBtn);
+    }
+    containerEl.appendChild(pager);
+  }
+
   function renderVitrineLoja(){
     if (!vitrineLojaGridEl) return;
     vitrineLojaGridEl.innerHTML = '';
 
-    GAME_CATALOG.forEach(game => {
+    if (vitrinePageState.loja === undefined) vitrinePageState.loja = 0;
+    const totalPages = Math.max(1, Math.ceil(GAME_CATALOG.length / VITRINE_ITEMS_PER_PAGE));
+    if (vitrinePageState.loja > totalPages - 1) vitrinePageState.loja = totalPages - 1;
+    const start = vitrinePageState.loja * VITRINE_ITEMS_PER_PAGE;
+    const pageItems = GAME_CATALOG.slice(start, start + VITRINE_ITEMS_PER_PAGE);
+
+    pageItems.forEach(game => {
       const owned = !!(inventory.jogos && inventory.jogos[game.id] > 0);
       const isFree = !!game.free || game.price === 0;
       const priceLabel = isFree ? 'Grátis' : `R$ ${game.price.toLocaleString('pt-BR')}`;
@@ -4065,6 +4112,8 @@ if (respostaTopicoAgiota){
     vitrineLojaGridEl.querySelectorAll('.vitrine-card-btn').forEach(btn => {
       btn.addEventListener('click', () => comprarJogo(btn.getAttribute('data-game')));
     });
+
+    renderVitrinePager(vitrineLojaGridEl, GAME_CATALOG.length, 'loja', renderVitrineLoja);
   }
 
   function renderVitrineBiblioteca(){
@@ -4074,7 +4123,13 @@ if (respostaTopicoAgiota){
     const ownedIds = Object.keys(inventory.jogos || {}).filter(id => inventory.jogos[id] > 0);
     if (vitrineBibliotecaEmptyEl) vitrineBibliotecaEmptyEl.hidden = ownedIds.length > 0;
 
-    ownedIds.forEach(gameId => {
+    if (vitrinePageState.biblioteca === undefined) vitrinePageState.biblioteca = 0;
+    const totalPages = Math.max(1, Math.ceil(ownedIds.length / VITRINE_ITEMS_PER_PAGE));
+    if (vitrinePageState.biblioteca > totalPages - 1) vitrinePageState.biblioteca = totalPages - 1;
+    const start = vitrinePageState.biblioteca * VITRINE_ITEMS_PER_PAGE;
+    const pageIds = ownedIds.slice(start, start + VITRINE_ITEMS_PER_PAGE);
+
+    pageIds.forEach(gameId => {
       const game = GAME_CATALOG.find(g => g.id === gameId);
       if (!game) return;
       const card = document.createElement('div');
@@ -4093,6 +4148,8 @@ if (respostaTopicoAgiota){
     vitrineBibliotecaGridEl.querySelectorAll('.vitrine-card-btn').forEach(btn => {
       btn.addEventListener('click', () => launchGame(btn.getAttribute('data-game')));
     });
+
+    renderVitrinePager(vitrineBibliotecaGridEl, ownedIds.length, 'biblioteca', renderVitrineBiblioteca);
   }
 
   function comprarJogo(gameId){
@@ -4127,7 +4184,7 @@ if (respostaTopicoAgiota){
       return;
     }
 
-    const windowId = gameId === 'fuga_policia' ? 'jogo-fuga-policia' : (gameId === 'xadrez' ? 'jogo-xadrez' : (gameId === 'penalti' ? 'jogo-penalti' : (gameId === 'progressbar95' ? 'jogo-progressbar95' : null)));
+    const windowId = gameId === 'fuga_policia' ? 'jogo-fuga-policia' : (gameId === 'xadrez' ? 'jogo-xadrez' : (gameId === 'penalti' ? 'jogo-penalti' : (gameId === 'progressbar95' ? 'jogo-progressbar95' : (gameId === 'zumbi_sobrevivencia' ? 'jogo-zumbi' : (gameId === 'futebol_turnos' ? 'jogo-futebol' : null)))));
     if (!windowId) return;
     const win = windowsByApp[windowId];
     if (!win) return;
@@ -4136,6 +4193,8 @@ if (respostaTopicoAgiota){
     if (gameId === 'xadrez' && chessMode !== 'online') chessResetGame();
     if (gameId === 'penalti') penaltiVoltarParaEscolha();
     if (gameId === 'progressbar95') pb95OnOpen();
+    if (gameId === 'zumbi_sobrevivencia') zumbiOnOpen();
+    if (gameId === 'futebol_turnos') futebolVoltarParaEscolha();
 
     openWindow(win);
   }
@@ -4375,6 +4434,865 @@ if (respostaTopicoAgiota){
     renderVitrineLoja();
     renderVitrineBiblioteca();
   }
+
+  /* =====================================================
+     JOGO "SOBREVIVÊNCIA ZUMBI" (aberto a partir da Vitrine)
+     Roguelike estilo "Vampire Survivors": o jogador anda pra
+     fugir de uma horda infinita de zumbis que vem de todos os
+     lados, junta XP, sobe de nível e escolhe upgrades (armas
+     automáticas + itens passivos) pra montar um arsenal.
+  ===================================================== */
+  (function setupZumbiGame(){
+    const zumbiWin = windowsByApp['jogo-zumbi'];
+    if (!zumbiWin) return;
+
+    const stageInicio = document.getElementById('zumbiStageInicio');
+    const stageJogo = document.getElementById('zumbiStageJogo');
+    const startBtn = document.getElementById('zumbiStartBtn');
+    const restartBtn = document.getElementById('zumbiRestartBtn');
+    const canvas = document.getElementById('zumbiCanvas');
+    const hpFillEl = document.getElementById('zumbiHpFill');
+    const hpLabelEl = document.getElementById('zumbiHpLabel');
+    const timerEl = document.getElementById('zumbiTimer');
+    const xpFillEl = document.getElementById('zumbiXpFill');
+    const levelEl = document.getElementById('zumbiLevel');
+    const levelupOverlay = document.getElementById('zumbiLevelupOverlay');
+    const upgradeGridEl = document.getElementById('zumbiUpgradeGrid');
+    const gameoverOverlay = document.getElementById('zumbiGameoverOverlay');
+    const gameoverStatsEl = document.getElementById('zumbiGameoverStats');
+
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const CW = canvas.width, CH = canvas.height;
+    const CX = CW / 2, CY = CH / 2;
+
+    const ZUMBI_ENEMY_DEFS = {
+      comum:   { emoji: '🧟',  baseHp: 18, baseSpeed: 52,  dmg: 7,  radius: 15, xp: 2, size: 26 },
+      agil:    { emoji: '🧟‍♂️', baseHp: 11, baseSpeed: 95,  dmg: 5,  radius: 13, xp: 3, size: 24 },
+      tanque:  { emoji: '🧌',  baseHp: 65, baseSpeed: 34,  dmg: 13, radius: 19, xp: 7, size: 32 },
+      voador:  { emoji: '🦇',  baseHp: 9,  baseSpeed: 78,  dmg: 4,  radius: 12, xp: 3, size: 22 },
+      boss:    { emoji: '👹',  baseHp: 260, baseSpeed: 30, dmg: 20, radius: 28, xp: 30, size: 46 }
+    };
+
+    const ZUMBI_WEAPON_DEFS = [
+      { id: 'faca',     emoji: '🔪', name: 'Faca de Combate',        desc: 'Arremessa facas no zumbi mais próximo.',                     maxLevel: 5 },
+      { id: 'machado',  emoji: '🪓', name: 'Machado Enferrujado',    desc: 'Machados girando que explodem numa área ao acertar.',        maxLevel: 5 },
+      { id: 'coquetel', emoji: '🧨', name: 'Coquetel Molotov',       desc: 'Explode numa poça em chamas que queima quem pisar nela.',    maxLevel: 5 },
+      { id: 'alho',     emoji: '🧄', name: 'Aura de Alho',           desc: 'Dilacera continuamente os zumbis ao seu redor.',             maxLevel: 5 },
+      { id: 'raio',     emoji: '⚡', name: 'Gerador Portátil',       desc: 'Descarga elétrica que salta entre zumbis próximos.',         maxLevel: 5 },
+      { id: 'diario',   emoji: '📔', name: 'Diário de Sobrevivência', desc: 'Páginas voam ao seu redor cortando quem chega perto.',      maxLevel: 5 }
+    ];
+
+    const ZUMBI_PASSIVE_DEFS = [
+      { id: 'tenis',   emoji: '👟', name: 'Tênis de Corrida',        desc: 'Aumenta sua velocidade de movimento.',            maxLevel: 5 },
+      { id: 'colete',  emoji: '🦺', name: 'Colete à Prova de Balas', desc: 'Aumenta seu HP máximo (e cura na hora).',         maxLevel: 5 },
+      { id: 'ima',     emoji: '🧲', name: 'Ímã de Sucata',           desc: 'Aumenta o alcance pra atrair XP.',                maxLevel: 5 },
+      { id: 'relogio', emoji: '⏱️', name: 'Cronômetro Turbo',        desc: 'Reduz o tempo de recarga das suas armas.',        maxLevel: 5 },
+      { id: 'pata',    emoji: '🍀', name: 'Pé de Coelho',            desc: 'Aumenta a chance de zumbis dropar XP extra.',     maxLevel: 5 },
+      { id: 'bateria', emoji: '🔋', name: 'Bateria Reserva',         desc: 'Regenera seu HP lentamente com o tempo.',         maxLevel: 5 }
+    ];
+
+    const MAX_WEAPON_SLOTS = 6;
+
+    function findWeaponDef(id){ return ZUMBI_WEAPON_DEFS.find(w => w.id === id); }
+    function findPassiveDef(id){ return ZUMBI_PASSIVE_DEFS.find(p => p.id === id); }
+
+    let z = null; // estado da partida atual (recriado a cada zumbiStartGame)
+
+    function zumbiFreshState(){
+      return {
+        running: false,
+        paused: false,
+        elapsed: 0,
+        kills: 0,
+        level: 1,
+        xp: 0,
+        xpNext: 6,
+        spawnTimer: 0.6,
+        bossTimer: 45,
+        bossWave: 0,
+        hitFlash: 0,
+        lastFrame: 0,
+        keys: {},
+        pointerActive: false,
+        pointerBase: { x: 0, y: 0 },
+        pointerDir: { x: 0, y: 0 },
+        pointerStrength: 0,
+        player: {
+          x: 0, y: 0,
+          hp: 100, maxHp: 100,
+          baseSpeed: 148,
+          speedMult: 1,
+          radius: 14,
+          phase: 0,
+          facing: 1,
+          magnetRadius: 52,
+          pickupSpeed: 320,
+          cdMult: 1,
+          luck: 0,
+          regenPerSec: 0
+        },
+        weapons: {},
+        passives: {},
+        weaponTimers: {},
+        orbitals: [],
+        enemies: [],
+        projectiles: [],
+        groundEffects: [],
+        gems: [],
+        sparks: []
+      };
+    }
+
+    function zumbiRecalcStats(){
+      const p = z.player;
+      let speedMult = 1, maxHp = 100, magnetRadius = 52, cdMult = 1, luck = 0, regen = 0;
+
+      const tenisLvl = z.passives.tenis || 0;
+      speedMult += tenisLvl * 0.08;
+
+      const coleteLvl = z.passives.colete || 0;
+      const oldMaxHp = p.maxHp;
+      maxHp += coleteLvl * 20;
+
+      const imaLvl = z.passives.ima || 0;
+      magnetRadius += imaLvl * 20;
+
+      const relogioLvl = z.passives.relogio || 0;
+      cdMult = Math.pow(0.9, relogioLvl);
+
+      const pataLvl = z.passives.pata || 0;
+      luck = pataLvl;
+
+      const bateriaLvl = z.passives.bateria || 0;
+      regen = bateriaLvl * 0.4;
+
+      p.speedMult = speedMult;
+      if (maxHp > oldMaxHp) p.hp += (maxHp - oldMaxHp);
+      p.maxHp = maxHp;
+      p.magnetRadius = magnetRadius;
+      p.cdMult = cdMult;
+      p.luck = luck;
+      p.regenPerSec = regen;
+
+      zumbiRebuildOrbitals();
+    }
+
+    function zumbiWeaponCooldown(id, lvl){
+      switch (id){
+        case 'faca': return Math.max(0.22, 0.85 - lvl * 0.09);
+        case 'machado': return Math.max(0.85, 1.8 - lvl * 0.16);
+        case 'coquetel': return Math.max(1.05, 2.2 - lvl * 0.2);
+        case 'raio': return Math.max(0.95, 2.0 - lvl * 0.18);
+        default: return 1;
+      }
+    }
+
+    function zumbiRebuildOrbitals(){
+      const lvl = z.weapons.diario || 0;
+      const count = lvl > 0 ? 1 + Math.floor(lvl / 2) : 0;
+      const existing = z.orbitals.length;
+      if (count === 0){ z.orbitals = []; return; }
+      const angleStep = (Math.PI * 2) / count;
+      const newOrbitals = [];
+      for (let i = 0; i < count; i++){
+        const prev = z.orbitals[i];
+        newOrbitals.push(prev || { angle: angleStep * i, tickTimer: 0 });
+      }
+      z.orbitals = newOrbitals;
+    }
+
+    function zumbiDistance(ax, ay, bx, by){
+      return Math.hypot(ax - bx, ay - by);
+    }
+
+    function zumbiNearestEnemies(x, y, count, excludeSet){
+      const list = z.enemies
+        .filter(e => !excludeSet || !excludeSet.has(e))
+        .map(e => ({ e, d: zumbiDistance(x, y, e.x, e.y) }))
+        .sort((a, b) => a.d - b.d)
+        .slice(0, count)
+        .map(item => item.e);
+      return list;
+    }
+
+    function zumbiDamageEnemy(enemy, dmg){
+      enemy.hp -= dmg;
+      enemy.flash = 0.12;
+      if (enemy.hp <= 0 && !enemy.dead){
+        enemy.dead = true;
+        z.kills++;
+        zumbiDropGem(enemy.x, enemy.y, enemy.xp);
+        if (Math.random() < 0.05 + z.player.luck * 0.03){
+          zumbiDropGem(enemy.x + (Math.random() * 16 - 8), enemy.y + (Math.random() * 16 - 8), Math.ceil(enemy.xp / 2) || 1);
+        }
+      }
+    }
+
+    function zumbiDropGem(x, y, value){
+      z.gems.push({ x, y, value, phase: Math.random() * Math.PI * 2 });
+    }
+
+    /* ---------- SPAWN DE INIMIGOS ---------- */
+    function zumbiPickEnemyType(){
+      const t = z.elapsed;
+      const pool = [{ type: 'comum', w: 10 }];
+      if (t > 8) pool.push({ type: 'voador', w: 5 });
+      if (t > 16) pool.push({ type: 'agil', w: 6 });
+      if (t > 32) pool.push({ type: 'tanque', w: 4 });
+      const total = pool.reduce((s, i) => s + i.w, 0);
+      let roll = Math.random() * total;
+      for (const item of pool){
+        if (roll < item.w) return item.type;
+        roll -= item.w;
+      }
+      return 'comum';
+    }
+
+    function zumbiSpawnEnemy(type){
+      const def = ZUMBI_ENEMY_DEFS[type];
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 340 + Math.random() * 60;
+      const scale = 1 + z.elapsed / 90;
+      const speedScale = 1 + Math.min(z.elapsed / 260, 0.55);
+      z.enemies.push({
+        type,
+        emoji: def.emoji,
+        x: z.player.x + Math.cos(angle) * dist,
+        y: z.player.y + Math.sin(angle) * dist,
+        hp: def.baseHp * (type === 'boss' ? (1 + z.bossWave * 0.35) : scale),
+        maxHp: def.baseHp * (type === 'boss' ? (1 + z.bossWave * 0.35) : scale),
+        speed: def.baseSpeed * speedScale,
+        damage: def.dmg * (type === 'boss' ? (1 + z.bossWave * 0.2) : 1),
+        radius: def.radius,
+        size: def.size,
+        xp: def.xp,
+        phase: Math.random() * Math.PI * 2,
+        wobble: Math.random() * Math.PI * 2,
+        facing: 1,
+        hitCd: 0,
+        flash: 0,
+        dead: false
+      });
+    }
+
+    function zumbiUpdateSpawning(dt){
+      z.spawnTimer -= dt;
+      if (z.spawnTimer <= 0){
+        zumbiSpawnEnemy(zumbiPickEnemyType());
+        const interval = Math.max(0.32, 1.35 - z.elapsed * 0.007);
+        z.spawnTimer = interval;
+      }
+      z.bossTimer -= dt;
+      if (z.bossTimer <= 0){
+        zumbiSpawnEnemy('boss');
+        z.bossWave++;
+        z.bossTimer = 45;
+      }
+    }
+
+    /* ---------- MOVIMENTO DO JOGADOR ---------- */
+    function zumbiKeyDir(){
+      let dx = 0, dy = 0;
+      if (z.keys['arrowup'] || z.keys['w']) dy -= 1;
+      if (z.keys['arrowdown'] || z.keys['s']) dy += 1;
+      if (z.keys['arrowleft'] || z.keys['a']) dx -= 1;
+      if (z.keys['arrowright'] || z.keys['d']) dx += 1;
+      return { dx, dy };
+    }
+
+    function zumbiUpdatePlayer(dt){
+      const p = z.player;
+      let dx = 0, dy = 0, strength = 1;
+
+      const kd = zumbiKeyDir();
+      const kMag = Math.hypot(kd.dx, kd.dy);
+      if (kMag > 0.001){
+        dx = kd.dx / kMag; dy = kd.dy / kMag;
+      } else if (z.pointerActive && z.pointerStrength > 0.05){
+        dx = z.pointerDir.x; dy = z.pointerDir.y; strength = z.pointerStrength;
+      }
+
+      const moving = (dx !== 0 || dy !== 0);
+      if (moving){
+        const spd = p.baseSpeed * p.speedMult * strength;
+        p.x += dx * spd * dt;
+        p.y += dy * spd * dt;
+        p.phase += dt * 9 * Math.max(strength, 0.6);
+        if (dx < -0.05) p.facing = -1;
+        else if (dx > 0.05) p.facing = 1;
+      } else {
+        p.phase += dt * 2.2;
+      }
+
+      if (p.regenPerSec > 0 && p.hp < p.maxHp){
+        p.hp = Math.min(p.maxHp, p.hp + p.regenPerSec * dt);
+      }
+    }
+
+    /* ---------- INIMIGOS: MOVIMENTO E CONTATO ---------- */
+    function zumbiUpdateEnemies(dt){
+      const p = z.player;
+      for (let i = z.enemies.length - 1; i >= 0; i--){
+        const e = z.enemies[i];
+        if (e.dead){ z.enemies.splice(i, 1); continue; }
+
+        let ddx = p.x - e.x, ddy = p.y - e.y;
+        const dist = Math.hypot(ddx, ddy) || 1;
+        ddx /= dist; ddy /= dist;
+
+        if (e.type === 'voador'){
+          e.wobble += dt * 4.2;
+          const perpX = -ddy, perpY = ddx;
+          const wob = Math.sin(e.wobble) * 0.55;
+          ddx += perpX * wob; ddy += perpY * wob;
+          const norm = Math.hypot(ddx, ddy) || 1;
+          ddx /= norm; ddy /= norm;
+        }
+
+        e.x += ddx * e.speed * dt;
+        e.y += ddy * e.speed * dt;
+        e.phase += dt * (e.speed / 11);
+        if (ddx < -0.05) e.facing = -1;
+        else if (ddx > 0.05) e.facing = 1;
+        if (e.flash > 0) e.flash -= dt;
+        if (e.hitCd > 0) e.hitCd -= dt;
+
+        const contactDist = p.radius + e.radius;
+        if (dist * 1 < contactDist + 4 && zumbiDistance(p.x, p.y, e.x, e.y) < contactDist){
+          if (e.hitCd <= 0){
+            p.hp -= e.damage;
+            e.hitCd = 0.55;
+            z.hitFlash = 0.25;
+            if (p.hp <= 0){
+              p.hp = 0;
+              zumbiGameOver();
+            }
+          }
+        }
+      }
+    }
+
+    /* ---------- ARMAS ---------- */
+    function zumbiFireWeapon(id, lvl){
+      const p = z.player;
+      if (id === 'faca'){
+        const dmg = 7 + lvl * 3;
+        const count = 1 + Math.floor(lvl / 2);
+        const pierce = 1 + Math.floor(lvl / 2);
+        const targets = zumbiNearestEnemies(p.x, p.y, count);
+        targets.forEach(t => {
+          const ang = Math.atan2(t.y - p.y, t.x - p.x);
+          z.projectiles.push({
+            kind: 'faca', emoji: '🔪', x: p.x, y: p.y,
+            vx: Math.cos(ang) * 360, vy: Math.sin(ang) * 360,
+            dmg, pierce, travelled: 0, maxTravel: 460
+          });
+        });
+      } else if (id === 'machado'){
+        const dmg = 12 + lvl * 4;
+        const count = 1 + Math.floor(lvl / 2);
+        const aoe = 32 + lvl * 5;
+        const nearest = zumbiNearestEnemies(p.x, p.y, 1)[0];
+        for (let i = 0; i < count; i++){
+          const ang = nearest ? Math.atan2(nearest.y - p.y, nearest.x - p.x) + (i - (count - 1) / 2) * 0.35
+                              : Math.random() * Math.PI * 2;
+          z.projectiles.push({
+            kind: 'machado', emoji: '🪓', x: p.x, y: p.y,
+            vx: Math.cos(ang) * 250, vy: Math.sin(ang) * 250,
+            dmg, pierce: 1, aoe, travelled: 0, maxTravel: 300, spin: 0
+          });
+        }
+      } else if (id === 'coquetel'){
+        const dmgTick = 3 + lvl * 1.5;
+        const radius = 42 + lvl * 5;
+        const duration = 2.6 + lvl * 0.3;
+        const target = zumbiNearestEnemies(p.x, p.y, 1)[0];
+        const tx = target ? target.x : p.x + (Math.random() * 200 - 100);
+        const ty = target ? target.y : p.y + (Math.random() * 200 - 100);
+        z.groundEffects.push({ x: tx, y: ty, radius, timeLeft: duration, tickTimer: 0, dmgTick });
+      } else if (id === 'raio'){
+        const dmg = 8 + lvl * 3;
+        const chains = 2 + Math.floor(lvl / 2);
+        const hitSet = new Set();
+        let originX = p.x, originY = p.y;
+        let current = zumbiNearestEnemies(p.x, p.y, 1)[0];
+        for (let i = 0; i < chains && current; i++){
+          hitSet.add(current);
+          zumbiDamageEnemy(current, dmg);
+          z.sparks.push({ x1: originX, y1: originY, x2: current.x, y2: current.y, life: 0.15 });
+          originX = current.x; originY = current.y;
+          const next = zumbiNearestEnemies(current.x, current.y, 1, hitSet)[0];
+          if (!next || zumbiDistance(current.x, current.y, next.x, next.y) > 150) break;
+          current = next;
+        }
+      }
+    }
+
+    function zumbiUpdateWeapons(dt){
+      const p = z.player;
+      Object.keys(z.weapons).forEach(id => {
+        const lvl = z.weapons[id];
+        if (lvl <= 0) return;
+
+        if (id === 'alho'){
+          const radius = 46 + lvl * 8;
+          const dmgTick = 2 + lvl * 1.2;
+          z.weaponTimers.alho = (z.weaponTimers.alho || 0) - dt;
+          if (z.weaponTimers.alho <= 0){
+            z.enemies.forEach(e => {
+              if (zumbiDistance(p.x, p.y, e.x, e.y) < radius + e.radius) zumbiDamageEnemy(e, dmgTick);
+            });
+            z.weaponTimers.alho = 0.4;
+          }
+          return;
+        }
+
+        if (id === 'diario') return; // tratado em zumbiUpdateOrbitals
+
+        z.weaponTimers[id] = (z.weaponTimers[id] || 0) - dt;
+        if (z.weaponTimers[id] <= 0){
+          zumbiFireWeapon(id, lvl);
+          z.weaponTimers[id] = zumbiWeaponCooldown(id, lvl) * p.cdMult;
+        }
+      });
+    }
+
+    function zumbiUpdateOrbitals(dt){
+      const lvl = z.weapons.diario || 0;
+      if (lvl <= 0 || z.orbitals.length === 0) return;
+      const p = z.player;
+      const radius = 60 + lvl * 2;
+      const speed = 2.0 + lvl * 0.15;
+      const dmgTick = 4 + lvl * 2;
+
+      z.orbitals.forEach(orb => {
+        orb.angle += speed * dt;
+        orb.x = p.x + Math.cos(orb.angle) * radius;
+        orb.y = p.y + Math.sin(orb.angle) * radius;
+        orb.tickTimer -= dt;
+        if (orb.tickTimer <= 0){
+          z.enemies.forEach(e => {
+            if (zumbiDistance(orb.x, orb.y, e.x, e.y) < e.radius + 14) zumbiDamageEnemy(e, dmgTick);
+          });
+          orb.tickTimer = 0.3;
+        }
+      });
+    }
+
+    function zumbiUpdateProjectiles(dt){
+      for (let i = z.projectiles.length - 1; i >= 0; i--){
+        const proj = z.projectiles[i];
+        proj.x += proj.vx * dt;
+        proj.y += proj.vy * dt;
+        proj.travelled += Math.hypot(proj.vx * dt, proj.vy * dt);
+        if (proj.kind === 'machado') proj.spin = (proj.spin || 0) + dt * 14;
+
+        let hit = false;
+        for (let j = 0; j < z.enemies.length; j++){
+          const e = z.enemies[j];
+          if (e.dead) continue;
+          if (zumbiDistance(proj.x, proj.y, e.x, e.y) < e.radius + 8){
+            if (proj.kind === 'machado'){
+              z.enemies.forEach(other => {
+                if (!other.dead && zumbiDistance(proj.x, proj.y, other.x, other.y) < proj.aoe) zumbiDamageEnemy(other, proj.dmg);
+              });
+              hit = true;
+            } else {
+              zumbiDamageEnemy(e, proj.dmg);
+              proj.pierce--;
+              if (proj.pierce < 0) hit = true;
+            }
+            break;
+          }
+        }
+
+        if (hit || proj.travelled >= proj.maxTravel){
+          z.projectiles.splice(i, 1);
+        }
+      }
+    }
+
+    function zumbiUpdateGroundEffects(dt){
+      for (let i = z.groundEffects.length - 1; i >= 0; i--){
+        const g = z.groundEffects[i];
+        g.timeLeft -= dt;
+        g.tickTimer -= dt;
+        if (g.tickTimer <= 0){
+          z.enemies.forEach(e => {
+            if (!e.dead && zumbiDistance(g.x, g.y, e.x, e.y) < g.radius + e.radius) zumbiDamageEnemy(e, g.dmgTick);
+          });
+          g.tickTimer = 0.5;
+        }
+        if (g.timeLeft <= 0) z.groundEffects.splice(i, 1);
+      }
+    }
+
+    function zumbiUpdateGems(dt){
+      const p = z.player;
+      for (let i = z.gems.length - 1; i >= 0; i--){
+        const gem = z.gems[i];
+        gem.phase += dt * 5;
+        const dist = zumbiDistance(p.x, p.y, gem.x, gem.y);
+        if (dist < p.magnetRadius){
+          const ang = Math.atan2(p.y - gem.y, p.x - gem.x);
+          const spd = p.pickupSpeed * (1 - Math.min(dist / p.magnetRadius, 1) * 0.4);
+          gem.x += Math.cos(ang) * spd * dt;
+          gem.y += Math.sin(ang) * spd * dt;
+        }
+        if (dist < 14){
+          z.xp += gem.value;
+          z.gems.splice(i, 1);
+          zumbiCheckLevelUp();
+        }
+      }
+    }
+
+    function zumbiCheckLevelUp(){
+      if (z.xp >= z.xpNext){
+        z.xp -= z.xpNext;
+        z.level++;
+        z.xpNext = 6 + z.level * 4;
+        zumbiOpenLevelup();
+      }
+    }
+
+    /* ---------- LEVEL UP: ESCOLHA DE UPGRADE ---------- */
+    function zumbiShuffle(arr){
+      for (let i = arr.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function zumbiOpenLevelup(){
+      z.paused = true;
+      const ownedWeaponCount = Object.keys(z.weapons).filter(id => z.weapons[id] > 0).length;
+      const options = [];
+
+      ZUMBI_WEAPON_DEFS.forEach(w => {
+        const lvl = z.weapons[w.id] || 0;
+        if (lvl === 0 && ownedWeaponCount < MAX_WEAPON_SLOTS) options.push({ kind: 'weapon', def: w, lvl });
+        else if (lvl > 0 && lvl < w.maxLevel) options.push({ kind: 'weapon', def: w, lvl });
+      });
+      ZUMBI_PASSIVE_DEFS.forEach(pdef => {
+        const lvl = z.passives[pdef.id] || 0;
+        if (lvl < pdef.maxLevel) options.push({ kind: 'passive', def: pdef, lvl });
+      });
+
+      zumbiShuffle(options);
+      const chosen = options.slice(0, 3);
+
+      if (upgradeGridEl){
+        upgradeGridEl.innerHTML = '';
+        if (chosen.length === 0){
+          z.paused = false;
+          if (levelupOverlay) levelupOverlay.hidden = true;
+          return;
+        }
+        chosen.forEach(opt => {
+          const card = document.createElement('button');
+          card.type = 'button';
+          card.className = 'zumbi-upgrade-card';
+          const nextLvl = opt.lvl + 1;
+          const tag = opt.lvl === 0 ? 'Novo!' : `Nv. ${opt.lvl} → ${nextLvl}`;
+          card.innerHTML = `
+            <span class="zumbi-upgrade-emoji">${opt.def.emoji}</span>
+            <span class="zumbi-upgrade-name">${opt.def.name}</span>
+            <span class="zumbi-upgrade-desc">${opt.def.desc}</span>
+            <span class="zumbi-upgrade-tag">${tag}</span>
+          `;
+          card.addEventListener('click', () => {
+            if (opt.kind === 'weapon') z.weapons[opt.def.id] = (z.weapons[opt.def.id] || 0) + 1;
+            else z.passives[opt.def.id] = (z.passives[opt.def.id] || 0) + 1;
+            zumbiRecalcStats();
+            if (levelupOverlay) levelupOverlay.hidden = true;
+            z.paused = false;
+          });
+          upgradeGridEl.appendChild(card);
+        });
+      }
+
+      if (levelupOverlay) levelupOverlay.hidden = false;
+    }
+
+    /* ---------- HUD ---------- */
+    function zumbiFormatTime(t){
+      const m = Math.floor(t / 60).toString().padStart(2, '0');
+      const s = Math.floor(t % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function zumbiUpdateHud(){
+      const p = z.player;
+      if (hpFillEl) hpFillEl.style.width = `${Math.max(0, (p.hp / p.maxHp) * 100)}%`;
+      if (hpLabelEl) hpLabelEl.textContent = `${Math.max(0, Math.round(p.hp))}/${Math.round(p.maxHp)}`;
+      if (timerEl) timerEl.textContent = zumbiFormatTime(z.elapsed);
+      if (xpFillEl) xpFillEl.style.width = `${Math.min(100, (z.xp / z.xpNext) * 100)}%`;
+      if (levelEl) levelEl.textContent = `Nv. ${z.level}`;
+    }
+
+    /* ---------- DESENHO ---------- */
+    function zumbiDrawEmoji(emoji, screenX, screenY, size, facing, yOffset, rotation){
+      ctx.save();
+      ctx.translate(screenX, screenY + (yOffset || 0));
+      if (rotation) ctx.rotate(rotation);
+      ctx.scale(facing < 0 ? -1 : 1, 1);
+      ctx.font = `${size}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(emoji, 0, 0);
+      ctx.restore();
+    }
+
+    function zumbiRender(){
+      const p = z.player;
+      ctx.clearRect(0, 0, CW, CH);
+
+      // fundo
+      ctx.fillStyle = '#1c2b18';
+      ctx.fillRect(0, 0, CW, CH);
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      ctx.lineWidth = 1;
+      const gridSize = 40;
+      const offX = ((-p.x % gridSize) + gridSize) % gridSize;
+      const offY = ((-p.y % gridSize) + gridSize) % gridSize;
+      for (let x = offX; x < CW; x += gridSize){
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CH); ctx.stroke();
+      }
+      for (let y = offY; y < CH; y += gridSize){
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CW, y); ctx.stroke();
+      }
+
+      const toScreen = (wx, wy) => ({ x: CX + (wx - p.x), y: CY + (wy - p.y) });
+
+      // aura de alho
+      const alhoLvl = z.weapons.alho || 0;
+      if (alhoLvl > 0){
+        const radius = 46 + alhoLvl * 8;
+        ctx.beginPath();
+        ctx.arc(CX, CY, radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(140,255,120,0.10)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(140,255,120,0.35)';
+        ctx.stroke();
+      }
+
+      // poças de fogo
+      z.groundEffects.forEach(g => {
+        const s = toScreen(g.x, g.y);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, g.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,120,30,0.22)';
+        ctx.fill();
+        zumbiDrawEmoji('🔥', s.x, s.y, 20 + Math.sin(z.elapsed * 8) * 3, 1, 0, 0);
+      });
+
+      // gemas de XP
+      z.gems.forEach(gem => {
+        const s = toScreen(gem.x, gem.y);
+        const pulse = 1 + Math.sin(gem.phase) * 0.15;
+        zumbiDrawEmoji('⭐', s.x, s.y, 14 * pulse, 1, 0, 0);
+      });
+
+      // páginas orbitais (diário)
+      z.orbitals.forEach(orb => {
+        if (orb.x === undefined) return;
+        const s = toScreen(orb.x, orb.y);
+        zumbiDrawEmoji('📔', s.x, s.y, 20, 1, 0, orb.angle);
+      });
+
+      // projéteis
+      z.projectiles.forEach(proj => {
+        const s = toScreen(proj.x, proj.y);
+        const ang = Math.atan2(proj.vy, proj.vx) + (proj.kind === 'machado' ? (proj.spin || 0) : 0);
+        zumbiDrawEmoji(proj.emoji, s.x, s.y, 20, 1, 0, ang);
+      });
+
+      // raios
+      z.sparks.forEach(sp => {
+        const s1 = toScreen(sp.x1, sp.y1), s2 = toScreen(sp.x2, sp.y2);
+        ctx.strokeStyle = `rgba(255,255,120,${Math.max(0, sp.life * 5)})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(s1.x, s1.y); ctx.lineTo(s2.x, s2.y); ctx.stroke();
+      });
+
+      // inimigos (com animacao de "andar saltitando")
+      z.enemies.forEach(e => {
+        const s = toScreen(e.x, e.y);
+        const bounce = -Math.abs(Math.sin(e.phase)) * 6;
+        const sway = Math.sin(e.phase * 0.5) * 0.14;
+        zumbiDrawEmoji(e.emoji, s.x, s.y, e.size, e.facing, bounce, sway);
+        if (e.flash > 0){
+          ctx.save();
+          ctx.globalAlpha = e.flash * 3;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y + bounce, e.size / 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+          ctx.restore();
+        }
+        if (e.hp < e.maxHp){
+          const w = e.size;
+          ctx.fillStyle = 'rgba(0,0,0,0.4)';
+          ctx.fillRect(s.x - w / 2, s.y - e.size / 2 - 10, w, 4);
+          ctx.fillStyle = '#ff5b5b';
+          ctx.fillRect(s.x - w / 2, s.y - e.size / 2 - 10, w * Math.max(0, e.hp / e.maxHp), 4);
+        }
+      });
+
+      // jogador
+      const pBounce = -Math.abs(Math.sin(p.phase)) * 5;
+      const pSway = Math.sin(p.phase * 0.5) * 0.12;
+      zumbiDrawEmoji('🏃', CX, CY, 30, p.facing, pBounce, pSway);
+
+      // flash de dano
+      if (z.hitFlash > 0){
+        ctx.fillStyle = `rgba(255,0,0,${z.hitFlash * 0.35})`;
+        ctx.fillRect(0, 0, CW, CH);
+      }
+    }
+
+    /* ---------- LOOP PRINCIPAL ---------- */
+    function zumbiIsVisible(){
+      if (zumbiWin.classList.contains('is-closed')) return false;
+      const body = zumbiWin.querySelector('.window-body');
+      if (body && body.style.display === 'none') return false;
+      return true;
+    }
+
+    function zumbiTick(now){
+      if (!z || !z.running){ return; }
+      if (!zumbiIsVisible()){
+        requestAnimationFrame(zumbiTick);
+        return;
+      }
+      if (!z.lastFrame) z.lastFrame = now;
+      let dt = (now - z.lastFrame) / 1000;
+      z.lastFrame = now;
+      dt = Math.min(dt, 0.05);
+
+      if (!z.paused){
+        z.elapsed += dt;
+        zumbiUpdatePlayer(dt);
+        zumbiUpdateSpawning(dt);
+        zumbiUpdateEnemies(dt);
+        zumbiUpdateWeapons(dt);
+        zumbiUpdateOrbitals(dt);
+        zumbiUpdateProjectiles(dt);
+        zumbiUpdateGroundEffects(dt);
+        zumbiUpdateGems(dt);
+        z.sparks.forEach(sp => sp.life -= dt);
+        z.sparks = z.sparks.filter(sp => sp.life > 0);
+        if (z.hitFlash > 0) z.hitFlash = Math.max(0, z.hitFlash - dt);
+      }
+
+      zumbiRender();
+      zumbiUpdateHud();
+      requestAnimationFrame(zumbiTick);
+    }
+
+    /* ---------- INICIO / FIM DE PARTIDA ---------- */
+    function zumbiStartGame(){
+      z = zumbiFreshState();
+      z.weapons.faca = 1;
+      z.weaponTimers.faca = 0.3;
+      zumbiRecalcStats();
+      z.player.hp = z.player.maxHp;
+      z.running = true;
+      z.paused = false;
+
+      if (stageInicio) stageInicio.hidden = true;
+      if (stageJogo) stageJogo.hidden = false;
+      if (levelupOverlay) levelupOverlay.hidden = true;
+      if (gameoverOverlay) gameoverOverlay.hidden = true;
+
+      requestAnimationFrame(zumbiTick);
+    }
+
+    function zumbiGameOver(){
+      // proteção: só processa se o estado da partida existir
+      if (!z) return;
+
+      // marca partida como encerrada (pausada e não mais 'running')
+      z.paused = true;
+      z.running = false;
+
+      // evita mostrar Game Over imediato por eventos espúrios logo ao iniciar
+      // (ex.: colisão no mesmo frame de spawn). Se a partida tiver durado
+      // menos de 0.2s, reinicia o HP e volta ao estado in-game silenciosamente.
+      if (z.elapsed < 0.2){
+        z.player.hp = z.player.maxHp;
+        z.paused = false;
+        z.running = true;
+        return;
+      }
+
+      if (gameoverStatsEl){
+        gameoverStatsEl.innerHTML = `Você sobreviveu <b>${zumbiFormatTime(z.elapsed)}</b><br>Eliminou <b>${z.kills}</b> zumbis · Chegou ao <b>nível ${z.level}</b>`;
+      }
+      if (gameoverOverlay) gameoverOverlay.hidden = false;
+    }
+
+    function zumbiOnOpen(){
+      // nada a fazer: se ja tinha uma partida em andamento ela continua
+      // (o loop detecta sozinho quando a janela volta a ficar visivel)
+    }
+    window.zumbiOnOpen = zumbiOnOpen;
+
+    if (startBtn) startBtn.addEventListener('click', zumbiStartGame);
+    if (restartBtn) restartBtn.addEventListener('click', zumbiStartGame);
+
+    /* ---------- CONTROLES: TECLADO ---------- */
+    const ZUMBI_KEYS = ['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'];
+    document.addEventListener('keydown', (e) => {
+      if (!z || !z.running || z.paused) return;
+      if (!zumbiIsVisible()) return;
+      const k = e.key.toLowerCase();
+      if (ZUMBI_KEYS.includes(k)){
+        z.keys[k] = true;
+        e.preventDefault();
+      }
+    });
+    document.addEventListener('keyup', (e) => {
+      if (!z) return;
+      const k = e.key.toLowerCase();
+      if (ZUMBI_KEYS.includes(k)) z.keys[k] = false;
+    });
+
+    /* ---------- CONTROLES: TOQUE / MOUSE (arrastar na tela) ---------- */
+    function zumbiPointerPos(e){
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = CW / rect.width;
+      const scaleY = CH / rect.height;
+      return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      if (!z || !z.running || z.paused) return;
+      z.pointerActive = true;
+      z.pointerBase = zumbiPointerPos(e);
+      canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId);
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!z || !z.pointerActive) return;
+      const pos = zumbiPointerPos(e);
+      const dx = pos.x - z.pointerBase.x, dy = pos.y - z.pointerBase.y;
+      const dist = Math.hypot(dx, dy);
+      const maxDist = 46;
+      z.pointerStrength = Math.min(1, dist / maxDist);
+      if (dist > 0.001){ z.pointerDir = { x: dx / dist, y: dy / dist }; }
+    });
+    function zumbiPointerEnd(){
+      if (!z) return;
+      z.pointerActive = false;
+      z.pointerStrength = 0;
+    }
+    canvas.addEventListener('pointerup', zumbiPointerEnd);
+    canvas.addEventListener('pointercancel', zumbiPointerEnd);
+    canvas.addEventListener('pointerleave', zumbiPointerEnd);
+  })();
 
   /* =====================================================
      JOGO "PROGRESSBAR95" (aberto a partir da Vitrine)
@@ -5636,6 +6554,445 @@ if (respostaTopicoAgiota){
 
   montarGradeTimesPenalti();
   if (penaltiRestartBtn) penaltiRestartBtn.addEventListener('click', penaltiVoltarParaEscolha);
+
+  /* =====================================================
+     JOGO: FUTEBOL DE TURNOS (visto de cima, tipo FIFA de
+     turnos) — Passe, Drible, Recuar e Chutar ao Gol.
+     Reaproveita a lista de times do Pênalti Decisivo.
+  ===================================================== */
+  const futebolTeamGridEl = document.getElementById('futebolTeamGrid');
+  const futebolStageEscolhaEl = document.getElementById('futebolStageEscolha');
+  const futebolStagePartidaEl = document.getElementById('futebolStagePartida');
+  const futebolSideUserEl = document.getElementById('futebolSideUser');
+  const futebolSideRivalEl = document.getElementById('futebolSideRival');
+  const futebolCrestUserEl = document.getElementById('futebolCrestUser');
+  const futebolCrestRivalEl = document.getElementById('futebolCrestRival');
+  const futebolNameUserEl = document.getElementById('futebolNameUser');
+  const futebolNameRivalEl = document.getElementById('futebolNameRival');
+  const futebolPlacarEl = document.getElementById('futebolPlacar');
+  const futebolRodadaEl = document.getElementById('futebolRodada');
+  const futebolStatusEl = document.getElementById('futebolStatus');
+  const futebolBallMarkerEl = document.getElementById('futebolBallMarker');
+  const futebolFormationUserEl = document.getElementById('futebolFormationUser');
+  const futebolFormationRivalEl = document.getElementById('futebolFormationRival');
+  const futebolActionsEl = document.getElementById('futebolActions');
+  const futebolRestartBtn = document.getElementById('futebolRestartBtn');
+
+  const FUTEBOL_TOTAL_RODADAS = 12;
+  const FUTEBOL_ZONA_MAX = 6; // 0 = colado no gol do usuário, 6 = colado no gol do rival
+
+  // formação fixa 4-4-2 usada pros dois times: posição, x% e y% (relativo
+  // ao lado do usuário; pro rival o y é espelhado na hora de desenhar)
+  const FUTEBOL_FORMACAO = [
+    { pos: 'GOL', x: 50, y: 92 },
+    { pos: 'ZAG', x: 18, y: 76 },
+    { pos: 'ZAG', x: 38, y: 80 },
+    { pos: 'ZAG', x: 62, y: 80 },
+    { pos: 'ZAG', x: 82, y: 76 },
+    { pos: 'MEI', x: 22, y: 56 },
+    { pos: 'MEI', x: 42, y: 60 },
+    { pos: 'MEI', x: 58, y: 60 },
+    { pos: 'MEI', x: 78, y: 56 },
+    { pos: 'ATA', x: 36, y: 36 },
+    { pos: 'ATA', x: 64, y: 36 }
+  ];
+
+  const FUTEBOL_NOMES_JOGADORES = [
+    'Silva', 'Souza', 'Costa', 'Santos', 'Oliveira', 'Pereira', 'Lima', 'Carvalho',
+    'Gomes', 'Ribeiro', 'Alves', 'Monteiro', 'Cardoso', 'Teixeira', 'Moreira',
+    'Nascimento', 'Araújo', 'Barros', 'Correia', 'Dias', 'Fernandes', 'Machado',
+    'Rocha', 'Barbosa', 'Farias'
+  ];
+
+  let futebolTimeUser = null;
+  let futebolTimeRival = null;
+  let futebolElencoUser = [];
+  let futebolElencoRival = [];
+  let futebolPortadorUser = 5;
+  let futebolPortadorRival = null;
+  let futebolPosseAtual = 'user';
+  let futebolZona = 3;
+  let futebolPlacarUser = 0;
+  let futebolPlacarRival = 0;
+  let futebolRodadaAtual = 1;
+  let futebolTravado = false;
+  let futebolFimDeJogo = false;
+
+  function futebolSortearNomes(qtd){
+    const pool = [...FUTEBOL_NOMES_JOGADORES];
+    const escolhidos = [];
+    for (let i = 0; i < qtd; i++){
+      const idx = Math.floor(Math.random() * pool.length);
+      escolhidos.push(pool.splice(idx, 1)[0]);
+    }
+    return escolhidos;
+  }
+
+  function futebolGerarElenco(){
+    const nomes = futebolSortearNomes(FUTEBOL_FORMACAO.length);
+    return FUTEBOL_FORMACAO.map((slot, i) => ({
+      numero: i + 1,
+      nome: nomes[i],
+      pos: slot.pos
+    }));
+  }
+
+  function futebolJogadorAleatorioPorPos(elenco, posicoes){
+    const candidatos = [];
+    elenco.forEach((jogador, i) => { if (posicoes.includes(jogador.pos)) candidatos.push(i); });
+    if (!candidatos.length) return 0;
+    return candidatos[Math.floor(Math.random() * candidatos.length)];
+  }
+
+  function montarGradeTimesFutebol(){
+    if (!futebolTeamGridEl) return;
+    futebolTeamGridEl.innerHTML = '';
+    PENALTI_TIMES.forEach(time => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'futebol-team-btn';
+      btn.innerHTML = `
+        <span class="futebol-crest" style="background:${time.cor}">${time.id}</span>
+        <span class="futebol-team-name">${time.nome}</span>
+      `;
+      btn.addEventListener('click', () => futebolIniciarPartida(time));
+      futebolTeamGridEl.appendChild(btn);
+    });
+  }
+
+  function futebolPulsarPlacar(){
+    if (!futebolPlacarEl) return;
+    futebolPlacarEl.classList.remove('gol-pulse');
+    void futebolPlacarEl.offsetWidth; // força reflow pra reiniciar a animação
+    futebolPlacarEl.classList.add('gol-pulse');
+  }
+
+  function futebolRenderPlacar(){
+    if (futebolNameUserEl) futebolNameUserEl.textContent = futebolTimeUser ? futebolTimeUser.nome : '';
+    if (futebolNameRivalEl) futebolNameRivalEl.textContent = futebolTimeRival ? futebolTimeRival.nome : '';
+    if (futebolCrestUserEl && futebolTimeUser){
+      futebolCrestUserEl.textContent = futebolTimeUser.id;
+      futebolCrestUserEl.style.background = futebolTimeUser.cor;
+    }
+    if (futebolCrestRivalEl && futebolTimeRival){
+      futebolCrestRivalEl.textContent = futebolTimeRival.id;
+      futebolCrestRivalEl.style.background = futebolTimeRival.cor;
+    }
+    if (futebolSideUserEl && futebolTimeUser) futebolSideUserEl.style.setProperty('--cor-time', futebolTimeUser.cor);
+    if (futebolSideRivalEl && futebolTimeRival) futebolSideRivalEl.style.setProperty('--cor-time', futebolTimeRival.cor);
+    if (futebolPlacarEl) futebolPlacarEl.textContent = `${futebolPlacarUser} × ${futebolPlacarRival}`;
+    if (futebolRodadaEl) futebolRodadaEl.textContent = `Rodada ${Math.min(futebolRodadaAtual, FUTEBOL_TOTAL_RODADAS)}/${FUTEBOL_TOTAL_RODADAS}`;
+  }
+
+  // desenha os 11 jogadores de um time na formação fixa, destacando quem
+  // está com a bola no momento (borda dourada + leve zoom)
+  function futebolMontarFormacaoContainer(containerEl, time, elenco, ehRival){
+    if (!containerEl || !time) return;
+    containerEl.innerHTML = '';
+    elenco.forEach((jogador, i) => {
+      const slot = FUTEBOL_FORMACAO[i];
+      const y = ehRival ? (100 - slot.y) : slot.y;
+      const comBola = ehRival
+        ? (futebolPosseAtual === 'rival' && i === futebolPortadorRival)
+        : (futebolPosseAtual === 'user' && i === futebolPortadorUser);
+      const dot = document.createElement('span');
+      dot.className = 'futebol-player-dot' + (comBola ? ' com-bola' : '');
+      dot.style.left = slot.x + '%';
+      dot.style.top = y + '%';
+      dot.style.background = time.cor;
+      dot.textContent = jogador.numero;
+      dot.title = `${jogador.nome} — ${jogador.pos}`;
+      containerEl.appendChild(dot);
+    });
+  }
+
+  function futebolRenderFormacoes(){
+    futebolMontarFormacaoContainer(futebolFormationUserEl, futebolTimeUser, futebolElencoUser, false);
+    futebolMontarFormacaoContainer(futebolFormationRivalEl, futebolTimeRival, futebolElencoRival, true);
+  }
+
+  function futebolRenderCampo(posse){
+    if (!futebolBallMarkerEl) return;
+    futebolPosseAtual = posse;
+    // zona 0 = perto do gol do usuário (embaixo), zona 6 = perto do gol do rival (em cima)
+    const topPercent = (FUTEBOL_ZONA_MAX - futebolZona) / FUTEBOL_ZONA_MAX * 84 + 6;
+    futebolBallMarkerEl.style.top = topPercent + '%';
+    futebolBallMarkerEl.textContent = posse === 'rival' ? '⚽' : '🏃';
+    futebolBallMarkerEl.classList.toggle('rival-posse', posse === 'rival');
+    futebolRenderFormacoes();
+  }
+
+  function futebolMontarBotoes(){
+    if (!futebolActionsEl) return;
+    futebolActionsEl.innerHTML = '';
+
+    const botoes = [];
+    if (futebolZona > 0){
+      botoes.push({ id: 'recuar', label: '⬅️ Recuar' });
+    }
+    botoes.push({ id: 'passe', label: '➡️ Passe' });
+    botoes.push({ id: 'drible', label: '🌀 Driblar' });
+    if (futebolZona >= 5){
+      botoes.push({ id: 'chutar', label: '🥅 Chutar ao Gol' });
+    }
+
+    botoes.forEach(acao => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'glass-btn futebol-action-btn';
+      btn.textContent = acao.label;
+      btn.addEventListener('click', () => {
+        if (futebolTravado || futebolFimDeJogo) return;
+        if (acao.id === 'passe'){
+          futebolMostrarSeletorJogadores();
+          return;
+        }
+        futebolExecutarAcaoUsuario(acao.id);
+      });
+      futebolActionsEl.appendChild(btn);
+    });
+  }
+
+  // troca os botões de ação pela lista dos companheiros de time (menos o
+  // goleiro e quem já está com a bola) pra escolher quem recebe o passe
+  function futebolMostrarSeletorJogadores(){
+    if (!futebolActionsEl) return;
+    futebolActionsEl.innerHTML = '';
+
+    futebolElencoUser.forEach((jogador, i) => {
+      if (i === futebolPortadorUser || jogador.pos === 'GOL') return;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'glass-btn futebol-action-btn futebol-player-btn';
+      btn.style.setProperty('--cor-time', futebolTimeUser.cor);
+      btn.innerHTML = `<span class="futebol-player-btn-num">${jogador.numero}</span> ${jogador.nome} <small>(${jogador.pos})</small>`;
+      btn.addEventListener('click', () => {
+        if (futebolTravado || futebolFimDeJogo) return;
+        futebolExecutarAcaoUsuario('passe', i);
+      });
+      futebolActionsEl.appendChild(btn);
+    });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'glass-btn futebol-action-btn futebol-cancel-btn';
+    cancelBtn.textContent = '◀️ Cancelar';
+    cancelBtn.addEventListener('click', futebolMontarBotoes);
+    futebolActionsEl.appendChild(cancelBtn);
+  }
+
+  function futebolChecarFimDeJogo(){
+    if (futebolRodadaAtual > FUTEBOL_TOTAL_RODADAS){
+      futebolFimDeJogo = true;
+      futebolTravado = true;
+      if (futebolActionsEl) futebolActionsEl.innerHTML = '';
+
+      let texto;
+      if (futebolPlacarUser > futebolPlacarRival){
+        texto = `🏆 Fim de jogo! ${futebolTimeUser.nome} venceu por ${futebolPlacarUser} a ${futebolPlacarRival}!`;
+      } else if (futebolPlacarRival > futebolPlacarUser){
+        texto = `😔 Fim de jogo! ${futebolTimeRival.nome} venceu por ${futebolPlacarRival} a ${futebolPlacarUser}. Vai ter revanche?`;
+      } else {
+        texto = `🤝 Fim de jogo! Empate em ${futebolPlacarUser} a ${futebolPlacarRival}.`;
+      }
+      if (futebolStatusEl) futebolStatusEl.textContent = texto;
+      return true;
+    }
+    return false;
+  }
+
+  function futebolFinalizarRodada(posseFinal){
+    futebolRenderPlacar();
+    futebolRenderCampo(posseFinal);
+    futebolRodadaAtual++;
+
+    if (futebolChecarFimDeJogo()) return;
+
+    futebolTravado = false;
+    futebolMontarBotoes();
+  }
+
+  // sequencia automatica do rival com a bola: encadeia varias micro-jogadas
+  // (avancar/driblar) ate ele chutar, perder a bola, ou o limite de seguranca
+  function futebolTurnoRival(passosRestantes){
+    if (passosRestantes === undefined) passosRestantes = 6;
+
+    // a cada jogada o time rival "toca a bola" pra um companheiro diferente
+    futebolPortadorRival = futebolJogadorAleatorioPorPos(futebolElencoRival, ['ZAG', 'MEI', 'ATA']);
+    const jogadorRival = futebolElencoRival[futebolPortadorRival];
+
+    if (futebolBallMarkerEl){
+      futebolBallMarkerEl.textContent = '⚽';
+      futebolBallMarkerEl.classList.add('rival-posse');
+    }
+    futebolRenderFormacoes();
+
+    if (futebolZona <= 1 || passosRestantes <= 0){
+      const chanceGol = futebolZona === 0 ? 0.5 : 0.35;
+      if (futebolStatusEl) futebolStatusEl.textContent = `${jogadorRival.nome} arrisca o chute contra seu gol...`;
+
+      setTimeout(() => {
+        const foiGol = Math.random() < chanceGol;
+        if (foiGol){
+          futebolPlacarRival++;
+          futebolZona = 3;
+          futebolPortadorUser = futebolJogadorAleatorioPorPos(futebolElencoUser, ['MEI']);
+          futebolPortadorRival = null;
+          if (futebolStatusEl) futebolStatusEl.textContent = `⚽ GOL do ${jogadorRival.nome} (${futebolTimeRival.nome})! Saque de meio de campo pro ${futebolTimeUser.nome}.`;
+          futebolPulsarPlacar();
+        } else {
+          futebolZona = 1;
+          futebolPortadorUser = futebolJogadorAleatorioPorPos(futebolElencoUser, ['GOL']);
+          futebolPortadorRival = null;
+          if (futebolStatusEl) futebolStatusEl.textContent = '🧤 Seu goleiro defendeu e a bola voltou pro seu time!';
+        }
+        futebolFinalizarRodada('user');
+      }, 750);
+      return;
+    }
+
+    const usarDrible = Math.random() < 0.35;
+    const chance = usarDrible ? 0.55 : 0.78;
+    const delta = usarDrible ? 2 : 1;
+    const sucesso = Math.random() < chance;
+
+    if (futebolStatusEl){
+      futebolStatusEl.textContent = usarDrible
+        ? `${jogadorRival.nome} tenta driblar e avançar no seu campo...`
+        : `${jogadorRival.nome} troca passes e avança...`;
+    }
+
+    setTimeout(() => {
+      if (sucesso){
+        futebolZona = Math.max(0, futebolZona - delta);
+        futebolRenderCampo('rival');
+        futebolTurnoRival(passosRestantes - 1);
+      } else {
+        futebolPortadorUser = futebolJogadorAleatorioPorPos(futebolElencoUser, ['ZAG']);
+        futebolPortadorRival = null;
+        if (futebolStatusEl) futebolStatusEl.textContent = `💪 ${futebolElencoUser[futebolPortadorUser].nome} tomou a bola de volta do rival!`;
+        futebolFinalizarRodada('user');
+      }
+    }, 650);
+  }
+
+  function futebolExecutarAcaoUsuario(acaoId, alvoIdx){
+    futebolTravado = true;
+    if (futebolActionsEl) futebolActionsEl.innerHTML = '';
+
+    const jogadorAtual = futebolElencoUser[futebolPortadorUser];
+
+    if (acaoId === 'recuar'){
+      futebolZona = Math.max(0, futebolZona - 1);
+      if (futebolStatusEl) futebolStatusEl.textContent = `${jogadorAtual.nome} recua a bola pra se organizar melhor.`;
+      futebolRenderCampo('user');
+      setTimeout(() => futebolFinalizarRodada('user'), 500);
+      return;
+    }
+
+    if (acaoId === 'passe' || acaoId === 'drible'){
+      const usarDrible = acaoId === 'drible';
+      const chance = usarDrible ? 0.55 : 0.75;
+      const delta = usarDrible ? 2 : 1;
+      const sucesso = Math.random() < chance;
+      const alvo = (!usarDrible && futebolElencoUser[alvoIdx]) ? futebolElencoUser[alvoIdx] : null;
+
+      if (futebolStatusEl){
+        futebolStatusEl.textContent = usarDrible
+          ? `${jogadorAtual.nome} tenta o drible...`
+          : `${jogadorAtual.nome} tenta o passe${alvo ? ` pra ${alvo.nome}` : ''}...`;
+      }
+
+      setTimeout(() => {
+        if (sucesso){
+          futebolZona = Math.min(FUTEBOL_ZONA_MAX, futebolZona + delta);
+          if (usarDrible){
+            if (futebolStatusEl) futebolStatusEl.textContent = `🌀 Drible certeiro! ${jogadorAtual.nome} avança no campo.`;
+          } else if (alvo){
+            futebolPortadorUser = alvoIdx;
+            if (futebolStatusEl) futebolStatusEl.textContent = `✅ Passe certo pra ${alvo.nome} (${alvo.pos})! ${futebolTimeUser.nome} avança no campo.`;
+          }
+          futebolFinalizarRodada('user');
+        } else {
+          if (futebolStatusEl) futebolStatusEl.textContent = `❌ Bola perdida! ${futebolTimeRival.nome} roubou a jogada.`;
+          futebolRenderCampo('rival');
+          setTimeout(() => futebolTurnoRival(), 500);
+        }
+      }, 550);
+      return;
+    }
+
+    if (acaoId === 'chutar'){
+      const chanceGol = futebolZona >= 6 ? 0.5 : 0.35;
+      if (futebolStatusEl) futebolStatusEl.textContent = `${jogadorAtual.nome} finaliza pro gol...`;
+
+      setTimeout(() => {
+        const foiGol = Math.random() < chanceGol;
+        if (foiGol){
+          futebolPlacarUser++;
+          futebolZona = 3;
+          if (futebolStatusEl) futebolStatusEl.textContent = `⚽ GOOOL de ${jogadorAtual.nome} (${futebolTimeUser.nome})! Saque de meio de campo pro ${futebolTimeRival.nome}.`;
+          futebolPulsarPlacar();
+          futebolRenderCampo('rival');
+          setTimeout(() => futebolTurnoRival(), 600);
+        } else {
+          futebolZona = 1;
+          if (futebolStatusEl) futebolStatusEl.textContent = `🧤 O goleiro do ${futebolTimeRival.nome} defendeu!`;
+          futebolRenderCampo('rival');
+          setTimeout(() => futebolTurnoRival(), 600);
+        }
+      }, 750);
+      return;
+    }
+  }
+
+  function futebolIniciarPartida(timeEscolhido){
+    futebolTimeUser = timeEscolhido;
+    const rivais = PENALTI_TIMES.filter(t => t.id !== timeEscolhido.id);
+    futebolTimeRival = pickRandom(rivais);
+    futebolElencoUser = futebolGerarElenco();
+    futebolElencoRival = futebolGerarElenco();
+    futebolPortadorUser = futebolJogadorAleatorioPorPos(futebolElencoUser, ['MEI']);
+    futebolPortadorRival = null;
+    futebolZona = 3;
+    futebolPlacarUser = 0;
+    futebolPlacarRival = 0;
+    futebolRodadaAtual = 1;
+    futebolTravado = false;
+    futebolFimDeJogo = false;
+
+    if (futebolStageEscolhaEl) futebolStageEscolhaEl.hidden = true;
+    if (futebolStagePartidaEl) futebolStagePartidaEl.hidden = false;
+
+    if (futebolStatusEl) futebolStatusEl.textContent = `Bola rolando! ${futebolElencoUser[futebolPortadorUser].nome} começa com a posse pro ${futebolTimeUser.nome}.`;
+    futebolRenderPlacar();
+    futebolRenderCampo('user');
+    futebolMontarBotoes();
+  }
+
+  function futebolVoltarParaEscolha(){
+    futebolTimeUser = null;
+    futebolTimeRival = null;
+    futebolElencoUser = [];
+    futebolElencoRival = [];
+    futebolPortadorUser = 5;
+    futebolPortadorRival = null;
+    futebolZona = 3;
+    futebolPlacarUser = 0;
+    futebolPlacarRival = 0;
+    futebolRodadaAtual = 1;
+    futebolTravado = false;
+    futebolFimDeJogo = false;
+
+    if (futebolStagePartidaEl) futebolStagePartidaEl.hidden = true;
+    if (futebolStageEscolhaEl) futebolStageEscolhaEl.hidden = false;
+    if (futebolActionsEl) futebolActionsEl.innerHTML = '';
+    if (futebolFormationUserEl) futebolFormationUserEl.innerHTML = '';
+    if (futebolFormationRivalEl) futebolFormationRivalEl.innerHTML = '';
+  }
+
+  montarGradeTimesFutebol();
+  if (futebolRestartBtn) futebolRestartBtn.addEventListener('click', futebolVoltarParaEscolha);
 
   /* =====================================================
      APP: PROMPT DE COMANDO (CMD) — comando secreto pra
